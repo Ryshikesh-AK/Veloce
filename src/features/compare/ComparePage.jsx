@@ -1,0 +1,7 @@
+import React from 'react';
+import { ArrowRight, BarChart3, Trash2 } from 'lucide-react';
+import { formatPrice } from '../../shared/format.js';
+
+export default function ComparePage({ cars, onRemove, onBrowse }) {
+  return <section className="compare-page"><div className="section-head"><div><div className="eyebrow muted">SIDE-BY-SIDE</div><h2>Compare your <em>shortlist.</em></h2></div><button className="text-button" onClick={onBrowse}>Browse cars <ArrowRight size={16} /></button></div>{cars.length === 0 ? <div className="empty-state compare-empty"><BarChart3 size={25} /><h3>Your compare list is empty</h3><p>Add up to three cars from Discover to compare them here.</p><button className="primary-button" onClick={onBrowse}>Browse collection <ArrowRight size={16} /></button></div> : <div className="compare-grid page-compare-grid">{cars.map((car) => <div className="compare-column" key={car.id}><div className="compare-image"><img src={car.image} alt={car.name} /></div><h3>{car.name}{car.model ? ` ${car.model}` : ''}</h3><strong className="compare-price">{formatPrice(car.price)}</strong><div className="compare-data"><span>Year <b>{car.year}</b></span><span>Model <b>{car.model || car.name}</b></span><span>Mileage <b>{car.mileage ? `${Number(car.mileage).toLocaleString()} miles` : '12,400 miles'}</b></span><span>Fuel <b>{car.fuel || car.type}</b></span><span>Transmission <b>{car.transmission || 'Automatic'}</b></span></div><button className="remove-button" onClick={() => onRemove(car.id)}><Trash2 size={14} /> Remove</button></div>)}</div>}</section>;
+}

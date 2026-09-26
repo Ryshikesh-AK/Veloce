@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
+import { formatPrice } from '../../shared/format.js';
 import {
-  ArrowLeft, ArrowRight, Bell, CarFront, Check, LayoutDashboard,
-  Plus, Search, ShieldCheck, Sparkles, Trash2, Upload
+  ArrowLeft, ArrowRight, Bell, CalendarDays, CarFront, Check, CircleDollarSign, LayoutDashboard,
+  Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Upload, X
 } from 'lucide-react';
-
-const formatPrice = (price) => new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0
-}).format(price);
 
 const sections = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard },
   { path: '/admin/inventory', label: 'Inventory', icon: CarFront },
+  { path: '/admin/test-drives', label: 'Test-drive queue', icon: CalendarDays },
+  { path: '/admin/finance', label: 'Financial overview', icon: CircleDollarSign },
   { path: '/admin/featured', label: 'Featured cars', icon: Sparkles },
   { path: '/admin/new', label: 'Add a car', icon: Plus },
   { path: '/admin/notifications', label: 'Notifications', icon: Bell }
@@ -35,7 +32,8 @@ function SectionHeading({ eyebrow, title, description, action }) {
 
 export default function AdminConsolePage({
   path, cars, featuredIds, adminAlerts, onAdd, onRemove,
-  onFeaturedChange, onStatusChange, onClearAlerts, onNavigate, onClose
+  testDrives, onApproveTestDrive, onDeclineTestDrive, onFeaturedChange, onStatusChange,
+  onFinancialChange, onPriceChange, onClearAlerts, onNavigate, onClose
 }) {
   const activePath = getActivePath(path);
   const [inventoryStatus, setInventoryStatus] = useState('All');
@@ -58,6 +56,7 @@ export default function AdminConsolePage({
             >
               <Icon size={18} />
               <span>{label}</span>
+              {sectionPath === '/admin/test-drives' && testDrives.filter((request) => request.status === 'pending').length > 0 && <span className="nav-count">{testDrives.filter((request) => request.status === 'pending').length}</span>}
               {sectionPath === '/admin/notifications' && adminAlerts > 0 && <span className="nav-count">{adminAlerts}</span>}
             </button>
           ))}
@@ -76,7 +75,9 @@ export default function AdminConsolePage({
         <div className="admin-console-content">
           <div className="admin-page-transition" key={activePath}>
             {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
-            {activePath === '/admin/inventory' && <InventoryPage cars={cars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onStatusChange={onStatusChange} onNavigate={onNavigate} />}
+            {activePath === '/admin/inventory' && <InventoryPage cars={cars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onStatusChange={onStatusChange} onFinancialChange={onFinancialChange} onPriceChange={onPriceChange} onNavigate={onNavigate} />}
+            {activePath === '/admin/test-drives' && <TestDriveQueuePage requests={testDrives} onApprove={onApproveTestDrive} onDecline={onDeclineTestDrive} />}
+            {activePath === '/admin/finance' && <FinancialPage cars={cars} onNavigate={onNavigate} />}
             {activePath === '/admin/featured' && <FeaturedPage cars={cars} featuredIds={featuredIds} onFeaturedChange={onFeaturedChange} />}
             {activePath === '/admin/new' && <CreateCarPage onAdd={onAdd} onDone={() => onNavigate('/admin/inventory')} />}
             {activePath === '/admin/notifications' && <NotificationsPage count={adminAlerts} onClear={onClearAlerts} />}
@@ -107,6 +108,8 @@ function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate, onStatusSele
         <div className="admin-section-heading"><div><div className="eyebrow muted">QUICK ACTIONS</div><h3>Where would you like to go?</h3></div></div>
         <div className="admin-action-list">
           <button onClick={() => onNavigate('/admin/inventory')}><CarFront size={19} /><span><strong>Manage inventory</strong><small>Review, update, or remove listings</small></span><ArrowRight size={17} /></button>
+          <button onClick={() => onNavigate('/admin/test-drives')}><CalendarDays size={19} /><span><strong>Review test-drive requests</strong><small>Approve appointments in request order</small></span><ArrowRight size={17} /></button>
+          <button onClick={() => onNavigate('/admin/finance')}><CircleDollarSign size={19} /><span><strong>View financial overview</strong><small>Review profit, pending balances, and sales</small></span><ArrowRight size={17} /></button>
           <button onClick={() => onNavigate('/admin/featured')}><Sparkles size={19} /><span><strong>Choose featured cars</strong><small>Curate the homepage carousel</small></span><ArrowRight size={17} /></button>
           <button onClick={() => onNavigate('/admin/notifications')}><Bell size={19} /><span><strong>View notifications</strong><small>{adminAlerts ? `${adminAlerts} new visitor ${adminAlerts === 1 ? 'session' : 'sessions'}` : 'No unread visitor activity'}</small></span><ArrowRight size={17} /></button>
         </div>
@@ -115,14 +118,110 @@ function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate, onStatusSele
   );
 }
 
-function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onStatusChange, onNavigate }) {
+function TestDriveQueuePage({ requests, onApprove, onDecline }) {
+  const [approvedTimes, setApprovedTimes] = useState({});
+  const pendingRequests = requests.filter((request) => request.status === 'pending').sort((a, b) => a.createdAt - b.createdAt);
+  const reviewedRequests = requests.filter((request) => request.status !== 'pending').sort((a, b) => b.createdAt - a.createdAt);
+  const formatDateTime = (value) => value ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Not set';
+
+  return <>
+    <SectionHeading eyebrow="CUSTOMER REQUESTS" title="Test-drive queue" description={`${pendingRequests.length} pending request${pendingRequests.length === 1 ? '' : 's'}, ordered by when they arrived.`} />
+    <section className="test-drive-queue">
+      {pendingRequests.map((request, index) => <article className="test-drive-queue-item" key={request.id}>
+        <div className="test-drive-queue-position">{index + 1}</div>
+        <img src={request.carImage} alt="" />
+        <div className="test-drive-queue-details">
+          <div className="test-drive-queue-car"><strong>{request.carName}</strong><span>Preferred: {formatDateTime(request.preferredAt)}</span></div>
+          <div className="test-drive-customer"><strong>{request.customerName}</strong><a href={`mailto:${request.customerEmail}`}>{request.customerEmail}</a>{request.customerPhone && <a href={`tel:${request.customerPhone}`}>{request.customerPhone}</a>}</div>
+          <form className="test-drive-approval" onSubmit={(event) => { event.preventDefault(); const approvedAt = approvedTimes[request.id] ?? request.preferredAt; if (approvedAt) onApprove(request.id, approvedAt); }}>
+            <label>Approved appointment time<input type="datetime-local" required value={approvedTimes[request.id] ?? request.preferredAt ?? ''} onChange={(event) => setApprovedTimes((current) => ({ ...current, [request.id]: event.target.value }))} /></label>
+            <button className="primary-button" type="submit"><Check size={15} /> Approve</button>
+            <button className="secondary-button" type="button" onClick={() => onDecline(request.id)}>Decline</button>
+          </form>
+        </div>
+      </article>)}
+      {pendingRequests.length === 0 && <div className="admin-empty-state">The test-drive queue is clear.</div>}
+    </section>
+    {reviewedRequests.length > 0 && <section className="test-drive-reviewed">
+      <div className="admin-section-heading"><div><h3>Recently reviewed</h3><p>Appointment decisions and customer notifications.</p></div></div>
+      {reviewedRequests.map((request) => <article className="test-drive-reviewed-row" key={request.id}>
+        <img src={request.carImage} alt="" />
+        <div><strong>{request.carName}</strong><small>{request.customerName} · {request.customerEmail}</small></div>
+        <span className={`test-drive-status ${request.status}`}>{request.status === 'approved' ? 'Approved' : 'Declined'}</span>
+        <time>{request.status === 'approved' ? formatDateTime(request.approvedAt) : formatDateTime(request.createdAt)}</time>
+      </article>)}
+    </section>}
+  </>;
+}
+
+function FinancialPage({ cars, onNavigate }) {
+  const recordedSales = cars.filter((car) => car.status === 'Sold' && Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice));
+  const realizedProfit = recordedSales.reduce((total, car) => total + car.soldPrice - car.costBasis, 0);
+  const reservedCars = cars.filter((car) => car.status === 'Reserved');
+  const recordedPending = reservedCars.filter((car) => Number.isFinite(car.pendingAmount));
+  const pendingMoney = recordedPending.reduce((total, car) => total + car.pendingAmount, 0);
+  const soldCars = cars.filter((car) => car.status === 'Sold' && Number.isFinite(car.soldPrice));
+  const soldRevenue = soldCars.reduce((total, car) => total + car.soldPrice, 0);
+  const availableCars = cars.filter((car) => (car.status || 'Available') === 'Available' && Number.isFinite(car.price));
+  const availableValue = availableCars.reduce((total, car) => total + car.price, 0);
+  const pieItems = [
+    { label: 'Pending money', value: pendingMoney, note: `${recordedPending.length} of ${reservedCars.length} reserved cars recorded`, tone: 'pending', color: '#c18d30' },
+    { label: 'Sold revenue', value: soldRevenue, note: `${soldCars.length} sale prices recorded`, tone: 'revenue', color: '#318e82' },
+    { label: 'Available stock', value: availableValue, note: 'Asking value of available listings', tone: 'stock', color: '#63869c' }
+  ];
+  const pieTotal = pieItems.reduce((total, item) => total + item.value, 0);
+  let pieOffset = 0;
+  const pieStops = pieItems.map((item) => {
+    const start = pieOffset;
+    pieOffset += pieTotal > 0 ? item.value / pieTotal * 100 : 0;
+    return `${item.color} ${start}% ${pieOffset}%`;
+  });
+  const pieStyle = { background: pieTotal > 0 ? `conic-gradient(${pieStops.join(', ')})` : 'var(--surface-soft)' };
+
+  return <>
+    <SectionHeading eyebrow="MONEY OVERVIEW" title="Financial overview" description="Track realized profit, pending balances, sold revenue, and available stock." action={<button className="secondary-button" onClick={() => onNavigate('/admin/inventory')}><CarFront size={15} /> Update car amounts</button>} />
+    <section className="admin-financial-picture" aria-labelledby="admin-financial-title">
+      <div className="admin-financial-heading"><div><div className="eyebrow muted">FINANCIAL BREAKDOWN</div><h3 id="admin-financial-title">Portfolio breakdown</h3></div><span>Amounts in USD</span></div>
+      <div className="admin-pie-layout">
+        <div className="admin-pie-chart" role="img" aria-label={pieItems.map((item) => `${item.label}: ${formatPrice(item.value)}`).join('. ')} style={pieStyle} />
+        <div className="admin-pie-legend">
+          {pieItems.map((item) => <div className={`admin-pie-legend-row ${item.tone}`} key={item.label}>
+            <span className="admin-pie-swatch" />
+            <span className="admin-pie-legend-copy"><strong>{item.label}</strong><small>{item.note}</small></span>
+            <strong className="admin-pie-value">{formatPrice(item.value)}<small>{pieTotal > 0 ? `${(item.value / pieTotal * 100).toFixed(1)}%` : '0.0%'}</small></strong>
+          </div>)}
+        </div>
+      </div>
+      <div className="admin-realized-profit"><span><strong>Realized profit</strong><small>{recordedSales.length} complete sold-car records</small></span><strong>{formatPrice(realizedProfit)}</strong></div>
+    </section>
+  </>;
+}
+
+function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onStatusChange, onFinancialChange, onPriceChange, onNavigate }) {
   const [query, setQuery] = useState('');
+  const [editingPriceId, setEditingPriceId] = useState(null);
+  const [priceDraft, setPriceDraft] = useState('');
   const filteredCars = cars.filter((car) => {
     const matchesStatus = statusFilter === 'All' || (car.status || 'Available') === statusFilter;
     const matchesQuery = `${car.name} ${car.model || ''} ${car.type} ${car.location || ''}`.toLowerCase().includes(query.toLowerCase());
     return matchesStatus && matchesQuery;
   });
   const filterStatuses = ['All', 'Available', 'Reserved', 'Sold'];
+  const beginPriceEdit = (car) => {
+    setEditingPriceId(car.id);
+    setPriceDraft(String(car.price));
+  };
+  const cancelPriceEdit = () => {
+    setEditingPriceId(null);
+    setPriceDraft('');
+  };
+  const savePrice = (event, carId) => {
+    event.preventDefault();
+    const price = Number(priceDraft);
+    if (!Number.isFinite(price) || price < 0) return;
+    onPriceChange(carId, price);
+    cancelPriceEdit();
+  };
 
   return (
     <>
@@ -134,9 +233,26 @@ function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onS
           <article className="admin-inventory-row" key={car.id}>
             <img src={car.image} alt={car.name} />
             <div className="admin-inventory-copy"><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><span>{car.year} · {car.type} · {car.location}</span></div>
-            <strong className="admin-inventory-price">{formatPrice(car.price)}</strong>
+            <div className="admin-price-editor">
+              {editingPriceId === car.id ? <form className="admin-price-form" onSubmit={(event) => savePrice(event, car.id)}>
+                <input type="number" min="0" step="1" aria-label={`New price for ${car.name}`} value={priceDraft} onChange={(event) => setPriceDraft(event.target.value)} autoFocus required />
+                <button type="submit" className="admin-price-save" aria-label={`Save price for ${car.name}`}><Check size={14} /></button>
+                <button type="button" className="admin-price-cancel" onClick={cancelPriceEdit} aria-label={`Cancel price edit for ${car.name}`}><X size={14} /></button>
+              </form> : <>
+                <strong className="admin-inventory-price">{formatPrice(car.price)}</strong>
+                <button type="button" className="admin-price-edit" onClick={() => beginPriceEdit(car)} aria-label={`Edit price for ${car.name}`}><Pencil size={13} /><span>Edit</span></button>
+              </>}
+            </div>
             <label className="admin-status-control"><span>Status</span><select aria-label={`Status for ${car.name}${car.model ? ` ${car.model}` : ''}`} value={car.status || 'Available'} onChange={(event) => onStatusChange(car.id, event.target.value)}><option>Available</option><option>Reserved</option><option>Sold</option></select></label>
             <button className="remove-button" onClick={() => onRemove(car.id)}><Trash2 size={14} /> Remove</button>
+            <div className="admin-inventory-financials">
+              <label>Cost basis<input type="number" min="0" step="1" aria-label={`Purchase cost for ${car.name}`} placeholder="Enter purchase cost" value={car.costBasis ?? ''} onChange={(event) => onFinancialChange(car.id, 'costBasis', event.target.value)} /></label>
+              {car.status === 'Sold' && <>
+                <label>Sold for<input type="number" min="0" step="1" aria-label={`Sale price for ${car.name}`} placeholder="Enter sale price" value={car.soldPrice ?? ''} onChange={(event) => onFinancialChange(car.id, 'soldPrice', event.target.value)} /></label>
+                <div className="admin-car-profit"><small>Profit</small><strong>{Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice) ? formatPrice(car.soldPrice - car.costBasis) : 'Enter both figures'}</strong></div>
+              </>}
+              {car.status === 'Reserved' && <label>Money pending<input type="number" min="0" step="1" aria-label={`Remaining balance for ${car.name}`} placeholder="Remaining balance" value={car.pendingAmount ?? ''} onChange={(event) => onFinancialChange(car.id, 'pendingAmount', event.target.value)} /></label>}
+            </div>
           </article>
         ))}
         {filteredCars.length === 0 && <div className="admin-empty-state">{cars.length === 0 ? 'Your inventory is empty. Add your first car to get started.' : statusFilter !== 'All' && !query ? `There are no ${statusFilter.toLowerCase()} cars right now.` : 'No listings match these filters.'}</div>}
@@ -170,7 +286,7 @@ function FeaturedPage({ cars, featuredIds, onFeaturedChange }) {
 }
 
 function CreateCarPage({ onAdd, onDone }) {
-  const [form, setForm] = useState({ name: '', model: '', year: '2024', type: 'SUV', price: '', mileage: '', fuel: 'Electric', transmission: 'Automatic', description: '', image: '' });
+  const [form, setForm] = useState({ name: '', model: '', year: '2024', type: 'SUV', price: '', costBasis: '', mileage: '', fuel: 'Electric', transmission: 'Automatic', description: '', image: '' });
   const [preview, setPreview] = useState('');
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const handleFile = (event) => {
@@ -182,7 +298,7 @@ function CreateCarPage({ onAdd, onDone }) {
   };
   const submit = (event) => {
     event.preventDefault();
-    onAdd({ ...form, id: Date.now(), price: Number(form.price), rating: 'New', status: 'Available', location: 'Veloce showroom', image: preview || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85', accent: 'new' });
+    onAdd({ ...form, id: Date.now(), price: Number(form.price), costBasis: Number(form.costBasis), rating: 'New', status: 'Available', location: 'Veloce showroom', image: preview || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85', accent: 'new' });
     onDone();
   };
 
@@ -195,6 +311,7 @@ function CreateCarPage({ onAdd, onDone }) {
           <div className="form-row"><label>Make / brand *<input value={form.name} onChange={(event) => update('name', event.target.value)} placeholder="e.g. Tesla" required /></label><label>Model *<input value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="e.g. Model S Plaid" required /></label></div>
           <div className="form-row"><label>Year<select value={form.year} onChange={(event) => update('year', event.target.value)}>{['2026', '2025', '2024', '2023', '2022'].map((year) => <option key={year}>{year}</option>)}</select></label><label>Category<select value={form.type} onChange={(event) => update('type', event.target.value)}>{['SUV', 'Sports', 'Electric', 'Sedan'].map((type) => <option key={type}>{type}</option>)}</select></label></div>
           <div className="form-row"><label>Mileage *<input type="number" min="0" value={form.mileage} onChange={(event) => update('mileage', event.target.value)} placeholder="12000" required /></label><label>Price *<span className="input-prefix"><span>$</span><input type="number" min="1" value={form.price} onChange={(event) => update('price', event.target.value)} placeholder="85000" required /></span></label></div>
+          <label>Purchase cost *<span className="input-prefix"><span>$</span><input type="number" min="0" value={form.costBasis} onChange={(event) => update('costBasis', event.target.value)} placeholder="60000" required /></span></label>
           <div className="form-row"><label>Fuel type<select value={form.fuel} onChange={(event) => update('fuel', event.target.value)}>{['Electric', 'Petrol', 'Diesel', 'Hybrid'].map((fuel) => <option key={fuel}>{fuel}</option>)}</select></label><label>Transmission<select value={form.transmission} onChange={(event) => update('transmission', event.target.value)}><option>Automatic</option><option>Manual</option></select></label></div>
           <label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} placeholder="Tell buyers what makes this car special..." rows="4" /></label>
           <label>Vehicle image<div className="upload-box admin-upload-box">{preview ? <img src={preview} alt="Selected vehicle preview" /> : <><div className="upload-icon"><Upload size={19} /></div><strong>Choose an image <span>to preview it here</span></strong><small>JPG or PNG image</small></>}<input type="file" accept="image/*" onChange={handleFile} /></div></label>
