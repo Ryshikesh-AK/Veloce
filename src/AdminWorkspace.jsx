@@ -35,9 +35,10 @@ function SectionHeading({ eyebrow, title, description, action }) {
 
 export default function AdminConsolePage({
   path, cars, featuredIds, adminAlerts, onAdd, onRemove,
-  onFeaturedChange, onClearAlerts, onNavigate, onClose
+  onFeaturedChange, onStatusChange, onClearAlerts, onNavigate, onClose
 }) {
   const activePath = getActivePath(path);
+  const [inventoryStatus, setInventoryStatus] = useState('All');
 
   return (
     <div className="admin-console">
@@ -74,8 +75,8 @@ export default function AdminConsolePage({
         </header>
         <div className="admin-console-content">
           <div className="admin-page-transition" key={activePath}>
-            {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onNavigate={onNavigate} />}
-            {activePath === '/admin/inventory' && <InventoryPage cars={cars} onRemove={onRemove} onNavigate={onNavigate} />}
+            {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
+            {activePath === '/admin/inventory' && <InventoryPage cars={cars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onStatusChange={onStatusChange} onNavigate={onNavigate} />}
             {activePath === '/admin/featured' && <FeaturedPage cars={cars} featuredIds={featuredIds} onFeaturedChange={onFeaturedChange} />}
             {activePath === '/admin/new' && <CreateCarPage onAdd={onAdd} onDone={() => onNavigate('/admin/inventory')} />}
             {activePath === '/admin/notifications' && <NotificationsPage count={adminAlerts} onClear={onClearAlerts} />}
@@ -86,7 +87,13 @@ export default function AdminConsolePage({
   );
 }
 
-function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate }) {
+function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate, onStatusSelect }) {
+  const statusCounts = cars.reduce((counts, car) => {
+    const status = car.status || 'Available';
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, { Available: 0, Reserved: 0, Sold: 0 });
+
   return (
     <>
       <SectionHeading eyebrow="CATALOG CONTROL CENTER" title="Good to see you." description="A clear view of your marketplace, listings, and featured collection." action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
@@ -94,6 +101,7 @@ function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate }) {
         <div className="admin-metric"><span>Live listings</span><strong>{cars.length}</strong><small>Vehicles in your inventory</small></div>
         <div className="admin-metric"><span>Featured cars</span><strong>{featuredIds.length}</strong><small>Shown in the home carousel</small></div>
         <div className="admin-metric"><span>New visitors</span><strong>{adminAlerts}</strong><small>Since notifications were cleared</small></div>
+        {['Available', 'Reserved', 'Sold'].map((status) => <button type="button" className={`admin-metric inventory-metric status-${status.toLowerCase()}`} key={status} onClick={() => onStatusSelect(status)}><span>{status}</span><strong>{statusCounts[status]}</strong><small>View {status.toLowerCase()} cars</small></button>)}
       </div>
       <section className="admin-quick-actions">
         <div className="admin-section-heading"><div><div className="eyebrow muted">QUICK ACTIONS</div><h3>Where would you like to go?</h3></div></div>
@@ -107,13 +115,19 @@ function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate }) {
   );
 }
 
-function InventoryPage({ cars, onRemove, onNavigate }) {
+function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onStatusChange, onNavigate }) {
   const [query, setQuery] = useState('');
-  const filteredCars = cars.filter((car) => `${car.name} ${car.model || ''} ${car.type}`.toLowerCase().includes(query.toLowerCase()));
+  const filteredCars = cars.filter((car) => {
+    const matchesStatus = statusFilter === 'All' || (car.status || 'Available') === statusFilter;
+    const matchesQuery = `${car.name} ${car.model || ''} ${car.type} ${car.location || ''}`.toLowerCase().includes(query.toLowerCase());
+    return matchesStatus && matchesQuery;
+  });
+  const filterStatuses = ['All', 'Available', 'Reserved', 'Sold'];
 
   return (
     <>
-      <SectionHeading eyebrow="YOUR CATALOG" title="Inventory" description={`${cars.length} ${cars.length === 1 ? 'vehicle' : 'vehicles'} currently listed.`} action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
+      <SectionHeading eyebrow="YOUR CATALOG" title="Inventory" description={`Showing ${filteredCars.length} of ${cars.length} vehicles${statusFilter === 'All' ? '' : ` · ${statusFilter}`}.`} action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
+      <div className="admin-status-filters" role="group" aria-label="Filter inventory by status">{filterStatuses.map((status) => <button type="button" key={status} className={statusFilter === status ? 'selected' : ''} aria-pressed={statusFilter === status} onClick={() => onStatusFilterChange(status)}>{status}{status !== 'All' && <span>{cars.filter((car) => (car.status || 'Available') === status).length}</span>}</button>)}</div>
       <label className="admin-inventory-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your inventory" /></label>
       <div className="admin-inventory-list">
         {filteredCars.map((car) => (
@@ -121,10 +135,11 @@ function InventoryPage({ cars, onRemove, onNavigate }) {
             <img src={car.image} alt={car.name} />
             <div className="admin-inventory-copy"><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><span>{car.year} · {car.type} · {car.location}</span></div>
             <strong className="admin-inventory-price">{formatPrice(car.price)}</strong>
+            <label className="admin-status-control"><span>Status</span><select aria-label={`Status for ${car.name}${car.model ? ` ${car.model}` : ''}`} value={car.status || 'Available'} onChange={(event) => onStatusChange(car.id, event.target.value)}><option>Available</option><option>Reserved</option><option>Sold</option></select></label>
             <button className="remove-button" onClick={() => onRemove(car.id)}><Trash2 size={14} /> Remove</button>
           </article>
         ))}
-        {filteredCars.length === 0 && <div className="admin-empty-state">{cars.length ? 'No listings match that search.' : 'Your inventory is empty. Add your first car to get started.'}</div>}
+        {filteredCars.length === 0 && <div className="admin-empty-state">{cars.length === 0 ? 'Your inventory is empty. Add your first car to get started.' : statusFilter !== 'All' && !query ? `There are no ${statusFilter.toLowerCase()} cars right now.` : 'No listings match these filters.'}</div>}
       </div>
     </>
   );
@@ -167,7 +182,7 @@ function CreateCarPage({ onAdd, onDone }) {
   };
   const submit = (event) => {
     event.preventDefault();
-    onAdd({ ...form, id: Date.now(), price: Number(form.price), rating: 'New', location: 'Veloce showroom', image: preview || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85', accent: 'new' });
+    onAdd({ ...form, id: Date.now(), price: Number(form.price), rating: 'New', status: 'Available', location: 'Veloce showroom', image: preview || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85', accent: 'new' });
     onDone();
   };
 

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import AdminConsolePage from './AdminWorkspace.jsx';
 import {
   ArrowRight, BarChart3, Bell, CarFront, Check, ChevronDown, CircleHelp,
-  Eye, Heart, LayoutGrid, Leaf, Menu, Moon, MoreHorizontal, Phone, Plus,
+  Clock3, Eye, Heart, LayoutGrid, Leaf, MapPin, Menu, Moon, MoreHorizontal, Phone, Plus,
   Search, Settings2, ShieldCheck, Sparkles, Sun, Trash2, Upload, UserRound,
   X, Zap
 } from 'lucide-react';
@@ -43,6 +43,7 @@ function App() {
   const [compare, setCompare] = useState([]);
   const [theme, setTheme] = useState('light');
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showContact, setShowContact] = useState(false);
   const [toast, setToast] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -127,6 +128,10 @@ function App() {
     setToast('Car removed from the collection');
   };
 
+  const updateCarStatus = (id, status) => {
+    setCars((items) => items.map((car) => car.id === id ? { ...car, status } : car));
+  };
+
   const toggleCompare = (id) => {
     setCompare((items) => {
       if (items.includes(id)) return items.filter((item) => item !== id);
@@ -136,14 +141,14 @@ function App() {
     });
   };
 
-  const openContact = () => window.open('https://wa.me/14155550148?text=Hi%20Veloce%20Motors%2C%20I%27m%20interested%20in%20one%20of%20your%20cars.', '_blank');
+  const openContact = () => setShowContact(true);
 
   if (isAdminRoute && !isAdmin) {
     return <AdminLogin onLogin={() => { sessionStorage.setItem('veloce-admin', 'true'); setIsAdmin(true); }} />;
   }
 
   if (isAdminRoute && isAdmin) {
-    return <AdminConsolePage path={currentPath} cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onAdd={(car) => setCars((items) => [car, ...items])} onRemove={removeCar} onFeaturedChange={setFeaturedIds} onClearAlerts={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} />;
+    return <AdminConsolePage path={currentPath} cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onAdd={(car) => setCars((items) => [car, ...items])} onRemove={removeCar} onFeaturedChange={setFeaturedIds} onStatusChange={updateCarStatus} onClearAlerts={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} />;
   }
 
   return (
@@ -165,7 +170,7 @@ function App() {
           <button className="nav-item" onClick={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }}><Bell size={18} /><span>Notifications</span>{adminAlerts > 0 && <span className="nav-count">{adminAlerts}</span>}<span className="notification-dot" /></button>
         </nav>}
         <div className="sidebar-bottom">
-          <div className="help-card"><div className="help-icon"><CircleHelp size={18} /></div><div><strong>Need help?</strong><span>Talk to our team</span></div><ArrowRight size={15} /></div>
+          <button className="help-card" onClick={openContact} aria-haspopup="dialog"><div className="help-icon"><CircleHelp size={18} /></div><div><strong>Need help?</strong><span>Talk to our team</span></div><ArrowRight size={15} /></button>
           <div className="profile"><div className="avatar">JM</div><div className="profile-copy"><strong>Jordan Miller</strong><span>Member since 2021</span></div><MoreHorizontal size={18} /></div>
         </div>
       </aside>
@@ -182,10 +187,11 @@ function App() {
           <footer className="footer"><div className="footer-brand"><div className="brand-mark"><CarFront size={17} /></div><strong>veloce<span className="brand-dot">.</span></strong><span>© 2024 Veloce Motors</span></div><div className="footer-links"><span><ShieldCheck size={15} /> Secure marketplace</span><button onClick={openContact}><Phone size={15} /> Contact support</button></div></footer>
         </div>
       </main>
-      <button className="whatsapp-button" onClick={openContact}><span className="whatsapp-symbol">◔</span><span>Chat with us</span></button>
+      <button className="whatsapp-button" onClick={openContact}><Phone size={16} /><span>Contact us</span></button>
       {compare.length > 0 && activeTab !== 'Compare cars' && <button className="compare-float" onClick={() => navigateTo('Compare')}><BarChart3 size={17} /><span>{compare.length} selected</span><ArrowRight size={15} /></button>}
       {showAdmin && isAdmin && <AdminPanel cars={cars} featuredIds={featuredIds} onClose={() => { setShowAdmin(false); navigateTo('Discover'); }} onAdd={(car) => { setCars((items) => [car, ...items]); setShowAdmin(false); setToast('New car added to the collection'); }} onRemove={removeCar} onFeaturedChange={setFeaturedIds} />}
       {selectedCar && <CarDetailsModal car={selectedCar} onClose={() => setSelectedCar(null)} />}
+      {showContact && <ContactModal onClose={() => setShowContact(false)} />}
       {showSignup && <SignupModal onClose={() => { localStorage.setItem('veloce-signup-dismissed', 'true'); setShowSignup(false); }} onSubmit={(user) => { sessionStorage.setItem('veloce-member', 'true'); localStorage.setItem('veloce-signup-dismissed', 'true'); setShowSignup(false); setToast(`Welcome, ${user.name}`); }} />}
       {toast && <div className="toast"><Check size={16} /> {toast}</div>}
     </div>
@@ -211,6 +217,20 @@ function AdminLogin({ onLogin }) {
 function AdminWorkspacePage({ cars, featuredIds, adminAlerts, onAdd, onRemove, onFeaturedChange, onClose }) {
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return <main className="admin-workspace-page"><header className="admin-workspace-topbar"><div className="brand"><div className="brand-mark"><CarFront size={20} strokeWidth={2.5} /></div><span>veloce<span className="brand-dot">.</span></span></div><div className="admin-workspace-heading"><div className="eyebrow muted">SECURE ADMIN AREA</div><h1>Admin workspace</h1></div><div className="admin-topbar-actions"><span className="admin-session-status"><ShieldCheck size={15} /> Admin session active</span><button className="secondary-button" onClick={() => scrollTo('garage')}><CarFront size={14} /> Garage</button><button className="secondary-button" onClick={onClose}>Back to marketplace</button></div></header><div className="admin-workspace-body"><div className="admin-overview"><div><div className="eyebrow muted">CATALOG CONTROL CENTER</div><h2>Manage your marketplace.</h2><p>Add listings, curate the landing page, remove unavailable cars, and monitor new visitors.</p></div><div className="admin-overview-stat"><strong>{cars.length}</strong><span>Live listings</span></div><div className="admin-overview-stat"><strong>{featuredIds.length}</strong><span>Featured cars</span></div><div className="admin-overview-stat"><strong>{adminAlerts}</strong><span>New visitors</span></div></div><AdminPanel cars={cars} featuredIds={featuredIds} standalone onClose={onClose} onAdd={onAdd} onRemove={onRemove} onFeaturedChange={onFeaturedChange} /><section className="admin-garage" id="garage"><div className="garage-header"><div><div className="eyebrow muted">INVENTORY</div><h2>Your garage</h2><p>Every uploaded car in one place.</p></div><button className="primary-button" onClick={() => scrollTo('catalog-controls')}><Plus size={16} /> Add car</button></div><div className="garage-grid">{cars.map((car) => <article className="garage-card" key={car.id}><div className="garage-image"><img src={car.image} alt={car.name} /><span>{car.type}</span></div><div className="garage-card-body"><div><h3>{car.name}{car.model ? ` ${car.model}` : ''}</h3><p>{car.year} · {car.location}</p></div><strong>{formatPrice(car.price)}</strong><div className="garage-specs"><span>{car.mileage ? `${Number(car.mileage).toLocaleString()} mi` : '12,400 mi'}</span><span>{car.fuel || car.type}</span><span>{car.transmission || 'Automatic'}</span></div><button className="remove-button" onClick={() => onRemove(car.id)}><Trash2 size={14} /> Delete car</button></div></article>)}</div></section></div></main>;
+}
+
+function ContactModal({ onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  const directionsUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('1000 Van Ness Ave, San Francisco, CA');
+
+  return <div className="modal-backdrop contact-backdrop" onClick={onClose}><section className="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" onClick={(event) => event.stopPropagation()}><div className="panel-header"><div className="eyebrow muted">VELOCE MOTORS</div><button className="close-button" onClick={onClose} aria-label="Close contact details"><X size={19} /></button></div><h2 id="contact-title">Showroom &amp; Contact</h2><p className="contact-intro">Visit our San Francisco flagship or speak directly with our sales team.</p><div className="contact-details"><a className="contact-detail" href={directionsUrl} target="_blank" rel="noreferrer"><span className="contact-detail-icon"><MapPin size={18} /></span><span className="contact-detail-copy"><small>Main Flagship</small><strong>1000 Van Ness Ave,<br />San Francisco, CA</strong></span><ArrowRight size={16} /></a><div className="contact-detail"><span className="contact-detail-icon"><Clock3 size={18} /></span><span className="contact-detail-copy"><small>Hours</small><strong>Mon - Sat: 9:00 AM - 8:00 PM</strong></span></div><a className="contact-detail" href="tel:+1234567890"><span className="contact-detail-icon"><Phone size={18} /></span><span className="contact-detail-copy"><small>Direct Sales</small><strong>+1 (234) 567-890</strong></span><ArrowRight size={16} /></a></div><a className="primary-button contact-call-button" href="tel:+1234567890"><Phone size={15} /> Call direct sales</a></section></div>;
 }
 
 function SignupModal({ onClose, onSubmit }) {
