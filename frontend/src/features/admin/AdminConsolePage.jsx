@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { formatPrice } from '../../shared/format.js';
 import {
   ArrowLeft, ArrowRight, Bell, CalendarDays, CarFront, Check, CircleDollarSign, LayoutDashboard,
-  Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Upload, X
+  LogOut, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Upload, X
 } from 'lucide-react';
 
 const sections = [
@@ -15,7 +15,7 @@ const sections = [
   { path: '/admin/notifications', label: 'Notifications', icon: Bell }
 ];
 
-const getActivePath = (path) => sections.some((section) => section.path === path) ? path : '/admin';
+const getActivePath = (path) => path.startsWith('/admin/edit/') ? '/admin/edit' : sections.some((section) => section.path === path) ? path : '/admin';
 
 function SectionHeading({ eyebrow, title, description, action }) {
   return (
@@ -31,12 +31,13 @@ function SectionHeading({ eyebrow, title, description, action }) {
 }
 
 export default function AdminConsolePage({
-  path, cars, featuredIds, adminAlerts, onAdd, onRemove,
+  path, cars, carsLoading, carsError, onRetryCars, featuredIds, adminAlerts, onAdd, onUpdate, onRemove,
   testDrives, onApproveTestDrive, onDeclineTestDrive, onFeaturedChange, onStatusChange,
-  onFinancialChange, onPriceChange, onClearAlerts, onNavigate, onClose
+  onFinancialChange, onPriceChange, onClearAlerts, onNavigate, onClose, onLogout
 }) {
   const activePath = getActivePath(path);
   const [inventoryStatus, setInventoryStatus] = useState('All');
+  const editingCar = activePath === '/admin/edit' ? cars.find((car) => car.id === Number(path.split('/').pop())) : null;
 
   return (
     <div className="admin-console">
@@ -64,22 +65,24 @@ export default function AdminConsolePage({
         <div className="admin-console-sidebar-bottom">
           <span className="admin-session-status"><ShieldCheck size={15} /> Admin session active</span>
           <button className="secondary-button" onClick={onClose}><ArrowLeft size={15} /> Back to marketplace</button>
+          <button className="secondary-button" onClick={onLogout}><LogOut size={15} /> Sign out</button>
         </div>
       </aside>
 
       <main className="admin-console-main">
         <header className="admin-console-topbar">
-          <div className="admin-console-breadcrumb"><span>Veloce Motors</span><span>/</span><strong>{sections.find((section) => section.path === activePath)?.label}</strong></div>
+          <div className="admin-console-breadcrumb"><span>Veloce Motors</span><span>/</span><strong>{activePath === '/admin/edit' ? 'Edit car' : sections.find((section) => section.path === activePath)?.label}</strong></div>
           <span className="admin-session-status"><ShieldCheck size={15} /> Secure admin area</span>
         </header>
         <div className="admin-console-content">
           <div className="admin-page-transition" key={activePath}>
             {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
-            {activePath === '/admin/inventory' && <InventoryPage cars={cars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onStatusChange={onStatusChange} onFinancialChange={onFinancialChange} onPriceChange={onPriceChange} onNavigate={onNavigate} />}
+            {activePath === '/admin/inventory' && <InventoryPage cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={onRetryCars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onUpdate={onUpdate} onStatusChange={onStatusChange} onFinancialChange={onFinancialChange} onPriceChange={onPriceChange} onNavigate={onNavigate} />}
             {activePath === '/admin/test-drives' && <TestDriveQueuePage requests={testDrives} onApprove={onApproveTestDrive} onDecline={onDeclineTestDrive} />}
             {activePath === '/admin/finance' && <FinancialPage cars={cars} onNavigate={onNavigate} />}
             {activePath === '/admin/featured' && <FeaturedPage cars={cars} featuredIds={featuredIds} onFeaturedChange={onFeaturedChange} />}
             {activePath === '/admin/new' && <CreateCarPage onAdd={onAdd} onDone={() => onNavigate('/admin/inventory')} />}
+            {activePath === '/admin/edit' && (editingCar ? <EditCarPage key={editingCar.id} car={editingCar} onUpdate={onUpdate} onDone={() => onNavigate('/admin/inventory')} /> : <div className="admin-empty-state">This car could not be found. <button className="text-button" onClick={() => onNavigate('/admin/inventory')}>Return to inventory</button></div>)}
             {activePath === '/admin/notifications' && <NotificationsPage count={adminAlerts} onClear={onClearAlerts} />}
           </div>
         </div>
@@ -197,10 +200,11 @@ function FinancialPage({ cars, onNavigate }) {
   </>;
 }
 
-function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onStatusChange, onFinancialChange, onPriceChange, onNavigate }) {
+function InventoryPage({ cars, carsLoading, carsError, onRetryCars, statusFilter, onStatusFilterChange, onRemove, onStatusChange, onFinancialChange, onPriceChange, onNavigate }) {
   const [query, setQuery] = useState('');
   const [editingPriceId, setEditingPriceId] = useState(null);
   const [priceDraft, setPriceDraft] = useState('');
+  const [financialDrafts, setFinancialDrafts] = useState({});
   const filteredCars = cars.filter((car) => {
     const matchesStatus = statusFilter === 'All' || (car.status || 'Available') === statusFilter;
     const matchesQuery = `${car.name} ${car.model || ''} ${car.type} ${car.location || ''}`.toLowerCase().includes(query.toLowerCase());
@@ -215,24 +219,37 @@ function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onS
     setEditingPriceId(null);
     setPriceDraft('');
   };
-  const savePrice = (event, carId) => {
+  const savePrice = async (event, carId) => {
     event.preventDefault();
     const price = Number(priceDraft);
     if (!Number.isFinite(price) || price < 0) return;
-    onPriceChange(carId, price);
-    cancelPriceEdit();
+    if (await onPriceChange(carId, price)) cancelPriceEdit();
+  };
+  const draftKey = (carId, field) => `${carId}:${field}`;
+  const valueFor = (car, field) => financialDrafts[draftKey(car.id, field)] ?? car[field] ?? '';
+  const saveFinancial = async (car, field) => {
+    const key = draftKey(car.id, field);
+    if (!(key in financialDrafts)) return;
+    const draft = financialDrafts[key];
+    const saved = await onFinancialChange(car.id, field, draft);
+    if (saved) setFinancialDrafts((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
   };
 
   return (
     <>
       <SectionHeading eyebrow="YOUR CATALOG" title="Inventory" description={`Showing ${filteredCars.length} of ${cars.length} vehicles${statusFilter === 'All' ? '' : ` · ${statusFilter}`}.`} action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
+      {carsError ? <div className="admin-empty-state">{carsError}<button className="secondary-button" onClick={onRetryCars}>Retry</button></div> : carsLoading ? <div className="admin-empty-state">Loading inventory…</div> : <>
       <div className="admin-status-filters" role="group" aria-label="Filter inventory by status">{filterStatuses.map((status) => <button type="button" key={status} className={statusFilter === status ? 'selected' : ''} aria-pressed={statusFilter === status} onClick={() => onStatusFilterChange(status)}>{status}{status !== 'All' && <span>{cars.filter((car) => (car.status || 'Available') === status).length}</span>}</button>)}</div>
       <label className="admin-inventory-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your inventory" /></label>
       <div className="admin-inventory-list">
         {filteredCars.map((car) => (
           <article className="admin-inventory-row" key={car.id}>
             <img src={car.image} alt={car.name} />
-            <div className="admin-inventory-copy"><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><span>{car.year} · {car.type} · {car.location}</span></div>
+            <div className="admin-inventory-copy"><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><span>{car.year} · {car.type} · {car.location}</span><button type="button" className="admin-price-edit" onClick={() => onNavigate(`/admin/edit/${car.id}`)}><Pencil size={13} /><span>Edit details</span></button></div>
             <div className="admin-price-editor">
               {editingPriceId === car.id ? <form className="admin-price-form" onSubmit={(event) => savePrice(event, car.id)}>
                 <input type="number" min="0" step="1" aria-label={`New price for ${car.name}`} value={priceDraft} onChange={(event) => setPriceDraft(event.target.value)} autoFocus required />
@@ -246,23 +263,23 @@ function InventoryPage({ cars, statusFilter, onStatusFilterChange, onRemove, onS
             <label className="admin-status-control"><span>Status</span><select aria-label={`Status for ${car.name}${car.model ? ` ${car.model}` : ''}`} value={car.status || 'Available'} onChange={(event) => onStatusChange(car.id, event.target.value)}><option>Available</option><option>Reserved</option><option>Sold</option></select></label>
             <button className="remove-button" onClick={() => onRemove(car.id)}><Trash2 size={14} /> Remove</button>
             <div className="admin-inventory-financials">
-              <label>Cost basis<input type="number" min="0" step="1" aria-label={`Purchase cost for ${car.name}`} placeholder="Enter purchase cost" value={car.costBasis ?? ''} onChange={(event) => onFinancialChange(car.id, 'costBasis', event.target.value)} /></label>
+              <label>Cost basis<input type="number" min="0" step="1" aria-label={`Purchase cost for ${car.name}`} placeholder="Enter purchase cost" value={valueFor(car, 'costBasis')} onChange={(event) => setFinancialDrafts((current) => ({ ...current, [draftKey(car.id, 'costBasis')]: event.target.value }))} onBlur={() => saveFinancial(car, 'costBasis')} /></label>
               {car.status === 'Sold' && <>
-                <label>Sold for<input type="number" min="0" step="1" aria-label={`Sale price for ${car.name}`} placeholder="Enter sale price" value={car.soldPrice ?? ''} onChange={(event) => onFinancialChange(car.id, 'soldPrice', event.target.value)} /></label>
+                <label>Sold for<input type="number" min="0" step="1" aria-label={`Sale price for ${car.name}`} placeholder="Enter sale price" value={valueFor(car, 'soldPrice')} onChange={(event) => setFinancialDrafts((current) => ({ ...current, [draftKey(car.id, 'soldPrice')]: event.target.value }))} onBlur={() => saveFinancial(car, 'soldPrice')} /></label>
                 <div className="admin-car-profit"><small>Profit</small><strong>{Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice) ? formatPrice(car.soldPrice - car.costBasis) : 'Enter both figures'}</strong></div>
               </>}
-              {car.status === 'Reserved' && <label>Money pending<input type="number" min="0" step="1" aria-label={`Remaining balance for ${car.name}`} placeholder="Remaining balance" value={car.pendingAmount ?? ''} onChange={(event) => onFinancialChange(car.id, 'pendingAmount', event.target.value)} /></label>}
+              {car.status === 'Reserved' && <label>Money pending<input type="number" min="0" step="1" aria-label={`Remaining balance for ${car.name}`} placeholder="Remaining balance" value={valueFor(car, 'pendingAmount')} onChange={(event) => setFinancialDrafts((current) => ({ ...current, [draftKey(car.id, 'pendingAmount')]: event.target.value }))} onBlur={() => saveFinancial(car, 'pendingAmount')} /></label>}
             </div>
           </article>
         ))}
         {filteredCars.length === 0 && <div className="admin-empty-state">{cars.length === 0 ? 'Your inventory is empty. Add your first car to get started.' : statusFilter !== 'All' && !query ? `There are no ${statusFilter.toLowerCase()} cars right now.` : 'No listings match these filters.'}</div>}
       </div>
+      </>}
     </>
   );
 }
 
 function FeaturedPage({ cars, featuredIds, onFeaturedChange }) {
-  const toggleFeatured = (id) => onFeaturedChange(featuredIds.includes(id) ? featuredIds.filter((item) => item !== id) : [...featuredIds, id]);
 
   return (
     <>
@@ -272,7 +289,7 @@ function FeaturedPage({ cars, featuredIds, onFeaturedChange }) {
         <div className="admin-featured-list">
           {cars.map((car) => (
             <label className="admin-featured-row" key={car.id}>
-              <input type="checkbox" checked={featuredIds.includes(car.id)} onChange={() => toggleFeatured(car.id)} />
+              <input type="checkbox" checked={featuredIds.includes(car.id)} onChange={() => onFeaturedChange(car.id, !car.isFeatured)} />
               <img src={car.image} alt="" />
               <span><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><small>{car.year} · {car.type}</small></span>
               <b>{formatPrice(car.price)}</b>
@@ -285,41 +302,107 @@ function FeaturedPage({ cars, featuredIds, onFeaturedChange }) {
   );
 }
 
-function CreateCarPage({ onAdd, onDone }) {
-  const [form, setForm] = useState({ name: '', model: '', year: '2024', type: 'SUV', price: '', costBasis: '', mileage: '', fuel: 'Electric', transmission: 'Automatic', description: '', image: '' });
-  const [preview, setPreview] = useState('');
+const fallbackCarImage = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85';
+const optionalNumber = (value) => value === '' ? null : Number(value);
+
+function CarEditorForm({ car, onSave, onCancel, submitLabel }) {
+  const [form, setForm] = useState(() => ({
+    name: car?.name || '', model: car?.model || '', year: String(car?.year || 2024), type: car?.type || 'SUV',
+    price: car?.price == null ? '' : String(car.price), costBasis: car?.costBasis == null ? '' : String(car.costBasis),
+    soldPrice: car?.soldPrice == null ? '' : String(car.soldPrice), pendingAmount: car?.pendingAmount == null ? '' : String(car.pendingAmount),
+    mileage: String(car?.mileage ?? ''), fuel: car?.fuel || 'Petrol', transmission: car?.transmission || 'Automatic',
+    location: car?.location || 'Veloce showroom', description: car?.description || '',
+    status: car?.status || 'Available', isFeatured: Boolean(car?.isFeatured)
+  }));
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState(car?.image || '');
+  const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-  const handleFile = (event) => {
+
+  useEffect(() => {
+    if (!imageFile) return undefined;
+    const imageUrl = URL.createObjectURL(imageFile);
+    setPreview(imageUrl);
+    return () => URL.revokeObjectURL(imageUrl);
+  }, [imageFile]);
+
+  const handleImage = (event) => {
     const file = event.target.files?.[0];
-    if (file) {
-      update('image', file.name);
-      setPreview(URL.createObjectURL(file));
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Choose an image smaller than 10 MB.');
+      event.target.value = '';
+      return;
     }
-  };
-  const submit = (event) => {
-    event.preventDefault();
-    onAdd({ ...form, id: Date.now(), price: Number(form.price), costBasis: Number(form.costBasis), rating: 'New', status: 'Available', location: 'Veloce showroom', image: preview || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85', accent: 'new' });
-    onDone();
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      setError('Choose a JPEG, PNG, WebP, or GIF image.');
+      event.target.value = '';
+      return;
+    }
+    setError('');
+    setImageFile(file);
   };
 
-  return (
-    <>
-      <SectionHeading eyebrow="NEW LISTING" title="Add a car" description="Enter the vehicle details and publish it to your marketplace inventory." />
-      <div className="admin-create-panel">
-        <form className="admin-create-form" onSubmit={submit}>
-          <div className="admin-form-section-title"><strong>Vehicle details</strong><span>Fields marked * are required</span></div>
-          <div className="form-row"><label>Make / brand *<input value={form.name} onChange={(event) => update('name', event.target.value)} placeholder="e.g. Tesla" required /></label><label>Model *<input value={form.model} onChange={(event) => update('model', event.target.value)} placeholder="e.g. Model S Plaid" required /></label></div>
-          <div className="form-row"><label>Year<select value={form.year} onChange={(event) => update('year', event.target.value)}>{['2026', '2025', '2024', '2023', '2022'].map((year) => <option key={year}>{year}</option>)}</select></label><label>Category<select value={form.type} onChange={(event) => update('type', event.target.value)}>{['SUV', 'Sports', 'Electric', 'Sedan'].map((type) => <option key={type}>{type}</option>)}</select></label></div>
-          <div className="form-row"><label>Mileage *<input type="number" min="0" value={form.mileage} onChange={(event) => update('mileage', event.target.value)} placeholder="12000" required /></label><label>Price *<span className="input-prefix"><span>$</span><input type="number" min="1" value={form.price} onChange={(event) => update('price', event.target.value)} placeholder="85000" required /></span></label></div>
-          <label>Purchase cost *<span className="input-prefix"><span>$</span><input type="number" min="0" value={form.costBasis} onChange={(event) => update('costBasis', event.target.value)} placeholder="60000" required /></span></label>
-          <div className="form-row"><label>Fuel type<select value={form.fuel} onChange={(event) => update('fuel', event.target.value)}>{['Electric', 'Petrol', 'Diesel', 'Hybrid'].map((fuel) => <option key={fuel}>{fuel}</option>)}</select></label><label>Transmission<select value={form.transmission} onChange={(event) => update('transmission', event.target.value)}><option>Automatic</option><option>Manual</option></select></label></div>
-          <label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} placeholder="Tell buyers what makes this car special..." rows="4" /></label>
-          <label>Vehicle image<div className="upload-box admin-upload-box">{preview ? <img src={preview} alt="Selected vehicle preview" /> : <><div className="upload-icon"><Upload size={19} /></div><strong>Choose an image <span>to preview it here</span></strong><small>JPG or PNG image</small></>}<input type="file" accept="image/*" onChange={handleFile} /></div></label>
-          <div className="admin-form-actions"><button className="secondary-button" type="button" onClick={() => onDone()}>Cancel</button><button className="primary-button" type="submit"><Plus size={16} /> Publish listing</button></div>
-        </form>
-      </div>
-    </>
-  );
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsSaving(true);
+    const saved = await onSave({
+      name: form.name.trim(),
+      model: form.model.trim() || null,
+      year: Number(form.year),
+      type: form.type,
+      price: Number(form.price),
+      costBasis: optionalNumber(form.costBasis),
+      soldPrice: optionalNumber(form.soldPrice),
+      pendingAmount: optionalNumber(form.pendingAmount),
+      mileage: Number(form.mileage || 0),
+      fuel: form.fuel,
+      transmission: form.transmission,
+      rating: car?.rating ?? null,
+      location: form.location.trim() || 'Veloce showroom',
+      image: car?.imagePath || fallbackCarImage,
+      description: form.description.trim() || null,
+      accent: car?.accent || null,
+      status: form.status,
+      isFeatured: form.isFeatured,
+      imageFile
+    });
+    setIsSaving(false);
+    if (saved) onCancel();
+    else setError('The car could not be saved. Review the error message and try again.');
+  };
+
+  return <form className="admin-create-form" onSubmit={submit}>
+    <div className="admin-form-section-title"><strong>Vehicle details</strong><span>Required fields marked *</span></div>
+    <div className="form-row"><label>Make / brand *<input value={form.name} onChange={(event) => update('name', event.target.value)} required maxLength="80" /></label><label>Model<input value={form.model} onChange={(event) => update('model', event.target.value)} maxLength="120" /></label></div>
+    <div className="form-row"><label>Year *<input type="number" min="1886" max="2100" value={form.year} onChange={(event) => update('year', event.target.value)} required /></label><label>Category *<select value={form.type} onChange={(event) => update('type', event.target.value)}>{['SUV', 'Sports', 'Electric', 'Sedan'].map((type) => <option key={type}>{type}</option>)}</select></label></div>
+    <div className="form-row"><label>Mileage<input type="number" min="0" value={form.mileage} onChange={(event) => update('mileage', event.target.value)} /></label><label>Price *<span className="input-prefix"><span>$</span><input type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => update('price', event.target.value)} required /></span></label></div>
+    <div className="form-row"><label>Purchase cost<span className="input-prefix"><span>$</span><input type="number" min="0.01" step="0.01" value={form.costBasis} onChange={(event) => update('costBasis', event.target.value)} /></span></label><label>Sold for<span className="input-prefix"><span>$</span><input type="number" min="0.01" step="0.01" value={form.soldPrice} onChange={(event) => update('soldPrice', event.target.value)} /></span></label></div>
+    <div className="form-row"><label>Money pending<span className="input-prefix"><span>$</span><input type="number" min="0" step="0.01" value={form.pendingAmount} onChange={(event) => update('pendingAmount', event.target.value)} /></span></label><label>Status<select value={form.status} onChange={(event) => update('status', event.target.value)}><option>Available</option><option>Reserved</option><option>Sold</option></select></label></div>
+    <div className="form-row"><label>Fuel type<select value={form.fuel} onChange={(event) => update('fuel', event.target.value)}>{['Petrol', 'Diesel', 'Electric', 'Hybrid'].map((fuel) => <option key={fuel}>{fuel}</option>)}</select></label><label>Transmission<select value={form.transmission} onChange={(event) => update('transmission', event.target.value)}><option>Automatic</option><option>Manual</option></select></label></div>
+    <label>Location<input value={form.location} onChange={(event) => update('location', event.target.value)} maxLength="120" /></label>
+    <label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows="4" /></label>
+    <label>Vehicle image<div className="upload-box admin-upload-box">{preview ? <img src={preview} alt="Vehicle image preview" /> : <><div className="upload-icon"><Upload size={19} /></div><strong>Choose an image <span>to preview it here</span></strong><small>JPEG, PNG, WebP, or GIF · up to 10 MB</small></>}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImage} /></div></label>
+    <label className="admin-feature-toggle"><input type="checkbox" checked={form.isFeatured} onChange={(event) => update('isFeatured', event.target.checked)} /> Feature this car on the homepage</label>
+    {error && <span className="login-error" role="alert">{error}</span>}
+    <div className="admin-form-actions"><button className="secondary-button" type="button" onClick={onCancel}>Cancel</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? 'Saving…' : submitLabel}</button></div>
+  </form>;
+}
+
+function CreateCarPage({ onAdd, onDone }) {
+  return <>
+    <SectionHeading eyebrow="NEW LISTING" title="Add a car" description="Enter the vehicle details and publish it to your marketplace inventory." />
+    <div className="admin-create-panel"><CarEditorForm onSave={onAdd} onCancel={onDone} submitLabel="Publish listing" /></div>
+  </>;
+}
+
+function EditCarPage({ car, onUpdate, onDone }) {
+  return <>
+    <SectionHeading eyebrow="CATALOG UPDATE" title="Edit car" description={`Update the details for ${car.name}.`} />
+    <div className="admin-create-panel"><CarEditorForm car={car} onSave={(payload) => onUpdate(car.id, payload)} onCancel={onDone} submitLabel="Save changes" /></div>
+  </>;
 }
 
 function NotificationsPage({ count, onClear }) {

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getPathForNavItem, tabForPath } from './navigation.js';
-import { readTestDrives, TEST_DRIVES_KEY } from '../features/test-drives/storage.js';
 import { MyTestDrivesPage, TestDriveRequestModal } from '../features/test-drives/CustomerTestDrives.jsx';
 import CarCard from '../features/marketplace/CarCard.jsx';
 import ComparePage from '../features/compare/ComparePage.jsx';
 import AdminLogin from '../features/admin/AdminLogin.jsx';
 import AdminConsolePage from '../features/admin/AdminConsolePage.jsx';
 import { formatPrice } from '../shared/format.js';
+import { carApi, clearAdminToken, getAdminToken } from '../shared/api.js';
 import {
   ArrowRight, BarChart3, Bell, CarFront, Check, ChevronDown, CircleHelp,
   CalendarDays, Clock3, Eye, Heart, LayoutGrid, Leaf, MapPin, Menu, Moon, MoreHorizontal, Phone, Plus,
@@ -15,18 +15,11 @@ import {
 } from 'lucide-react';
 import '../styles.css';
 
-const initialCars = [
-  { id: 1, name: 'Audi RS e-tron GT', year: '2024', type: 'Electric', price: 142900, rating: '4.9', location: 'New York', image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1200&q=85', accent: 'silver', description: 'A breathtaking electric grand tourer with instant torque, sculpted lines, and a serene cabin.' },
-  { id: 2, name: 'Porsche 911 Carrera', year: '2023', type: 'Sports', price: 128500, rating: '4.8', location: 'Los Angeles', image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85', accent: 'red', description: 'An iconic driver\'s car, refined for every day and engineered for the moments that matter.' },
-  { id: 3, name: 'Range Rover Sport', year: '2024', type: 'SUV', price: 106750, rating: '4.7', location: 'Miami', image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=1200&q=85', accent: 'black', description: 'Commanding presence, all-terrain confidence, and an effortlessly elevated interior.' },
-  { id: 4, name: 'Mercedes-Benz G 580', year: '2024', type: 'Electric', price: 161500, rating: '4.9', location: 'Austin', image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=1200&q=85', accent: 'green', description: 'The legendary silhouette meets a new electric era with uncompromising capability.' },
-  { id: 5, name: 'BMW M4 Competition', year: '2024', type: 'Sports', price: 92500, rating: '4.8', location: 'Chicago', image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=85', accent: 'blue', description: 'Sharp, athletic, and endlessly rewarding behind the wheel.' },
-  { id: 6, name: 'Volvo XC90 Recharge', year: '2024', type: 'SUV', price: 79990, rating: '4.6', location: 'Seattle', image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1200&q=85', accent: 'white', description: 'Scandinavian calm with intelligent hybrid performance for the whole family.' }
-];
-
 export default function App() {
-  const [cars, setCars] = useState(initialCars);
-  const [testDrives, setTestDrives] = useState(readTestDrives);
+  const [cars, setCars] = useState([]);
+  const [carsLoading, setCarsLoading] = useState(true);
+  const [carsError, setCarsError] = useState('');
+  const [testDrives, setTestDrives] = useState([]);
   const [customerEmail, setCustomerEmail] = useState(() => localStorage.getItem('veloce-test-drive-email') || '');
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [filter, setFilter] = useState('All cars');
@@ -38,32 +31,55 @@ export default function App() {
   const [toast, setToast] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [featuredIds, setFeaturedIds] = useState([1, 2, 3]);
   const [selectedCar, setSelectedCar] = useState(null);
   const [testDriveCar, setTestDriveCar] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
   const [adminAlerts, setAdminAlerts] = useState(() => Number(localStorage.getItem('veloce-admin-alerts') || 0));
-  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('veloce-admin') === 'true');
+  const [isAdmin, setIsAdmin] = useState(() => Boolean(getAdminToken()));
   const isAdminRoute = currentPath.startsWith('/admin');
   const activeTab = tabForPath(currentPath);
   const approvedTestDriveCount = testDrives.filter((request) => request.status === 'approved' && request.customerEmail === customerEmail.trim().toLowerCase()).length;
 
-  useEffect(() => {
-    localStorage.setItem(TEST_DRIVES_KEY, JSON.stringify(testDrives));
-  }, [testDrives]);
+  const loadCars = async () => {
+    setCarsLoading(true);
+    setCarsError('');
+    try {
+      setCars(await carApi.list());
+    } catch (error) {
+      setCarsError(error.message);
+    } finally {
+      setCarsLoading(false);
+    }
+  };
+
+  const loadTestDrives = async (admin = false) => {
+    try {
+      const requests = admin
+        ? await carApi.listTestDrives()
+        : customerEmail.trim()
+          ? await carApi.listMyTestDrives(customerEmail.trim().toLowerCase())
+          : [];
+      setTestDrives(requests);
+    } catch (error) {
+      setToast(error.message);
+    }
+  };
 
   useEffect(() => {
-    const syncTestDrives = (event) => {
-      if (event.key !== TEST_DRIVES_KEY) return;
-      try {
-        const requests = JSON.parse(event.newValue || '[]');
-        setTestDrives(Array.isArray(requests) ? requests : []);
-      } catch {
-        setTestDrives([]);
-      }
+    loadCars();
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin) loadTestDrives();
+  }, [customerEmail, isAdmin]);
+
+  useEffect(() => {
+    const handleExpiredAdminSession = () => {
+      setIsAdmin(false);
+      setToast('Your admin session expired. Please sign in again.');
     };
-    window.addEventListener('storage', syncTestDrives);
-    return () => window.removeEventListener('storage', syncTestDrives);
+    window.addEventListener('veloce-admin-session-expired', handleExpiredAdminSession);
+    return () => window.removeEventListener('veloce-admin-session-expired', handleExpiredAdminSession);
   }, []);
 
   useEffect(() => {
@@ -109,68 +125,96 @@ export default function App() {
     const matchesWishlist = activeTab !== 'My wishlist' || wishlist.includes(car.id);
     const matchesFilter = filter === 'All cars' || car.type === filter;
     const query = search.toLowerCase();
-    return matchesWishlist && matchesFilter && `${car.name} ${car.type} ${car.location}`.toLowerCase().includes(query);
+    return matchesWishlist && matchesFilter && `${car.name} ${car.model || ''} ${car.type} ${car.location || ''}`.toLowerCase().includes(query);
   }), [activeTab, cars, filter, search, wishlist]);
 
-  const featuredCars = useMemo(() => cars.filter((car) => featuredIds.includes(car.id)), [cars, featuredIds]);
-  const featuredCar = featuredCars[featuredIndex % featuredCars.length] || cars[0];
+  const featuredCars = useMemo(() => cars.filter((car) => car.isFeatured), [cars]);
+  const carouselCars = featuredCars.length ? featuredCars : cars;
+  const featuredCar = carouselCars[featuredIndex % carouselCars.length];
 
   useEffect(() => {
-    if (!featuredCars.length) return undefined;
-    const timer = setInterval(() => setFeaturedIndex((index) => (index + 1) % featuredCars.length), 4500);
+    if (carouselCars.length < 2) return undefined;
+    const timer = setInterval(() => setFeaturedIndex((index) => (index + 1) % carouselCars.length), 4500);
     return () => clearInterval(timer);
-  }, [featuredCars.length]);
+  }, [carouselCars.length]);
 
   const toggleWishlist = (id) => {
     setWishlist((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
     setToast(wishlist.includes(id) ? 'Removed from your wishlist' : 'Saved to your wishlist');
   };
 
-  const removeCar = (id) => {
-    setCars((items) => items.filter((car) => car.id !== id));
-    setWishlist((items) => items.filter((item) => item !== id));
-    setCompare((items) => items.filter((item) => item !== id));
-    setFeaturedIds((items) => items.filter((item) => item !== id));
-    setSelectedCar(null);
-    setToast('Car removed from the collection');
+  const addCar = async ({ imageFile, ...payload }) => {
+    try {
+      if (imageFile) payload.image = (await carApi.uploadImage(imageFile)).image;
+      const car = await carApi.create(payload);
+      setCars((items) => [car, ...items]);
+      setToast('Car listing created');
+      return true;
+    } catch (error) {
+      setToast(error.message);
+      return false;
+    }
   };
 
-  const updateCarStatus = (id, status) => {
-    setCars((items) => items.map((car) => car.id === id ? { ...car, status } : car));
+  const updateCar = async (id, { imageFile, ...changes }) => {
+    try {
+      if (imageFile) changes.image = (await carApi.uploadImage(imageFile)).image;
+      const updatedCar = await carApi.update(id, changes);
+      setCars((items) => items.map((car) => car.id === id ? updatedCar : car));
+      setToast('Car listing updated');
+      return true;
+    } catch (error) {
+      setToast(error.message);
+      return false;
+    }
   };
 
-  const updateCarFinancial = (id, field, value) => {
-    const amount = value === '' ? null : Number(value);
-    setCars((items) => items.map((car) => car.id === id ? { ...car, [field]: amount } : car));
+  const removeCar = async (id) => {
+    try {
+      await carApi.remove(id);
+      setCars((items) => items.filter((car) => car.id !== id));
+      setWishlist((items) => items.filter((item) => item !== id));
+      setCompare((items) => items.filter((item) => item !== id));
+      setSelectedCar(null);
+      setToast('Car removed from the collection');
+      return true;
+    } catch (error) {
+      setToast(error.message);
+      return false;
+    }
   };
 
-  const updateCarPrice = (id, price) => {
-    setCars((items) => items.map((car) => car.id === id ? { ...car, price } : car));
+  const requestTestDrive = async (requestDetails) => {
+    try {
+      const request = await carApi.createTestDrive(requestDetails);
+      const normalizedEmail = request.customerEmail.trim().toLowerCase();
+      setTestDrives((items) => [request, ...items.filter((item) => item.id !== request.id)]);
+      localStorage.setItem('veloce-test-drive-email', normalizedEmail);
+      setCustomerEmail(normalizedEmail);
+      setTestDriveCar(null);
+      navigateTo('/test-drives');
+      setToast('Test-drive request added to the queue');
+    } catch (error) {
+      setToast(error.message);
+    }
   };
 
-  const requestTestDrive = (requestDetails) => {
-    const request = {
-      ...requestDetails,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      createdAt: Date.now(),
-      status: 'pending',
-      approvedAt: ''
-    };
-    setTestDrives((items) => [...items, request]);
-    const normalizedEmail = request.customerEmail.trim().toLowerCase();
-    localStorage.setItem('veloce-test-drive-email', normalizedEmail);
-    setCustomerEmail(normalizedEmail);
-    setTestDriveCar(null);
-    navigateTo('/test-drives');
-    setToast('Test-drive request added to the queue');
+  const approveTestDrive = async (id, approvedAt) => {
+    try {
+      const updated = await carApi.reviewTestDrive(id, 'approved', approvedAt);
+      setTestDrives((items) => items.map((request) => request.id === id ? updated : request));
+    } catch (error) {
+      setToast(error.message);
+    }
   };
 
-  const approveTestDrive = (id, approvedAt) => {
-    setTestDrives((items) => items.map((request) => request.id === id ? { ...request, status: 'approved', approvedAt, reviewedAt: Date.now() } : request));
-  };
-
-  const declineTestDrive = (id) => {
-    setTestDrives((items) => items.map((request) => request.id === id ? { ...request, status: 'declined', reviewedAt: Date.now() } : request));
+  const declineTestDrive = async (id) => {
+    try {
+      const updated = await carApi.reviewTestDrive(id, 'declined');
+      setTestDrives((items) => items.map((request) => request.id === id ? updated : request));
+    } catch (error) {
+      setToast(error.message);
+    }
   };
 
   const toggleCompare = (id) => {
@@ -184,12 +228,17 @@ export default function App() {
 
   const openContact = () => setShowContact(true);
 
+  const logoutAdmin = () => {
+    clearAdminToken();
+    setIsAdmin(false);
+  };
+
   if (isAdminRoute && !isAdmin) {
-    return <AdminLogin onLogin={() => { sessionStorage.setItem('veloce-admin', 'true'); setIsAdmin(true); }} />;
+    return <AdminLogin onLogin={async () => { setIsAdmin(true); await loadTestDrives(true); }} />;
   }
 
   if (isAdminRoute && isAdmin) {
-    return <AdminConsolePage path={currentPath} cars={cars} testDrives={testDrives} adminAlerts={adminAlerts} featuredIds={featuredIds} onApproveTestDrive={approveTestDrive} onDeclineTestDrive={declineTestDrive} onAdd={(car) => setCars((items) => [car, ...items])} onRemove={removeCar} onFeaturedChange={setFeaturedIds} onStatusChange={updateCarStatus} onFinancialChange={updateCarFinancial} onPriceChange={updateCarPrice} onClearAlerts={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} />;
+    return <><AdminConsolePage path={currentPath} cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={loadCars} testDrives={testDrives} adminAlerts={adminAlerts} featuredIds={cars.filter((car) => car.isFeatured).map((car) => car.id)} onApproveTestDrive={approveTestDrive} onDeclineTestDrive={declineTestDrive} onAdd={addCar} onUpdate={updateCar} onRemove={removeCar} onFeaturedChange={(id, isFeatured) => updateCar(id, { isFeatured })} onStatusChange={(id, status) => updateCar(id, { status })} onFinancialChange={(id, field, value) => updateCar(id, { [field]: value === '' ? null : Number(value) })} onPriceChange={(id, price) => updateCar(id, { price })} onClearAlerts={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} onLogout={logoutAdmin} />{toast && <div className="toast" role="status"><Check size={16} /> {toast}</div>}</>;
   }
 
   return (
@@ -219,11 +268,11 @@ export default function App() {
       <main className="main-content">
         <header className="topbar"><button className="mobile-menu" onClick={() => setIsSidebarOpen(!isSidebarOpen)}><Menu size={20} /></button><div className="breadcrumb"><span>Marketplace</span><span>/</span><strong>{activeTab}</strong></div><div className="topbar-actions"><button className="icon-button" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} aria-label="Toggle theme">{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}</button><button className="avatar small-avatar">JM</button></div></header>
         <div className="page-content">
-          {activeTab === 'Discover' && <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> CURATED FOR YOU</div><h1>Find a car that<br /><em>feels like you.</em></h1><p className="hero-copy">A considered collection of exceptional cars, selected for how you live and where you’re going.</p></div><div className="stats-strip"><div><strong>{cars.length * 38}+</strong><span>Cars available</span></div><div><strong>24</strong><span>Trusted brands</span></div><div><strong>4.9<span className="star">★</span></strong><span>Average rating</span></div></div></section>}
-          {activeTab === 'Discover' && <section className="hero-banner"><div className="hero-banner-copy"><div className="hero-kicker"><Zap size={14} fill="currentColor" /> TOP OF THE COLLECTION</div><h2>{featuredCar.name}<br /><span>{formatPrice(featuredCar.price)}</span></h2><p>{featuredCar.description}<br />Selected for its performance, design, and presence.</p><button className="primary-button" onClick={() => { setSearch(featuredCar.name); navigateTo('Discover'); }}>Explore model <ArrowRight size={16} /></button><div className="hero-dots">{featuredCars.map((car, index) => <button key={car.id} aria-label={`Show ${car.name}`} className={index === featuredIndex % featuredCars.length ? 'active' : ''} onClick={() => setFeaturedIndex(index)} />)}</div></div><div className="hero-car-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(208,216,216,.98) 0%, rgba(208,216,216,.83) 30%, rgba(208,216,216,.05) 61%), url('${featuredCar.image}')` }} /></section>}
+          {activeTab === 'Discover' && <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> CURATED FOR YOU</div><h1>Find a car that<br /><em>feels like you.</em></h1><p className="hero-copy">A considered collection of exceptional cars, selected for how you live and where you’re going.</p></div><div className="stats-strip"><div><strong>{cars.length}</strong><span>Cars available</span></div><div><strong>24</strong><span>Trusted brands</span></div><div><strong>4.9<span className="star">★</span></strong><span>Average rating</span></div></div></section>}
+          {activeTab === 'Discover' && featuredCar && <section className="hero-banner"><div className="hero-banner-copy"><div className="hero-kicker"><Zap size={14} fill="currentColor" /> TOP OF THE COLLECTION</div><h2>{featuredCar.name}<br /><span>{formatPrice(featuredCar.price)}</span></h2><p>{featuredCar.description}<br />Selected for its performance, design, and presence.</p><button className="primary-button" onClick={() => { setSearch(featuredCar.name); navigateTo('Discover'); }}>Explore model <ArrowRight size={16} /></button><div className="hero-dots">{carouselCars.map((car, index) => <button key={car.id} aria-label={`Show ${car.name}`} className={index === featuredIndex % carouselCars.length ? 'active' : ''} onClick={() => setFeaturedIndex(index)} />)}</div></div><div className="hero-car-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(208,216,216,.98) 0%, rgba(208,216,216,.83) 30%, rgba(208,216,216,.05) 61%), url('${featuredCar.image}')` }} /></section>}
           {activeTab === 'My test drives' ? <MyTestDrivesPage requests={testDrives} email={customerEmail} onEmailChange={(email) => { const normalizedEmail = email.trim().toLowerCase(); setCustomerEmail(normalizedEmail); localStorage.setItem('veloce-test-drive-email', normalizedEmail); }} onBrowse={() => navigateTo('Discover')} /> : activeTab !== 'Compare cars' ? <section className="collection-section"><div className="section-head"><div><div className="eyebrow muted">{activeTab === 'My wishlist' ? 'SAVED FOR LATER' : 'THE COLLECTION'}</div><h2>{activeTab === 'My wishlist' ? <>Your <em>wishlist.</em></> : <>Cars worth <em>knowing.</em></>}</h2></div><button className="text-button" onClick={() => { setFilter('All cars'); setSearch(''); navigateTo('Discover'); }}>View all <ArrowRight size={16} /></button></div>
             <div className="filter-bar"><div className="filter-tabs">{['All cars', 'Electric', 'Sports', 'SUV'].map((item) => <button key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}</button>)}</div><label className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by model, make..." /></label><button className="sort-button"><span>Sort by</span> Featured <ChevronDown size={15} /></button></div>
-            <div className="car-grid">{visibleCars.map((car, index) => <CarCard key={car.id} car={car} index={index} liked={wishlist.includes(car.id)} compared={compare.includes(car.id)} onOpen={() => setSelectedCar(car)} onLike={() => toggleWishlist(car.id)} onCompare={() => toggleCompare(car.id)} />)}{visibleCars.length === 0 && <div className="empty-state">{activeTab === 'My wishlist' ? <Heart size={25} /> : <Search size={25} />}<h3>{activeTab === 'My wishlist' ? 'Your wishlist is empty' : 'No cars found'}</h3><p>{activeTab === 'My wishlist' ? 'Like a car to save it here for later.' : 'Try another model, make, or category.'}</p></div>}</div>
+            {carsError ? <div className="empty-state"><h3>Could not load cars</h3><p>{carsError}</p><button className="secondary-button" onClick={loadCars}>Retry</button></div> : carsLoading ? <div className="empty-state">Loading cars…</div> : <div className="car-grid">{visibleCars.map((car, index) => <CarCard key={car.id} car={car} index={index} liked={wishlist.includes(car.id)} compared={compare.includes(car.id)} onOpen={() => setSelectedCar(car)} onLike={() => toggleWishlist(car.id)} onCompare={() => toggleCompare(car.id)} />)}{visibleCars.length === 0 && <div className="empty-state">{activeTab === 'My wishlist' ? <Heart size={25} /> : <Search size={25} />}<h3>{activeTab === 'My wishlist' ? 'Your wishlist is empty' : 'No cars found'}</h3><p>{activeTab === 'My wishlist' ? 'Like a car to save it here for later.' : 'Try another model, make, or category.'}</p></div>}</div>}
           </section> : <ComparePage cars={cars.filter((car) => compare.includes(car.id))} onRemove={toggleCompare} onBrowse={() => navigateTo('Discover')} />}
           <footer className="footer"><div className="footer-brand"><div className="brand-mark"><CarFront size={17} /></div><strong>veloce<span className="brand-dot">.</span></strong><span>© 2024 Veloce Motors</span></div><div className="footer-links"><span><ShieldCheck size={15} /> Secure marketplace</span><button onClick={openContact}><Phone size={15} /> Contact support</button></div></footer>
         </div>

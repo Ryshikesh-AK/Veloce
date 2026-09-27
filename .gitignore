@@ -39,3 +39,14 @@ Thumbs.db
 # Cache
 .vite/
 .eslintcache
+
+# Python backend
+backend/.venv/
+backend/veloce.db
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/uploads/
+backend/local_veloce.db
+backend/test_veloce.db
+/test_veloce.db
