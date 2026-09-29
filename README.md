@@ -40,6 +40,12 @@ npm run dev
 
 The frontend is available at `http://localhost:5173`. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point it at a different API; the default is `http://localhost:8000`.
 
+### PWA build and offline behavior
+
+Create a production frontend build with `npm run build` and preview it with `npm run preview`. The build includes the Veloce web app manifest and service worker, so browsers can install it as a desktop or mobile app. Service workers require HTTPS in production; `localhost` is allowed for local testing.
+
+The installed app caches the frontend shell and can open previously visited routes while offline. Inventory, images served by the API, authentication, uploads, test-drive requests, and admin changes remain online-only and are not queued. Configure the deployed frontend URL in the backend `CORS_ORIGINS` setting.
+
 ## Tests
 
 The API regression tests cover authentication, inventory CRUD, image uploads, and test-drive workflows. Run them from the repository root after installing backend requirements:

@@ -34,6 +34,7 @@ export default function App() {
   const [selectedCar, setSelectedCar] = useState(null);
   const [testDriveCar, setTestDriveCar] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [adminAlerts, setAdminAlerts] = useState(() => Number(localStorage.getItem('veloce-admin-alerts') || 0));
   const [isAdmin, setIsAdmin] = useState(() => Boolean(getAdminToken()));
   const isAdminRoute = currentPath.startsWith('/admin');
@@ -85,6 +86,17 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const visitorIsKnown = sessionStorage.getItem('veloce-visitor-counted') === 'true';
@@ -243,6 +255,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {!isOnline && <div className="offline-banner" role="status">You are offline. Live inventory and requests need a connection.</div>}
       <aside className={`sidebar ${isSidebarOpen ? 'is-open' : ''}`}>
         <div className="brand"><div className="brand-mark"><CarFront size={20} strokeWidth={2.5} /></div><span>veloce<span className="brand-dot">.</span></span></div>
         <div className="sidebar-label">Workspace</div>

@@ -6,5 +6,6 @@ alembic>=1.15,<2.0
 pydantic[email]>=2.10,<3.0
 pydantic-settings>=2.7,<3.0
 PyJWT>=2.10,<3.0
+cloudinary>=1.44,<2.0
 pytest>=8.3,<9.0
 httpx>=0.28,<1.0

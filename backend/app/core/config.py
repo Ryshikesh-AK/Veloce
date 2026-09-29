@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60
     admin_email: str = "admin@example.com"
     admin_password: str = "veloce-admin"
+    cloudinary_cloud_name: str | None = None
+    cloudinary_api_key: str | None = None
+    cloudinary_api_secret: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -32,13 +35,26 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
 
+    @property
+    def cloudinary_enabled(self) -> bool:
+        return all((self.cloudinary_cloud_name, self.cloudinary_api_key, self.cloudinary_api_secret))
+
     @model_validator(mode="after")
     def validate_production_secrets(self) -> "Settings":
+        cloudinary_credentials = (
+            self.cloudinary_cloud_name,
+            self.cloudinary_api_key,
+            self.cloudinary_api_secret,
+        )
+        if any(cloudinary_credentials) and not all(cloudinary_credentials):
+            raise ValueError("CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET must be set together")
         if self.is_production:
             if len(self.jwt_secret_key) < 32 or self.jwt_secret_key.startswith("development-only"):
                 raise ValueError("JWT_SECRET_KEY must be a unique 32+ character production secret")
             if self.admin_password in {"veloce-admin", "change-me"}:
                 raise ValueError("ADMIN_PASSWORD must be changed in production")
+            if not self.cloudinary_enabled:
+                raise ValueError("Cloudinary credentials are required in production for persistent image storage")
         return self
 
 

@@ -7,6 +7,8 @@ os.environ["ADMIN_PASSWORD"] = "test-password"
 from datetime import datetime, timedelta, timezone
 from starlette.routing import Mount
 
+import pytest
+from pydantic import ValidationError
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
@@ -34,6 +36,17 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
+
+
+def test_production_settings_require_cloudinary_credentials() -> None:
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError, match="Cloudinary credentials are required"):
+        Settings(
+            environment="production",
+            jwt_secret_key="production-secret-value-that-is-long-enough",
+            admin_password="non-default-admin-password",
+        )
 
 
 def setup_function() -> None:
@@ -125,6 +138,33 @@ def test_admin_image_upload_and_public_retrieval(tmp_path, monkeypatch) -> None:
         headers={**headers, "Content-Type": "image/png"},
     )
     assert invalid.status_code == 415
+
+
+def test_admin_image_upload_uses_cloudinary(monkeypatch) -> None:
+    from app.api.routes import cars
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "cloudinary_cloud_name", "test-cloud")
+    monkeypatch.setattr(settings, "cloudinary_api_key", "test-key")
+    monkeypatch.setattr(settings, "cloudinary_api_secret", "test-secret")
+    uploaded_options = {}
+
+    def fake_upload(image, **options):
+        assert image.read() == b"\x89PNG\r\n\x1a\nimage-data"
+        uploaded_options.update(options)
+        return {"secure_url": "https://res.cloudinary.com/test-cloud/image/upload/veloce/cars/test.png"}
+
+    monkeypatch.setattr(cars.uploader, "upload", fake_upload)
+    response = client.post(
+        "/api/v1/cars/images",
+        content=b"\x89PNG\r\n\x1a\nimage-data",
+        headers={"Authorization": f"Bearer {admin_token()}", "Content-Type": "image/png"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["image"].startswith("https://res.cloudinary.com/")
+    assert uploaded_options["folder"] == "veloce/cars"
+    assert uploaded_options["resource_type"] == "image"
 
 
 def test_car_with_test_drive_cannot_be_deleted() -> None:

@@ -1,10 +1,14 @@
+from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 
+import cloudinary
+from cloudinary import uploader
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.core.security import require_admin
@@ -26,6 +30,29 @@ IMAGE_SIGNATURES = {
 
 def _not_found() -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Car not found")
+
+
+def _store_car_image(content: bytes, filename: str) -> str:
+    if settings.cloudinary_enabled:
+        cloudinary.config(
+            cloud_name=settings.cloudinary_cloud_name,
+            api_key=settings.cloudinary_api_key,
+            api_secret=settings.cloudinary_api_secret,
+            secure=True,
+        )
+        result = uploader.upload(
+            BytesIO(content),
+            folder="veloce/cars",
+            public_id=Path(filename).stem,
+            resource_type="image",
+            overwrite=False,
+            format=Path(filename).suffix.lstrip("."),
+        )
+        return result["secure_url"]
+
+    settings.upload_directory.mkdir(parents=True, exist_ok=True)
+    (settings.upload_directory / filename).write_bytes(content)
+    return f"/uploads/{filename}"
 
 
 @router.get("", response_model=CarListResponse)
@@ -73,11 +100,16 @@ async def upload_car_image(request: Request) -> dict[str, str]:
     if not image_type[1](content):
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Image content does not match its file type")
 
-    settings.upload_directory.mkdir(parents=True, exist_ok=True)
     extension = next(extension for extension, value in IMAGE_SIGNATURES.items() if value == image_type)
     filename = f"{uuid4().hex}{extension}"
-    (settings.upload_directory / filename).write_bytes(content)
-    return {"image": f"/uploads/{filename}"}
+    try:
+        image_url = await run_in_threadpool(_store_car_image, content, filename)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Image storage service is unavailable",
+        ) from exc
+    return {"image": image_url}
 
 
 @router.get("/{car_id}", response_model=CarResponse)
