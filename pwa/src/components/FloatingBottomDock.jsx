@@ -1,8 +1,15 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { hapticTab } from '../utils/haptics';
 
-export default function FloatingBottomDock({ darkMode, activeTab = 'explore', onTabChange, savedCount = 1 }) {
+const TAB_PATHS = {
+  explore: '/',
+  saved: '/wishlist',
+  compare: '/compare',
+  'test-drive': '/test-drives',
+  concierge: '/contact'
+};
+
+export default function FloatingBottomDock({ darkMode, activeTab = 'explore', savedCount = 0, compareCount = 0, onNavigate }) {
   const tabs = [
     {
       id: 'explore',
@@ -29,6 +36,7 @@ export default function FloatingBottomDock({ darkMode, activeTab = 'explore', on
     {
       id: 'compare',
       label: 'Compare',
+      badge: compareCount,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
           <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round"></path>
@@ -46,9 +54,16 @@ export default function FloatingBottomDock({ darkMode, activeTab = 'explore', on
     }
   ];
 
+  const handleNavigate = (event, tab) => {
+    hapticTab();
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !onNavigate) return;
+    event.preventDefault();
+    onNavigate(tab);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none" data-purpose="floating-nav-container">
-      <div className="w-full max-w-[430px] px-3 pb-3 safe-bottom pointer-events-auto">
+      <div className="w-full max-w-[480px] px-3 pb-3 safe-bottom pointer-events-auto">
         <nav className={`backdrop-blur-xl border rounded-2xl px-2 py-2 shadow-2xl flex items-center justify-around transition-colors ${
           darkMode 
             ? 'bg-slate-900/90 border-white/10 text-white' 
@@ -57,15 +72,12 @@ export default function FloatingBottomDock({ darkMode, activeTab = 'explore', on
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
-              <motion.button
+              <a
                 key={tab.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  hapticTab();
-                  onTabChange && onTabChange(tab.id);
-                }}
-                className={`flex flex-col items-center justify-center flex-1 py-1 group transition-colors cursor-pointer ${
+                href={TAB_PATHS[tab.id]}
+                aria-current={isActive ? 'page' : undefined}
+                onClick={(event) => handleNavigate(event, tab.id)}
+                className={`flex flex-col items-center justify-center flex-1 py-1 group transition-colors cursor-pointer no-underline ${
                   isActive 
                     ? 'text-emerald-500 font-semibold' 
                     : darkMode 
@@ -93,19 +105,16 @@ export default function FloatingBottomDock({ darkMode, activeTab = 'explore', on
                 }`}>
                   {tab.label}
                 </span>
-              </motion.button>
+              </a>
             );
           })}
 
           {/* Concierge Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              hapticTab();
-              onTabChange && onTabChange('concierge');
-            }}
-            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer ${
+          <a
+            href={TAB_PATHS.concierge}
+            aria-current={activeTab === 'concierge' ? 'page' : undefined}
+            onClick={(event) => handleNavigate(event, 'concierge')}
+            className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer no-underline ${
               darkMode ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -121,7 +130,7 @@ export default function FloatingBottomDock({ darkMode, activeTab = 'explore', on
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               darkMode ? 'text-slate-400 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'
             }`}>Concierge</span>
-          </motion.button>
+          </a>
         </nav>
       </div>
     </div>

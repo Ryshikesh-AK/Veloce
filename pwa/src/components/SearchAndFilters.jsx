@@ -8,7 +8,9 @@ export default function SearchAndFilters({
   onSearchChange, 
   categories = ['All cars', 'Electric', 'Sports', 'SUV', 'Sedan', 'Hybrid'],
   selectedCategory, 
-  onSelectCategory 
+  onSelectCategory,
+  sortBy = 'featured',
+  onSortChange
 }) {
   return (
     <section className="space-y-3 pt-1" data-purpose="search-and-filters">
@@ -33,17 +35,24 @@ export default function SearchAndFilters({
           }`}
         />
         <div className="absolute inset-y-0 right-1.5 flex items-center">
-          <button 
-            onClick={() => hapticFilter()}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-colors cursor-pointer ${
+          <select
+            aria-label="Sort cars"
+            value={sortBy}
+            onChange={(event) => {
+              hapticFilter();
+              onSortChange(event.target.value);
+            }}
+            className={`max-w-[118px] appearance-none flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-colors cursor-pointer focus:outline-none ${
               darkMode ? 'bg-slate-800/80 border-white/10 text-slate-300 hover:bg-slate-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
             }`}
           >
-            <span>Featured</span>
-            <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
+            <option value="featured">Featured</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+          </select>
+          <svg className="pointer-events-none absolute right-2.5 h-3 w-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path>
+          </svg>
         </div>
       </div>
 

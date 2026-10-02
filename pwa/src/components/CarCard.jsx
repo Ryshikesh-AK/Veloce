@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { hapticCard, hapticAction } from '../utils/haptics';
 
-export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, onCompare, onViewDetails }) {
+export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggleFavorite, onCompare, onViewDetails }) {
   const {
     id,
     title,
@@ -12,8 +12,7 @@ export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, o
     location,
     description,
     price,
-    badge = 'Certified pre-owned',
-    viewersCount = 18,
+    status,
     imageUrl,
     imgObjectPos = 'object-cover'
   } = car;
@@ -36,12 +35,9 @@ export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, o
           className={`w-full h-full object-cover filter brightness-95 contrast-105 ${imgObjectPos}`} 
         />
         
-        {/* Badge */}
-        {badge && (
-          <div className={`absolute top-3 left-3 backdrop-blur-md border px-2.5 py-1 rounded-md text-[10px] font-semibold tracking-tight ${
-            darkMode ? 'bg-slate-950/80 border-white/10 text-slate-200' : 'bg-white/90 border-gray-200 text-gray-800'
-          }`}>
-            {badge}
+        {status && status !== 'Available' && (
+          <div className="absolute left-3 top-3 rounded-md border border-white/15 bg-slate-950/85 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md">
+            {status}
           </div>
         )}
 
@@ -53,7 +49,7 @@ export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, o
             hapticAction();
             onToggleFavorite && onToggleFavorite(id);
           }}
-          aria-label="Favorite car"
+          aria-label={isFavorite ? 'Remove from saved cars' : 'Save car'}
           className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-transform cursor-pointer ${
             isFavorite 
               ? 'text-rose-500 border-rose-500/30 bg-slate-950/80' 
@@ -67,12 +63,7 @@ export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, o
           </svg>
         </motion.button>
 
-        {/* Bottom Floating Chips */}
-        <div className="absolute bottom-3 inset-x-3 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-sm text-[10px] text-white font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            {viewersCount} people viewing
-          </span>
+        <div className="absolute bottom-3 right-3">
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -80,9 +71,9 @@ export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, o
               hapticAction();
               onCompare && onCompare(car);
             }}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/60 hover:bg-black/80 backdrop-blur-sm text-[10px] text-white font-medium cursor-pointer"
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md backdrop-blur-sm text-[10px] text-white font-medium cursor-pointer ${isCompared ? 'bg-emerald-700/90' : 'bg-black/60 hover:bg-black/80'}`}
           >
-            <span>+</span> Compare
+            <span>{isCompared ? '✓' : '+'}</span> {isCompared ? 'Added' : 'Compare'}
           </motion.button>
         </div>
       </div>
@@ -97,9 +88,9 @@ export default function CarCard({ darkMode, car, isFavorite, onToggleFavorite, o
         </div>
         
         <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>{year} • {category} • {location}</p>
-        <p className={`text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>
+        {description && <p className={`text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>
           {description}
-        </p>
+        </p>}
 
         {/* Card Bottom Divider & Price CTA */}
         <div className={`pt-3 mt-1 border-t flex items-center justify-between ${
