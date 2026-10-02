@@ -73,7 +73,7 @@ export default function NavigationHeader({ darkMode, onToggleDarkMode, activeTab
         </motion.button>
         <div className="relative">
           <div className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
-            darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100/80 text-emerald-800 border-emerald-300'
+            darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-[#b9f43d] border-[#141719]'
           }`}>
             JM
           </div>

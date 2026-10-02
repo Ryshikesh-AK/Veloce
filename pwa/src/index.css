@@ -3,6 +3,9 @@
 @theme {
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Newsreader, Georgia, serif;
+  --color-slate-950: #141719;
+  --color-slate-900: #30383c;
+  --color-slate-800: #30383c;
   --color-emerald-400: #b9f43d;
   --color-emerald-500: #b9f43d;
   --color-emerald-600: #b9f43d;
@@ -13,7 +16,7 @@
 :root {
   font-family: Inter, system-ui, sans-serif;
   color: #f3f5f2;
-  background: #101411;
+  background: #141719;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -31,7 +34,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  background: #101411;
+  background: #141719;
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
 }
@@ -42,9 +45,9 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    radial-gradient(ellipse at 50% -12%, rgba(64, 91, 65, 0.22), transparent 42rem),
+    radial-gradient(ellipse at 50% -12%, rgba(48, 56, 60, 0.55), transparent 42rem),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 12px),
-    #101411;
+    #141719;
 }
 
 button,
@@ -111,7 +114,7 @@ input:focus-visible {
   min-height: 100svh;
   margin-inline: auto;
   overflow: visible;
-  background: linear-gradient(180deg, #151a16 0%, #111612 36rem, #101411 100%);
+  background: linear-gradient(180deg, #141719 0%, #30383c 36rem, #141719 100%);
   box-shadow: 0 0 64px rgba(0, 0, 0, 0.32);
 }
 

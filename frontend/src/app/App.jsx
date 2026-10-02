@@ -26,7 +26,7 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [wishlist, setWishlist] = useState([2]);
   const [compare, setCompare] = useState([]);
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
   const [showContact, setShowContact] = useState(false);
   const [toast, setToast] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
