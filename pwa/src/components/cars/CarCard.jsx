@@ -1,8 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { hapticCard, hapticAction } from '../utils/haptics';
+import { hapticCard, hapticAction } from '../../utils/haptics';
+import { useCarContext } from '../../context/CarContext';
 
-export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggleFavorite, onCompare, onViewDetails }) {
+export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propIsFav, isCompared: propIsComp, onToggleFavorite, onCompare, onViewDetails }) {
+  const navigate = useNavigate();
+  const context = useCarContext();
+  const darkMode = propDarkMode ?? context.darkMode;
+
   const {
     id,
     title,
@@ -15,6 +21,27 @@ export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggl
     imageUrl,
     imgObjectPos = 'object-cover'
   } = car;
+
+  const isFavorite = propIsFav ?? context.favorites.includes(id);
+  const isCompared = propIsComp ?? context.compareIds.includes(id);
+
+  const handleToggleFav = () => {
+    hapticAction();
+    if (onToggleFavorite) onToggleFavorite(id);
+    else context.toggleFavorite(id);
+  };
+
+  const handleCompare = () => {
+    hapticAction();
+    if (onCompare) onCompare(car);
+    else context.toggleCompare(id);
+  };
+
+  const handleView = () => {
+    hapticCard();
+    if (onViewDetails) onViewDetails(car);
+    else navigate(`/car/${id}`);
+  };
 
   return (
     <motion.article 
@@ -44,10 +71,7 @@ export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggl
         <motion.button 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => {
-            hapticAction();
-            onToggleFavorite && onToggleFavorite(id);
-          }}
+          onClick={handleToggleFav}
           aria-label={isFavorite ? 'Remove from saved cars' : 'Save car'}
           className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-transform cursor-pointer ${
             isFavorite 
@@ -66,10 +90,7 @@ export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggl
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              hapticAction();
-              onCompare && onCompare(car);
-            }}
+            onClick={handleCompare}
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md backdrop-blur-sm text-[10px] text-white font-medium cursor-pointer ${isCompared ? 'bg-emerald-700/90' : 'bg-black/60 hover:bg-black/80'}`}
           >
             <span>{isCompared ? '✓' : '+'}</span> {isCompared ? 'Added' : 'Compare'}
@@ -97,10 +118,7 @@ export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggl
           </div>
           <motion.button 
             whileHover={{ x: 2 }}
-            onClick={() => {
-              hapticCard();
-              onViewDetails && onViewDetails(car);
-            }}
+            onClick={handleView}
             className="text-xs font-semibold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 group cursor-pointer"
           >
             View details

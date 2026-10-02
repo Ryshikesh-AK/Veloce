@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { hapticFilter } from '../utils/haptics';
+import { hapticFilter } from '../../utils/haptics';
 
 export default function SearchAndFilters({ 
   darkMode,

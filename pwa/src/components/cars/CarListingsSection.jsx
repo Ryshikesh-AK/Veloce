@@ -28,7 +28,7 @@ export default function CarListingsSection({
             }`}>knowing.</span></>}
           </h2>
         </div>
-        <button onClick={onBrowse} className={`text-xs font-semibold flex items-center gap-1 transition-colors pb-1 ${
+        <button onClick={onBrowse} className={`text-xs font-semibold flex items-center gap-1 transition-colors pb-1 cursor-pointer ${
           darkMode ? 'text-slate-300 hover:text-emerald-400' : 'text-gray-600 hover:text-emerald-600'
         }`}>
           {isSavedView ? 'Explore' : 'View all'}
@@ -60,7 +60,7 @@ export default function CarListingsSection({
             <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
               {isSavedView ? 'Save a car from Explore and it will appear here.' : 'Try another model or category.'}
             </p>
-            {isSavedView && <button className="mt-4 min-h-10 text-sm font-semibold text-emerald-400" onClick={onBrowse}>Browse cars →</button>}
+            {isSavedView && <button className="mt-4 min-h-10 text-sm font-semibold text-emerald-400 cursor-pointer" onClick={onBrowse}>Browse cars →</button>}
           </div>
         )}
       </div>

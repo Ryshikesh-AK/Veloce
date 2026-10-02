@@ -1,14 +1,19 @@
 import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { hapticTab } from '../utils/haptics';
+import { hapticTab } from '../../utils/haptics';
+import { useCarContext } from '../../context/CarContext';
 
-export default function NavigationHeader({ darkMode, onToggleDarkMode, activeTab, savedCount, compareCount, onNavigate }) {
+export default function NavigationHeader() {
+  const { darkMode, toggleDarkMode, favorites, compareIds } = useCarContext();
+  const navigate = useNavigate();
+
   const links = [
-    { id: 'explore', label: 'Explore' },
-    { id: 'saved', label: 'Saved', count: savedCount },
-    { id: 'compare', label: 'Compare', count: compareCount },
-    { id: 'test-drive', label: 'Test drives' },
-    { id: 'concierge', label: 'Concierge' }
+    { path: '/', label: 'Explore' },
+    { path: '/saved', label: 'Saved', count: favorites.length },
+    { path: '/compare', label: 'Compare', count: compareIds.length },
+    { path: '/test-drives', label: 'Test drives' },
+    { path: '/concierge', label: 'Concierge' }
   ];
 
   return (
@@ -21,7 +26,7 @@ export default function NavigationHeader({ darkMode, onToggleDarkMode, activeTab
       data-purpose="app-header"
     >
       {/* Brand Logo */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
           darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
         }`}>
@@ -38,9 +43,14 @@ export default function NavigationHeader({ darkMode, onToggleDarkMode, activeTab
 
       <div className="pwa-desktop-nav" aria-label="Main navigation">
         {links.map((link) => (
-          <button key={link.id} type="button" className={activeTab === link.id ? 'active' : ''} aria-current={activeTab === link.id ? 'page' : undefined} onClick={() => onNavigate(link.id)}>
-            {link.label}{link.count > 0 && <span>{link.count}</span>}
-          </button>
+          <NavLink
+            key={link.path}
+            to={link.path}
+            className={({ isActive }) => (isActive ? 'active' : '')}
+          >
+            {link.label}
+            {link.count > 0 && <span>{link.count}</span>}
+          </NavLink>
         ))}
       </div>
 
@@ -52,7 +62,7 @@ export default function NavigationHeader({ darkMode, onToggleDarkMode, activeTab
           aria-label="Toggle dark mode" 
           onClick={() => {
             hapticTab();
-            onToggleDarkMode();
+            toggleDarkMode();
           }}
           className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer shadow-xs ${
             darkMode 

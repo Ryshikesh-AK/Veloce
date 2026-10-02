@@ -334,7 +334,8 @@ input:focus-visible {
     gap: 0.35rem;
   }
 
-  .pwa-desktop-nav button {
+  .pwa-desktop-nav button,
+  .pwa-desktop-nav a {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
@@ -345,21 +346,27 @@ input:focus-visible {
     background: transparent;
     font-size: 0.8125rem;
     font-weight: 600;
+    text-decoration: none;
     transition: color .18s, background .18s;
   }
 
   .pwa-desktop-nav button:hover,
-  .pwa-desktop-nav button.active {
+  .pwa-desktop-nav button.active,
+  .pwa-desktop-nav a:hover,
+  .pwa-desktop-nav a.active {
     color: #b9f43d;
     background: rgba(185, 244, 61, .12);
   }
 
   .pwa-shell[data-theme='light'] .pwa-desktop-nav button:hover,
-  .pwa-shell[data-theme='light'] .pwa-desktop-nav button.active {
+  .pwa-shell[data-theme='light'] .pwa-desktop-nav button.active,
+  .pwa-shell[data-theme='light'] .pwa-desktop-nav a:hover,
+  .pwa-shell[data-theme='light'] .pwa-desktop-nav a.active {
     color: #253508;
   }
 
-  .pwa-desktop-nav button span {
+  .pwa-desktop-nav button span,
+  .pwa-desktop-nav a span {
     display: grid;
     min-width: 1.15rem;
     height: 1.15rem;
