@@ -15,6 +15,7 @@ export function normalizeCar(car) {
   return {
     ...car,
     price: Number(car.price),
+    currency: car.currency || 'USD',
     costBasis: car.costBasis == null ? null : Number(car.costBasis),
     soldPrice: car.soldPrice == null ? null : Number(car.soldPrice),
     pendingAmount: car.pendingAmount == null ? null : Number(car.pendingAmount),

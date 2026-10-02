@@ -1,12 +1,15 @@
-const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')).replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
 
 export function resolveImageUrl(image) {
   if (!image || /^(https?:|data:|blob:)/i.test(image)) return image || '';
-  return new URL(image.startsWith('/') ? image : `/${image}`, API_ORIGIN).toString();
+  return new URL(image.startsWith('/') ? image : `/${image}`, API_ORIGIN || window.location.origin).toString();
 }
 
 async function request(path, options = {}) {
+  if (!API_ORIGIN) {
+    throw new Error('Live inventory is not configured. Set VITE_API_BASE_URL to the Veloce API URL and redeploy.');
+  }
   let response;
   try {
     response = await fetch(`${API_ROOT}${path}`, options);
@@ -40,9 +43,11 @@ export async function listCars() {
     title: [car.name, car.model].filter(Boolean).join(' '),
     category: car.type,
     imageUrl: resolveImageUrl(car.image),
-    price: new Intl.NumberFormat('en-US', {
+    currency: car.currency || 'USD',
+    priceAmount: Number(car.price),
+    price: new Intl.NumberFormat((car.currency || 'USD') === 'GBP' ? 'en-GB' : 'en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: car.currency || 'USD',
       maximumFractionDigits: 0
     }).format(Number(car.price)),
     isFeatured: car.isFeatured,

@@ -31,6 +31,11 @@
 .details-hero { height: 300px; position: relative; overflow: hidden; background: #d2d8d8; }
 .details-hero img { width: 100%; height: 100%; object-fit: cover; }
 .details-hero-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 18px 24px 25px; background: linear-gradient(180deg, rgba(20,30,30,.27), rgba(20,25,25,.72)); color: #fff; }
+.details-image-expand { position: absolute; z-index: 1; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.65); border-radius: 4px; padding: 8px 10px; color: #fff; background: rgba(20,25,27,.72); cursor: pointer; font: inherit; font-size: 11px; }
+.details-image-expand:hover { background: rgba(20,25,27,.92); }
+.image-lightbox { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 48px; background: rgba(10,14,15,.96); cursor: zoom-out; }
+.image-lightbox img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; cursor: default; }
+.image-lightbox-close { position: absolute; top: max(18px, env(safe-area-inset-top)); right: max(18px, env(safe-area-inset-right)); z-index: 1; display: grid; place-items: center; width: 44px; height: 44px; color: #fff; background: rgba(255,255,255,.14); }
 .details-hero-overlay .condition-tag { align-self: start; }
 .details-hero-overlay .eyebrow { color: var(--accent); }
 .details-hero-overlay h2 { margin: 10px 0 7px; font-size: 28px; letter-spacing: -1px; }

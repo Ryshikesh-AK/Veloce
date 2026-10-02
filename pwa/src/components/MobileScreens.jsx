@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function ScreenHeading({ eyebrow, title, description, onBack }) {
   return (
@@ -27,22 +27,34 @@ function EmptyState({ title, description, actionLabel, onAction }) {
 }
 
 export function CarDetailsScreen({ car, isFavorite, isCompared, onBack, onFavorite, onCompare, onRequestDrive }) {
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!isImageExpanded) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsImageExpanded(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [isImageExpanded]);
+
   return (
-    <section className="space-y-5" data-purpose="car-details-screen">
-      <ScreenHeading eyebrow="VEHICLE DETAILS" title={car.title} onBack={onBack} />
-      <div className="relative overflow-hidden rounded-xl bg-slate-900">
-        <img className="aspect-[1.18] w-full object-cover" src={car.imageUrl} alt={car.title} />
+    <section className="pwa-detail-screen space-y-5" data-purpose="car-details-screen">
+      <div className="pwa-detail-heading"><ScreenHeading eyebrow="VEHICLE DETAILS" title={car.title} onBack={onBack} /></div>
+      <div className="pwa-detail-image relative overflow-hidden rounded-xl bg-slate-900">
+        <img className="pwa-detail-photo aspect-[1.18] w-full object-cover" src={car.imageUrl} alt={car.title} />
+        <button className="pwa-full-image-trigger" type="button" onClick={() => setIsImageExpanded(true)}>View full image</button>
         <span className="absolute bottom-3 left-3 rounded-md bg-black/70 px-3 py-1.5 text-xs font-semibold text-white">{car.status || car.badge || 'Available'}</span>
       </div>
-      <div className="flex items-start justify-between gap-4">
+      <div className="pwa-detail-price flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Starting from</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Price</p>
           <p className="mt-1 text-2xl font-bold text-white">{car.price}</p>
         </div>
         <div className="text-right text-sm text-emerald-300">{car.rating == null ? 'New listing' : `★ ${car.rating}`}</div>
       </div>
-      <p className="text-sm leading-6 text-slate-300">{car.description || 'Visit Veloce to learn more about this vehicle.'}</p>
-      <div className="grid grid-cols-2 gap-2 border-y border-white/10 py-4">
+      <p className="pwa-detail-description text-sm leading-6 text-slate-300">{car.description || 'Visit Veloce to learn more about this vehicle.'}</p>
+      <div className="pwa-detail-specs grid grid-cols-2 gap-2 border-y border-white/10 py-4">
         {[
           ['Year', car.year], ['Type', car.category], ['Mileage', `${Number(car.mileage || 0).toLocaleString()} mi`],
           ['Fuel', car.fuel || 'Not listed'], ['Transmission', car.transmission || 'Not listed'], ['Location', car.location || 'Veloce showroom']
@@ -50,11 +62,15 @@ export function CarDetailsScreen({ car, isFavorite, isCompared, onBack, onFavori
           <div className="py-1" key={label}><div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</div><div className="mt-1 text-sm font-medium text-slate-200">{value}</div></div>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="pwa-detail-actions grid grid-cols-2 gap-3">
         <button className="min-h-12 rounded-lg border border-white/15 px-3 text-sm font-semibold text-white" onClick={onFavorite}>{isFavorite ? '♥ Saved' : '♡ Save car'}</button>
         <button className="min-h-12 rounded-lg border border-white/15 px-3 text-sm font-semibold text-white" onClick={onCompare}>{isCompared ? '✓ In compare' : '+ Compare'}</button>
       </div>
       <button className="min-h-12 w-full rounded-lg bg-emerald-400 px-4 text-sm font-bold text-slate-950" onClick={onRequestDrive}>Request a test drive</button>
+      {isImageExpanded && <div className="pwa-image-lightbox" role="dialog" aria-modal="true" aria-label={`${car.title} full-size image`} onClick={() => setIsImageExpanded(false)}>
+        <button type="button" className="pwa-image-lightbox-close" aria-label="Close full image" onClick={() => setIsImageExpanded(false)}>Close</button>
+        <img src={car.imageUrl} alt={car.title} onClick={(event) => event.stopPropagation()} />
+      </div>}
     </section>
   );
 }
@@ -64,9 +80,9 @@ export function CompareScreen({ cars, onRemove, onBrowse }) {
     <section className="space-y-5" data-purpose="compare-screen">
       <ScreenHeading eyebrow="SIDE BY SIDE" title="Compare your shortlist." description="Keep up to three cars here while you decide." />
       {cars.length === 0 ? <EmptyState title="Your compare list is empty" description="Add cars from Explore or open a car and tap Compare." actionLabel="Browse cars" onAction={onBrowse} /> : (
-        <div className="-mx-[1.125rem] flex snap-x gap-3 overflow-x-auto px-[1.125rem] pb-3 no-scrollbar">
+        <div className="pwa-compare-list -mx-4.5 flex snap-x gap-3 overflow-x-auto px-4.5 pb-3 no-scrollbar">
           {cars.map((car) => (
-            <article className="w-[82%] min-w-[82%] snap-start overflow-hidden rounded-xl border border-white/10 bg-slate-900/70" key={car.id}>
+            <article className="pwa-compare-card w-[82%] min-w-[82%] snap-start overflow-hidden rounded-xl border border-white/10 bg-slate-900/70" key={car.id}>
               <img className="aspect-[1.55] w-full object-cover" src={car.imageUrl} alt={car.title} />
               <div className="space-y-4 p-4">
                 <div><h2 className="text-lg font-semibold text-white">{car.title}</h2><p className="mt-1 text-xl font-bold text-emerald-300">{car.price}</p></div>

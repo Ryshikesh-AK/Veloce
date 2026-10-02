@@ -10,7 +10,6 @@ export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggl
     year,
     category,
     location,
-    description,
     price,
     status,
     imageUrl,
@@ -88,16 +87,12 @@ export default function CarCard({ darkMode, car, isFavorite, isCompared, onToggl
         </div>
         
         <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>{year} • {category} • {location}</p>
-        {description && <p className={`text-xs line-clamp-2 leading-relaxed ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>
-          {description}
-        </p>}
-
         {/* Card Bottom Divider & Price CTA */}
         <div className={`pt-3 mt-1 border-t flex items-center justify-between ${
           darkMode ? 'border-white/10' : 'border-gray-100'
         }`}>
           <div>
-            <span className={`text-[10px] uppercase block font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>Starting from</span>
+            <span className={`text-[10px] uppercase block font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>Price</span>
             <span className={`text-base font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{price}</span>
           </div>
           <motion.button 

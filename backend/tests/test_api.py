@@ -78,6 +78,7 @@ def create_car() -> dict:
 
 def test_public_inventory_and_admin_guard() -> None:
     created = create_car()
+    assert created["currency"] == "USD"
     listing = client.get("/api/v1/cars", params={"search": "Roadster"})
     assert listing.status_code == 200
     assert listing.json()["items"][0]["id"] == created["id"]
@@ -91,11 +92,19 @@ def test_car_crud_and_delete() -> None:
     updated = client.patch(
         f"/api/v1/cars/{car['id']}",
         headers={"Authorization": f"Bearer {admin_token()}"},
-        json={"price": 88000, "isFeatured": True},
+        json={"price": 88000, "currency": "GBP", "isFeatured": True},
     )
     assert updated.status_code == 200
     assert updated.json()["price"] == "88000.00"
+    assert updated.json()["currency"] == "GBP"
     assert updated.json()["isFeatured"] is True
+
+    invalid_currency = client.patch(
+        f"/api/v1/cars/{car['id']}",
+        headers={"Authorization": f"Bearer {admin_token()}"},
+        json={"currency": "CAD"},
+    )
+    assert invalid_currency.status_code == 422
 
     deleted = client.delete(
         f"/api/v1/cars/{car['id']}",

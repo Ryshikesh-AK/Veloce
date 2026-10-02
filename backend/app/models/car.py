@@ -16,6 +16,7 @@ class Car(Base):
     year: Mapped[int] = mapped_column(index=True)
     type: Mapped[str] = mapped_column(String(30), index=True)
     price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    currency: Mapped[str] = mapped_column(String(3), default="USD", server_default="USD")
     cost_basis: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     sold_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     pending_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)

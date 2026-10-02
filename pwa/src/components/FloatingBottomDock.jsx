@@ -63,7 +63,7 @@ export default function FloatingBottomDock({ darkMode, activeTab = 'explore', sa
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none" data-purpose="floating-nav-container">
-      <div className="w-full max-w-[480px] px-3 pb-3 safe-bottom pointer-events-auto">
+      <div className="pwa-bottom-dock w-full px-3 pb-3 safe-bottom pointer-events-auto">
         <nav className={`backdrop-blur-xl border rounded-2xl px-2 py-2 shadow-2xl flex items-center justify-around transition-colors ${
           darkMode 
             ? 'bg-slate-900/90 border-white/10 text-white' 

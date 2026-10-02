@@ -3,6 +3,9 @@
 @theme {
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Newsreader, Georgia, serif;
+  --color-emerald-400: #b9f43d;
+  --color-emerald-500: #b9f43d;
+  --color-emerald-600: #b9f43d;
   --shadow-subtle: 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
   --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.04);
 }
@@ -102,11 +105,12 @@ input:focus-visible {
 }
 
 .pwa-shell {
-  width: min(100%, 480px);
+  width: min(100%, 1440px);
+  max-width: 1440px;
   min-height: 100vh;
   min-height: 100svh;
   margin-inline: auto;
-  overflow: clip;
+  overflow: visible;
   background: linear-gradient(180deg, #151a16 0%, #111612 36rem, #101411 100%);
   box-shadow: 0 0 64px rgba(0, 0, 0, 0.32);
 }
@@ -144,9 +148,88 @@ input:focus-visible {
   color: #202922;
 }
 
+.pwa-shell[data-theme='light'] .text-emerald-400,
+.pwa-shell[data-theme='light'] .text-emerald-500,
+.pwa-shell[data-theme='light'] .text-emerald-600 {
+  color: #253508;
+}
+
 .pwa-main {
   width: 100%;
   padding: 1.25rem 1.125rem 7.5rem;
+}
+
+.pwa-desktop-nav {
+  display: none;
+}
+
+.pwa-listing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.pwa-inventory-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pwa-inventory-error button {
+  flex: 0 0 auto;
+  min-height: 2.25rem;
+  padding: 0 .8rem;
+  border: 1px solid rgba(253, 230, 138, .35);
+  border-radius: .5rem;
+  color: #fde68a;
+  background: rgba(15, 23, 42, .28);
+  font-weight: 700;
+}
+
+.pwa-full-image-trigger {
+  position: absolute;
+  right: .75rem;
+  bottom: .75rem;
+  min-height: 2.5rem;
+  padding: 0 .9rem;
+  border: 1px solid rgba(255, 255, 255, .32);
+  border-radius: .55rem;
+  color: #fff;
+  background: rgba(2, 6, 23, .76);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.pwa-image-lightbox {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 3.5rem 1.25rem 1.25rem;
+  background: rgba(5, 8, 10, .97);
+}
+
+.pwa-image-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.pwa-image-lightbox-close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 .8rem;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: .65rem;
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
 }
 
 [data-purpose='app-header'] {
@@ -154,9 +237,20 @@ input:focus-visible {
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
-[data-purpose='hero-section'] h1 {
-  font-size: 1.5rem;
-  line-height: 1.2;
+.pwa-hero-title {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: .98;
+  letter-spacing: 0;
+}
+
+.pwa-hero-title em {
+  display: block;
+  font-family: Newsreader, Georgia, serif;
+  font-size: 1.06em;
+  font-weight: 400;
+  line-height: 1.05;
 }
 
 [data-purpose='search-and-filters'] input {
@@ -214,6 +308,132 @@ input:focus-visible {
   [data-purpose='floating-nav-container'] > div {
     width: min(100%, 480px);
     margin-bottom: 1.25rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .pwa-shell {
+    margin-block: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding-bottom: 0;
+  }
+
+  .pwa-header {
+    min-height: 76px;
+    padding: 0 max(2rem, calc((100vw - 1320px) / 2));
+  }
+
+  .pwa-desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .pwa-desktop-nav button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 42px;
+    padding: 0 0.9rem;
+    border-radius: 0.65rem;
+    color: #9ca3af;
+    background: transparent;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: color .18s, background .18s;
+  }
+
+  .pwa-desktop-nav button:hover,
+  .pwa-desktop-nav button.active {
+    color: #b9f43d;
+    background: rgba(185, 244, 61, .12);
+  }
+
+  .pwa-shell[data-theme='light'] .pwa-desktop-nav button:hover,
+  .pwa-shell[data-theme='light'] .pwa-desktop-nav button.active {
+    color: #253508;
+  }
+
+  .pwa-desktop-nav button span {
+    display: grid;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    place-items: center;
+    border-radius: 999px;
+    color: #253508;
+    background: #b9f43d;
+    font-size: .65rem;
+  }
+
+  .pwa-main {
+    width: min(100%, 1320px);
+    margin-inline: auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  .pwa-detail-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
+    grid-template-areas:
+      'heading heading'
+      'photo price'
+      'photo description'
+      'photo specs'
+      'photo actions'
+      'photo request';
+    align-items: start;
+    column-gap: 2rem;
+    row-gap: 1rem;
+  }
+
+  .pwa-detail-screen > * { margin-top: 0 !important; }
+  .pwa-detail-heading { grid-area: heading; }
+  .pwa-detail-image { grid-area: photo; position: sticky; top: 6rem; }
+  .pwa-detail-photo { aspect-ratio: 1.18; max-height: min(68vh, 680px); }
+  .pwa-detail-price { grid-area: price; }
+  .pwa-detail-description { grid-area: description; }
+  .pwa-detail-specs { grid-area: specs; }
+  .pwa-detail-actions { grid-area: actions; }
+  [data-purpose='car-details-screen'] > button:last-of-type { grid-area: request; }
+
+  [data-purpose='test-drives-screen'],
+  [data-purpose='test-drive-request-screen'],
+  [data-purpose='concierge-screen'] {
+    max-width: 820px;
+    margin-inline: auto;
+  }
+
+  .pwa-compare-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .pwa-compare-card {
+    width: auto;
+    min-width: 0;
+  }
+
+  .pwa-listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  [data-purpose='floating-nav-container'] {
+    display: none;
+  }
+
+  .pwa-hero-title {
+    font-size: 4rem;
+  }
+}
+
+@media (min-width: 1240px) {
+  .pwa-listing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

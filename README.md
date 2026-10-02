@@ -1,8 +1,9 @@
 # Veloce Motors
 
-Veloce Motors is split into two independently runnable applications:
+Veloce Motors is split into three independently runnable applications:
 
-- `frontend/`: React and Vite marketplace and admin interface.
+- `frontend/`: responsive React and Vite marketplace and admin interface.
+- `pwa/`: installable storefront for mobile and desktop, sharing live inventory and customer APIs with the web app.
 - `backend/`: FastAPI API, SQLAlchemy models, Alembic migrations, and seed script.
 
 ## Run locally
@@ -40,7 +41,18 @@ npm run dev
 
 The frontend is available at `http://localhost:5173`. Set `VITE_API_BASE_URL` in `frontend/.env.local` to point it at a different API; the default is `http://localhost:8000`.
 
-### PWA build and offline behavior
+### PWA local development
+
+```powershell
+Set-Location pwa
+npm install
+$env:VITE_API_BASE_URL = "http://localhost:8000"
+npm run dev -- --port 5174
+```
+
+The PWA is available at `http://localhost:5174`. The backend's development CORS origins include this port. Production builds must set `VITE_API_BASE_URL` to the deployed API URL and include the deployed PWA origin in backend `CORS_ORIGINS`; see [backend deployment instructions](backend/README.md).
+
+### PWA install and offline behavior
 
 Create a production frontend build with `npm run build` and preview it with `npm run preview`. The build includes the Veloce web app manifest and service worker, so browsers can install it as a desktop or mobile app. Service workers require HTTPS in production; `localhost` is allowed for local testing.
 

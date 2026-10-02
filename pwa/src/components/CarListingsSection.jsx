@@ -39,7 +39,7 @@ export default function CarListingsSection({
       </div>
 
       {/* Car Cards List */}
-      <div className="space-y-4">
+      <div className="pwa-listing-grid">
         {cars.map((car) => (
           <CarCard
             key={car.id}

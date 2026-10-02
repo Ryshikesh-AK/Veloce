@@ -8,7 +8,7 @@ import AdminConsolePage from '../features/admin/AdminConsolePage.jsx';
 import { formatPrice } from '../shared/format.js';
 import { carApi, clearAdminToken, getAdminToken } from '../shared/api.js';
 import {
-  ArrowRight, BarChart3, Bell, CarFront, Check, ChevronDown, CircleHelp,
+  ArrowRight, BarChart3, Bell, CarFront, Check, ChevronDown, CircleHelp, Expand,
   CalendarDays, Clock3, Eye, Heart, LayoutGrid, Leaf, MapPin, Menu, Moon, MoreHorizontal, Phone, Plus,
   Search, Settings2, ShieldCheck, Sparkles, Sun, Trash2, Upload, UserRound,
   X, Zap
@@ -282,9 +282,9 @@ export default function App() {
         <header className="topbar"><button className="mobile-menu" onClick={() => setIsSidebarOpen(!isSidebarOpen)}><Menu size={20} /></button><div className="breadcrumb"><span>Marketplace</span><span>/</span><strong>{activeTab}</strong></div><div className="topbar-actions"><button className="icon-button" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} aria-label="Toggle theme">{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}</button><button className="avatar small-avatar">JM</button></div></header>
         <div className="page-content">
           {activeTab === 'Discover' && <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> CURATED FOR YOU</div><h1>Find a car that<br /><em>feels like you.</em></h1><p className="hero-copy">A considered collection of exceptional cars, selected for how you live and where you’re going.</p></div><div className="stats-strip"><div><strong>{cars.length}</strong><span>Cars available</span></div><div><strong>24</strong><span>Trusted brands</span></div><div><strong>4.9<span className="star">★</span></strong><span>Average rating</span></div></div></section>}
-          {activeTab === 'Discover' && featuredCar && <section className="hero-banner"><div className="hero-banner-copy"><div className="hero-kicker"><Zap size={14} fill="currentColor" /> TOP OF THE COLLECTION</div><h2>{featuredCar.name}<br /><span>{formatPrice(featuredCar.price)}</span></h2><p>{featuredCar.description}<br />Selected for its performance, design, and presence.</p><button className="primary-button" onClick={() => { setSearch(featuredCar.name); navigateTo('Discover'); }}>Explore model <ArrowRight size={16} /></button><div className="hero-dots">{carouselCars.map((car, index) => <button key={car.id} aria-label={`Show ${car.name}`} className={index === featuredIndex % carouselCars.length ? 'active' : ''} onClick={() => setFeaturedIndex(index)} />)}</div></div><div className="hero-car-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(208,216,216,.98) 0%, rgba(208,216,216,.83) 30%, rgba(208,216,216,.05) 61%), url('${featuredCar.image}')` }} /></section>}
+          {activeTab === 'Discover' && featuredCar && <section className="hero-banner"><div className="hero-banner-copy"><div className="hero-kicker"><Zap size={14} fill="currentColor" /> TOP OF THE COLLECTION</div><h2>{featuredCar.name}<br /><span>{formatPrice(featuredCar.price, featuredCar.currency)}</span></h2><p>{featuredCar.description}<br />Selected for its performance, design, and presence.</p><button className="primary-button" onClick={() => { setSearch(featuredCar.name); navigateTo('Discover'); }}>Explore model <ArrowRight size={16} /></button><div className="hero-dots">{carouselCars.map((car, index) => <button key={car.id} aria-label={`Show ${car.name}`} className={index === featuredIndex % carouselCars.length ? 'active' : ''} onClick={() => setFeaturedIndex(index)} />)}</div></div><div className="hero-car-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(208,216,216,.98) 0%, rgba(208,216,216,.83) 30%, rgba(208,216,216,.05) 61%), url('${featuredCar.image}')` }} /></section>}
           {activeTab === 'My test drives' ? <MyTestDrivesPage requests={testDrives} email={customerEmail} onEmailChange={(email) => { const normalizedEmail = email.trim().toLowerCase(); setCustomerEmail(normalizedEmail); localStorage.setItem('veloce-test-drive-email', normalizedEmail); }} onBrowse={() => navigateTo('Discover')} /> : activeTab !== 'Compare cars' ? <section className="collection-section"><div className="section-head"><div><div className="eyebrow muted">{activeTab === 'My wishlist' ? 'SAVED FOR LATER' : 'THE COLLECTION'}</div><h2>{activeTab === 'My wishlist' ? <>Your <em>wishlist.</em></> : <>Cars worth <em>knowing.</em></>}</h2></div><button className="text-button" onClick={() => { setFilter('All cars'); setSearch(''); navigateTo('Discover'); }}>View all <ArrowRight size={16} /></button></div>
-            <div className="filter-bar"><div className="filter-tabs">{['All cars', 'Electric', 'Sports', 'SUV'].map((item) => <button key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}</button>)}</div><label className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by model, make..." /></label><button className="sort-button"><span>Sort by</span> Featured <ChevronDown size={15} /></button></div>
+            <div className="filter-bar"><div className="filter-tabs">{['All cars', 'Electric', 'Sports', 'SUV', 'MPV'].map((item) => <button key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}</button>)}</div><label className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by model, make..." /></label><button className="sort-button"><span>Sort by</span> Featured <ChevronDown size={15} /></button></div>
             {carsError ? <div className="empty-state"><h3>Could not load cars</h3><p>{carsError}</p><button className="secondary-button" onClick={loadCars}>Retry</button></div> : carsLoading ? <div className="empty-state">Loading cars…</div> : <div className="car-grid">{visibleCars.map((car, index) => <CarCard key={car.id} car={car} index={index} liked={wishlist.includes(car.id)} compared={compare.includes(car.id)} onOpen={() => setSelectedCar(car)} onLike={() => toggleWishlist(car.id)} onCompare={() => toggleCompare(car.id)} />)}{visibleCars.length === 0 && <div className="empty-state">{activeTab === 'My wishlist' ? <Heart size={25} /> : <Search size={25} />}<h3>{activeTab === 'My wishlist' ? 'Your wishlist is empty' : 'No cars found'}</h3><p>{activeTab === 'My wishlist' ? 'Like a car to save it here for later.' : 'Try another model, make, or category.'}</p></div>}</div>}
           </section> : <ComparePage cars={cars.filter((car) => compare.includes(car.id))} onRemove={toggleCompare} onBrowse={() => navigateTo('Discover')} />}
           <footer className="footer"><div className="footer-brand"><div className="brand-mark"><CarFront size={17} /></div><strong>veloce<span className="brand-dot">.</span></strong><span>© 2024 Veloce Motors</span></div><div className="footer-links"><span><ShieldCheck size={15} /> Secure marketplace</span><button onClick={openContact}><Phone size={15} /> Contact support</button></div></footer>
@@ -337,10 +337,11 @@ function AdminPanel({ cars, featuredIds, standalone = false, onClose, onAdd, onR
 }
 
 function CarDetailsModal({ car, onClose, onTestDrive }) {
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
   const specifications = [
     ['Model', car.model || car.name],
     ['Year', car.year],
-    ['Mileage', car.mileage ? `${Number(car.mileage).toLocaleString()} miles` : '12,400 miles'],
+    ['Mileage', car.mileage ? `${Number(car.mileage).toLocaleString()} miles` : 'Not listed'],
     ['Fuel type', car.fuel || car.type],
     ['Transmission', car.transmission || 'Automatic'],
     ['Location', car.location]
@@ -348,7 +349,34 @@ function CarDetailsModal({ car, onClose, onTestDrive }) {
 
   const carIsAvailable = !car.status || car.status === 'Available';
 
-  return <div className="modal-backdrop details-backdrop" onClick={onClose}><div className="details-modal" onClick={(event) => event.stopPropagation()}><button className="close-button details-close" onClick={onClose}><X size={20} /></button><div className="details-hero"><img src={car.image} alt={car.name} /><div className="details-hero-overlay"><span className="condition-tag">Certified pre-owned</span><div><div className="eyebrow">VEHICLE DETAILS</div><h2>{car.name}{car.model ? ` ${car.model}` : ''}</h2><strong>{formatPrice(car.price)}</strong></div></div></div><div className="details-body"><p className="details-description">{car.description || 'A carefully selected vehicle, inspected and prepared by the Veloce Motors team.'}</p><div className="spec-grid">{specifications.map(([label, value]) => <div className="spec-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div><div className="details-actions">{carIsAvailable ? <button className="primary-button details-contact" onClick={() => onTestDrive(car)}><CalendarDays size={15} /> Request a test drive</button> : <span className="test-drive-unavailable">This car is not currently available for test drives.</span>}<button className="secondary-button" onClick={() => window.open('https://wa.me/14155550148?text=Hi%20Veloce%20Motors%2C%20I%27m%20interested%20in%20the%20' + encodeURIComponent(car.name), '_blank')}><Phone size={15} /> Ask about this car</button></div></div></div></div>;
+  useEffect(() => {
+    if (!isImageExpanded) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsImageExpanded(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [isImageExpanded]);
+
+  return <div className="modal-backdrop details-backdrop" onClick={onClose}>
+    <div className="details-modal" onClick={(event) => event.stopPropagation()}>
+      <button className="close-button details-close" onClick={onClose} aria-label="Close vehicle details"><X size={20} /></button>
+      <div className="details-hero">
+        <img src={car.image} alt={car.name} />
+        <div className="details-hero-overlay"><span className="condition-tag">Used vehicle</span><div><div className="eyebrow">VEHICLE DETAILS</div><h2>{car.name}{car.model ? ` ${car.model}` : ''}</h2><strong>{formatPrice(car.price, car.currency)}</strong></div></div>
+        <button className="details-image-expand" type="button" onClick={() => setIsImageExpanded(true)}><Expand size={16} /> View full image</button>
+      </div>
+      <div className="details-body">
+        <p className="details-description">{car.description || 'See the seller’s description for condition and service history.'}</p>
+        <div className="spec-grid">{specifications.map(([label, value]) => <div className="spec-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
+        <div className="details-actions">{carIsAvailable ? <button className="primary-button details-contact" onClick={() => onTestDrive(car)}><CalendarDays size={15} /> Request a test drive</button> : <span className="test-drive-unavailable">This car is not currently available for test drives.</span>}<button className="secondary-button" onClick={() => window.open('https://wa.me/14155550148?text=Hi%20Veloce%20Motors%2C%20I%27m%20interested%20in%20the%20' + encodeURIComponent(car.name), '_blank')}><Phone size={15} /> Ask about this car</button></div>
+      </div>
+    </div>
+    {isImageExpanded && <div className="image-lightbox" role="dialog" aria-modal="true" aria-label={`${car.name} full-size image`} onClick={(event) => { event.stopPropagation(); setIsImageExpanded(false); }}>
+      <button className="close-button image-lightbox-close" type="button" aria-label="Close full image" onClick={() => setIsImageExpanded(false)}><X size={22} /></button>
+      <img src={car.image} alt={`${car.name}${car.model ? ` ${car.model}` : ''}`} onClick={(event) => event.stopPropagation()} />
+    </div>}
+  </div>;
 }
 
 

@@ -39,14 +39,15 @@ This setup uses Cloudflare Pages for the Vite frontend, Render Free for the API,
 - Build command: `pip install -r requirements.txt`.
 - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
 - Set `ENVIRONMENT=production`, `DATABASE_URL`, `JWT_SECRET_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CORS_ORIGINS`, and the three `CLOUDINARY_*` variables.
-- Use Neon's PostgreSQL connection URL with the SQLAlchemy scheme `postgresql+psycopg://` and retain `sslmode=require`. Set `CORS_ORIGINS` to a JSON array containing the deployed Pages origin, for example `["https://your-site.pages.dev"]`.
+- Use Neon's PostgreSQL connection URL with the SQLAlchemy scheme `postgresql+psycopg://` and retain `sslmode=require`. Set `CORS_ORIGINS` to a JSON array containing both deployed Pages origins, for example `["https://web-site.pages.dev","https://pwa-site.pages.dev"]`.
 - Do not use Render's free PostgreSQL database; it expires after 30 days. Apply schema migrations from a local checkout configured with the same `DATABASE_URL` by running `alembic upgrade head` from the `backend` directory.
 
-### Cloudflare Pages frontend
+### Cloudflare Pages apps
 
-- Connect the same repository with root directory `frontend`, build command `npm run build`, and output directory `dist`.
-- Set `VITE_API_BASE_URL` to the Render service URL, without a trailing slash.
-- Set the final Pages origin in the Render `CORS_ORIGINS` value, then redeploy the API if needed.
+- Create one Pages project with root directory `frontend`, build command `npm run build`, and output directory `dist` for the web marketplace/admin.
+- Create another Pages project with root directory `pwa`, build command `npm run build`, and output directory `dist` for the responsive installable storefront.
+- Set `VITE_API_BASE_URL` to the Render service URL, without a trailing slash, in the production build environment for both projects. The PWA intentionally has no production localhost fallback.
+- Add both final Pages origins to Render `CORS_ORIGINS`, then redeploy the API if needed.
 
 Render's free API sleeps after 15 minutes without requests and may take about a minute to wake. Uploaded images are stored remotely in Cloudinary when all three Cloudinary credentials are set; local development without those credentials continues to use `UPLOAD_DIRECTORY`.
 

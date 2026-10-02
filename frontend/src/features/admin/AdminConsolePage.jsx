@@ -158,45 +158,56 @@ function TestDriveQueuePage({ requests, onApprove, onDecline }) {
 }
 
 function FinancialPage({ cars, onNavigate }) {
-  const recordedSales = cars.filter((car) => car.status === 'Sold' && Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice));
-  const realizedProfit = recordedSales.reduce((total, car) => total + car.soldPrice - car.costBasis, 0);
-  const reservedCars = cars.filter((car) => car.status === 'Reserved');
-  const recordedPending = reservedCars.filter((car) => Number.isFinite(car.pendingAmount));
-  const pendingMoney = recordedPending.reduce((total, car) => total + car.pendingAmount, 0);
-  const soldCars = cars.filter((car) => car.status === 'Sold' && Number.isFinite(car.soldPrice));
-  const soldRevenue = soldCars.reduce((total, car) => total + car.soldPrice, 0);
-  const availableCars = cars.filter((car) => (car.status || 'Available') === 'Available' && Number.isFinite(car.price));
-  const availableValue = availableCars.reduce((total, car) => total + car.price, 0);
-  const pieItems = [
-    { label: 'Pending money', value: pendingMoney, note: `${recordedPending.length} of ${reservedCars.length} reserved cars recorded`, tone: 'pending', color: '#c18d30' },
-    { label: 'Sold revenue', value: soldRevenue, note: `${soldCars.length} sale prices recorded`, tone: 'revenue', color: '#318e82' },
-    { label: 'Available stock', value: availableValue, note: 'Asking value of available listings', tone: 'stock', color: '#63869c' }
-  ];
-  const pieTotal = pieItems.reduce((total, item) => total + item.value, 0);
-  let pieOffset = 0;
-  const pieStops = pieItems.map((item) => {
-    const start = pieOffset;
-    pieOffset += pieTotal > 0 ? item.value / pieTotal * 100 : 0;
-    return `${item.color} ${start}% ${pieOffset}%`;
+  const currencies = [...new Set(cars.map((car) => car.currency || 'USD'))];
+  const summaries = currencies.map((currency) => {
+    const currencyCars = cars.filter((car) => (car.currency || 'USD') === currency);
+    const recordedSales = currencyCars.filter((car) => car.status === 'Sold' && Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice));
+    const realizedProfit = recordedSales.reduce((total, car) => total + car.soldPrice - car.costBasis, 0);
+    const reservedCars = currencyCars.filter((car) => car.status === 'Reserved');
+    const recordedPending = reservedCars.filter((car) => Number.isFinite(car.pendingAmount));
+    const pendingMoney = recordedPending.reduce((total, car) => total + car.pendingAmount, 0);
+    const soldCars = currencyCars.filter((car) => car.status === 'Sold' && Number.isFinite(car.soldPrice));
+    const soldRevenue = soldCars.reduce((total, car) => total + car.soldPrice, 0);
+    const availableCars = currencyCars.filter((car) => (car.status || 'Available') === 'Available' && Number.isFinite(car.price));
+    const availableValue = availableCars.reduce((total, car) => total + car.price, 0);
+    const pieItems = [
+      { label: 'Pending money', value: pendingMoney, note: `${recordedPending.length} of ${reservedCars.length} reserved cars recorded`, tone: 'pending', color: '#c18d30' },
+      { label: 'Sold revenue', value: soldRevenue, note: `${soldCars.length} sale prices recorded`, tone: 'revenue', color: '#318e82' },
+      { label: 'Available stock', value: availableValue, note: 'Asking value of available listings', tone: 'stock', color: '#63869c' }
+    ];
+    const pieTotal = pieItems.reduce((total, item) => total + item.value, 0);
+    let pieOffset = 0;
+    const pieStops = pieItems.map((item) => {
+      const start = pieOffset;
+      pieOffset += pieTotal > 0 ? item.value / pieTotal * 100 : 0;
+      return `${item.color} ${start}% ${pieOffset}%`;
+    });
+    return {
+      currency,
+      recordedSales,
+      realizedProfit,
+      pieItems,
+      pieTotal,
+      pieStyle: { background: pieTotal > 0 ? `conic-gradient(${pieStops.join(', ')})` : 'var(--surface-soft)' }
+    };
   });
-  const pieStyle = { background: pieTotal > 0 ? `conic-gradient(${pieStops.join(', ')})` : 'var(--surface-soft)' };
 
   return <>
     <SectionHeading eyebrow="MONEY OVERVIEW" title="Financial overview" description="Track realized profit, pending balances, sold revenue, and available stock." action={<button className="secondary-button" onClick={() => onNavigate('/admin/inventory')}><CarFront size={15} /> Update car amounts</button>} />
-    <section className="admin-financial-picture" aria-labelledby="admin-financial-title">
-      <div className="admin-financial-heading"><div><div className="eyebrow muted">FINANCIAL BREAKDOWN</div><h3 id="admin-financial-title">Portfolio breakdown</h3></div><span>Amounts in USD</span></div>
+    {summaries.map(({ currency, recordedSales, realizedProfit, pieItems, pieTotal, pieStyle }) => <section className="admin-financial-picture" key={currency} aria-label={`${currency} financial breakdown`}>
+      <div className="admin-financial-heading"><div><div className="eyebrow muted">FINANCIAL BREAKDOWN</div><h3>Portfolio breakdown · {currency}</h3></div><span>Amounts in {currency}</span></div>
       <div className="admin-pie-layout">
-        <div className="admin-pie-chart" role="img" aria-label={pieItems.map((item) => `${item.label}: ${formatPrice(item.value)}`).join('. ')} style={pieStyle} />
+        <div className="admin-pie-chart" role="img" aria-label={pieItems.map((item) => `${item.label}: ${formatPrice(item.value, currency)}`).join('. ')} style={pieStyle} />
         <div className="admin-pie-legend">
           {pieItems.map((item) => <div className={`admin-pie-legend-row ${item.tone}`} key={item.label}>
             <span className="admin-pie-swatch" />
             <span className="admin-pie-legend-copy"><strong>{item.label}</strong><small>{item.note}</small></span>
-            <strong className="admin-pie-value">{formatPrice(item.value)}<small>{pieTotal > 0 ? `${(item.value / pieTotal * 100).toFixed(1)}%` : '0.0%'}</small></strong>
+            <strong className="admin-pie-value">{formatPrice(item.value, currency)}<small>{pieTotal > 0 ? `${(item.value / pieTotal * 100).toFixed(1)}%` : '0.0%'}</small></strong>
           </div>)}
         </div>
       </div>
-      <div className="admin-realized-profit"><span><strong>Realized profit</strong><small>{recordedSales.length} complete sold-car records</small></span><strong>{formatPrice(realizedProfit)}</strong></div>
-    </section>
+      <div className="admin-realized-profit"><span><strong>Realized profit</strong><small>{recordedSales.length} complete sold-car records</small></span><strong>{formatPrice(realizedProfit, currency)}</strong></div>
+    </section>)}
   </>;
 }
 
@@ -256,7 +267,7 @@ function InventoryPage({ cars, carsLoading, carsError, onRetryCars, statusFilter
                 <button type="submit" className="admin-price-save" aria-label={`Save price for ${car.name}`}><Check size={14} /></button>
                 <button type="button" className="admin-price-cancel" onClick={cancelPriceEdit} aria-label={`Cancel price edit for ${car.name}`}><X size={14} /></button>
               </form> : <>
-                <strong className="admin-inventory-price">{formatPrice(car.price)}</strong>
+                <strong className="admin-inventory-price">{formatPrice(car.price, car.currency)}</strong>
                 <button type="button" className="admin-price-edit" onClick={() => beginPriceEdit(car)} aria-label={`Edit price for ${car.name}`}><Pencil size={13} /><span>Edit</span></button>
               </>}
             </div>
@@ -266,7 +277,7 @@ function InventoryPage({ cars, carsLoading, carsError, onRetryCars, statusFilter
               <label>Cost basis<input type="number" min="0" step="1" aria-label={`Purchase cost for ${car.name}`} placeholder="Enter purchase cost" value={valueFor(car, 'costBasis')} onChange={(event) => setFinancialDrafts((current) => ({ ...current, [draftKey(car.id, 'costBasis')]: event.target.value }))} onBlur={() => saveFinancial(car, 'costBasis')} /></label>
               {car.status === 'Sold' && <>
                 <label>Sold for<input type="number" min="0" step="1" aria-label={`Sale price for ${car.name}`} placeholder="Enter sale price" value={valueFor(car, 'soldPrice')} onChange={(event) => setFinancialDrafts((current) => ({ ...current, [draftKey(car.id, 'soldPrice')]: event.target.value }))} onBlur={() => saveFinancial(car, 'soldPrice')} /></label>
-                <div className="admin-car-profit"><small>Profit</small><strong>{Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice) ? formatPrice(car.soldPrice - car.costBasis) : 'Enter both figures'}</strong></div>
+                <div className="admin-car-profit"><small>Profit</small><strong>{Number.isFinite(car.costBasis) && Number.isFinite(car.soldPrice) ? formatPrice(car.soldPrice - car.costBasis, car.currency) : 'Enter both figures'}</strong></div>
               </>}
               {car.status === 'Reserved' && <label>Money pending<input type="number" min="0" step="1" aria-label={`Remaining balance for ${car.name}`} placeholder="Remaining balance" value={valueFor(car, 'pendingAmount')} onChange={(event) => setFinancialDrafts((current) => ({ ...current, [draftKey(car.id, 'pendingAmount')]: event.target.value }))} onBlur={() => saveFinancial(car, 'pendingAmount')} /></label>}
             </div>
@@ -292,7 +303,7 @@ function FeaturedPage({ cars, featuredIds, onFeaturedChange }) {
               <input type="checkbox" checked={featuredIds.includes(car.id)} onChange={() => onFeaturedChange(car.id, !car.isFeatured)} />
               <img src={car.image} alt="" />
               <span><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><small>{car.year} · {car.type}</small></span>
-              <b>{formatPrice(car.price)}</b>
+              <b>{formatPrice(car.price, car.currency)}</b>
             </label>
           ))}
           {cars.length === 0 && <div className="admin-empty-state">Add cars to your inventory before featuring them.</div>}
@@ -307,7 +318,7 @@ const optionalNumber = (value) => value === '' ? null : Number(value);
 
 function CarEditorForm({ car, onSave, onCancel, submitLabel }) {
   const [form, setForm] = useState(() => ({
-    name: car?.name || '', model: car?.model || '', year: String(car?.year || 2024), type: car?.type || 'SUV',
+    name: car?.name || '', model: car?.model || '', year: String(car?.year || 2024), type: car?.type || 'SUV', currency: car?.currency || 'USD',
     price: car?.price == null ? '' : String(car.price), costBasis: car?.costBasis == null ? '' : String(car.costBasis),
     soldPrice: car?.soldPrice == null ? '' : String(car.soldPrice), pendingAmount: car?.pendingAmount == null ? '' : String(car.pendingAmount),
     mileage: String(car?.mileage ?? ''), fuel: car?.fuel || 'Petrol', transmission: car?.transmission || 'Automatic',
@@ -354,6 +365,7 @@ function CarEditorForm({ car, onSave, onCancel, submitLabel }) {
       year: Number(form.year),
       type: form.type,
       price: Number(form.price),
+      currency: form.currency,
       costBasis: optionalNumber(form.costBasis),
       soldPrice: optionalNumber(form.soldPrice),
       pendingAmount: optionalNumber(form.pendingAmount),
@@ -377,10 +389,11 @@ function CarEditorForm({ car, onSave, onCancel, submitLabel }) {
   return <form className="admin-create-form" onSubmit={submit}>
     <div className="admin-form-section-title"><strong>Vehicle details</strong><span>Required fields marked *</span></div>
     <div className="form-row"><label>Make / brand *<input value={form.name} onChange={(event) => update('name', event.target.value)} required maxLength="80" /></label><label>Model<input value={form.model} onChange={(event) => update('model', event.target.value)} maxLength="120" /></label></div>
-    <div className="form-row"><label>Year *<input type="number" min="1886" max="2100" value={form.year} onChange={(event) => update('year', event.target.value)} required /></label><label>Category *<select value={form.type} onChange={(event) => update('type', event.target.value)}>{['SUV', 'Sports', 'Electric', 'Sedan'].map((type) => <option key={type}>{type}</option>)}</select></label></div>
-    <div className="form-row"><label>Mileage<input type="number" min="0" value={form.mileage} onChange={(event) => update('mileage', event.target.value)} /></label><label>Price *<span className="input-prefix"><span>$</span><input type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => update('price', event.target.value)} required /></span></label></div>
-    <div className="form-row"><label>Purchase cost<span className="input-prefix"><span>$</span><input type="number" min="0.01" step="0.01" value={form.costBasis} onChange={(event) => update('costBasis', event.target.value)} /></span></label><label>Sold for<span className="input-prefix"><span>$</span><input type="number" min="0.01" step="0.01" value={form.soldPrice} onChange={(event) => update('soldPrice', event.target.value)} /></span></label></div>
-    <div className="form-row"><label>Money pending<span className="input-prefix"><span>$</span><input type="number" min="0" step="0.01" value={form.pendingAmount} onChange={(event) => update('pendingAmount', event.target.value)} /></span></label><label>Status<select value={form.status} onChange={(event) => update('status', event.target.value)}><option>Available</option><option>Reserved</option><option>Sold</option></select></label></div>
+    <div className="form-row"><label>Year *<input type="number" min="1886" max="2100" value={form.year} onChange={(event) => update('year', event.target.value)} required /></label><label>Category *<select value={form.type} onChange={(event) => update('type', event.target.value)}>{['SUV', 'MPV', 'Sports', 'Electric', 'Sedan'].map((type) => <option key={type}>{type}</option>)}</select></label></div>
+    <div className="form-row"><label>Mileage<input type="number" min="0" value={form.mileage} onChange={(event) => update('mileage', event.target.value)} /></label><label>Currency<select value={form.currency} onChange={(event) => update('currency', event.target.value)}><option value="USD">USD</option><option value="GBP">GBP</option></select></label></div>
+    <div className="form-row"><label>Price *<span className="input-prefix"><span>{form.currency === 'GBP' ? '£' : '$'}</span><input type="number" min="0.01" step="0.01" value={form.price} onChange={(event) => update('price', event.target.value)} required /></span></label><label>Purchase cost<span className="input-prefix"><span>{form.currency === 'GBP' ? '£' : '$'}</span><input type="number" min="0.01" step="0.01" value={form.costBasis} onChange={(event) => update('costBasis', event.target.value)} /></span></label></div>
+    <div className="form-row"><label>Sold for<span className="input-prefix"><span>{form.currency === 'GBP' ? '£' : '$'}</span><input type="number" min="0.01" step="0.01" value={form.soldPrice} onChange={(event) => update('soldPrice', event.target.value)} /></span></label><label>Money pending<span className="input-prefix"><span>{form.currency === 'GBP' ? '£' : '$'}</span><input type="number" min="0" step="0.01" value={form.pendingAmount} onChange={(event) => update('pendingAmount', event.target.value)} /></span></label></div>
+    <label>Status<select value={form.status} onChange={(event) => update('status', event.target.value)}><option>Available</option><option>Reserved</option><option>Sold</option></select></label>
     <div className="form-row"><label>Fuel type<select value={form.fuel} onChange={(event) => update('fuel', event.target.value)}>{['Petrol', 'Diesel', 'Electric', 'Hybrid'].map((fuel) => <option key={fuel}>{fuel}</option>)}</select></label><label>Transmission<select value={form.transmission} onChange={(event) => update('transmission', event.target.value)}><option>Automatic</option><option>Manual</option></select></label></div>
     <label>Location<input value={form.location} onChange={(event) => update('location', event.target.value)} maxLength="120" /></label>
     <label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows="4" /></label>

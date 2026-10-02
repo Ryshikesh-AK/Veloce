@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     auto_create_tables: bool = False
     upload_directory: Path = Path("./uploads")
     cors_origins: list[str] = Field(
-        default_factory=lambda: ["http://localhost:5173", "http://localhost:3000"]
+        default_factory=lambda: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
     )
     jwt_secret_key: str = "development-only-secret-change-before-production-32"
     jwt_algorithm: str = "HS256"

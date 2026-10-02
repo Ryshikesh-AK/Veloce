@@ -79,9 +79,10 @@ const CARS_DATA = [
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('veloce-pwa-theme') !== 'light');
-  const [cars, setCars] = useState(CARS_DATA);
+  const [cars, setCars] = useState([]);
   const [inventoryError, setInventoryError] = useState('');
   const [carsLoading, setCarsLoading] = useState(true);
+  const [inventoryRetryCount, setInventoryRetryCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All cars');
   const [sortBy, setSortBy] = useState('featured');
@@ -100,7 +101,7 @@ export default function App() {
     let isCurrent = true;
     listCars()
       .then((inventory) => {
-        if (isCurrent && inventory.length) {
+        if (isCurrent) {
           setCars(inventory);
           const sampleTitles = new Map(CARS_DATA.map((car) => [car.id, car.title.toLowerCase()]));
           setFavorites((previous) => previous.map((id) => {
@@ -110,14 +111,14 @@ export default function App() {
           }));
         }
       })
-      .catch(() => {
-        if (isCurrent) setInventoryError('Showing saved sample inventory. Connect to the Veloce service to load live cars.');
+      .catch((error) => {
+        if (isCurrent) setInventoryError(error.message);
       })
       .finally(() => {
         if (isCurrent) setCarsLoading(false);
       });
     return () => { isCurrent = false; };
-  }, []);
+  }, [inventoryRetryCount]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -196,8 +197,8 @@ export default function App() {
       return matchesCategory && matchesSearch;
     });
     return [...matchingCars].sort((first, second) => {
-      if (sortBy === 'price-asc') return Number(first.price.replace(/[^\d.]/g, '')) - Number(second.price.replace(/[^\d.]/g, ''));
-      if (sortBy === 'price-desc') return Number(second.price.replace(/[^\d.]/g, '')) - Number(first.price.replace(/[^\d.]/g, ''));
+      if (sortBy === 'price-asc') return first.priceAmount - second.priceAmount;
+      if (sortBy === 'price-desc') return second.priceAmount - first.priceAmount;
       return Number(Boolean(second.isFeatured)) - Number(Boolean(first.isFeatured));
     });
   }, [activeTab, cars, favorites, searchQuery, selectedCategory, sortBy]);
@@ -245,20 +246,24 @@ export default function App() {
   };
 
   return (
-    <div data-theme={darkMode ? 'dark' : 'light'} className={`pwa-shell w-full max-w-[480px] min-h-screen flex flex-col relative pb-32 shadow-2xl transition-colors duration-300 ${
+    <div data-theme={darkMode ? 'dark' : 'light'} className={`pwa-shell w-full min-h-screen flex flex-col relative pb-32 transition-colors duration-300 ${
       darkMode 
-        ? 'bg-slate-950 text-slate-100 border-x border-white/10 selection:bg-emerald-500 selection:text-white' 
-        : 'bg-[#FBFBFC] text-slate-900 border-x border-gray-200 selection:bg-emerald-500 selection:text-white'
+        ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
+        : 'bg-[#FBFBFC] text-slate-900 selection:bg-emerald-500 selection:text-slate-950'
     }`}>
       {/* Brand Navigation Header */}
       <NavigationHeader
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode((prev) => !prev)}
+        activeTab={activeTab}
+        savedCount={favorites.length}
+        compareCount={compareIds.length}
+        onNavigate={navigateTo}
       />
 
       {/* Main App Content */}
       <main className="pwa-main flex-1 space-y-4 pt-3" data-purpose="main-content">
-        {inventoryError && <div className="rounded-lg border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100" role="status">{inventoryError}</div>}
+        {inventoryError && <div className="pwa-inventory-error rounded-lg border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100" role="status"><span>{inventoryError}</span><button type="button" onClick={() => { setCarsLoading(true); setInventoryError(''); setInventoryRetryCount((count) => count + 1); }}>Retry</button></div>}
         {carsLoading && <div className="text-xs text-slate-400" role="status">Loading Veloce inventory…</div>}
 
         {testDriveCar ? (

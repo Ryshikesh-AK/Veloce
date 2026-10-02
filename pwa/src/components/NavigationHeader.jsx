@@ -2,10 +2,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { hapticTab } from '../utils/haptics';
 
-export default function NavigationHeader({ darkMode, onToggleDarkMode }) {
+export default function NavigationHeader({ darkMode, onToggleDarkMode, activeTab, savedCount, compareCount, onNavigate }) {
+  const links = [
+    { id: 'explore', label: 'Explore' },
+    { id: 'saved', label: 'Saved', count: savedCount },
+    { id: 'compare', label: 'Compare', count: compareCount },
+    { id: 'test-drive', label: 'Test drives' },
+    { id: 'concierge', label: 'Concierge' }
+  ];
+
   return (
     <nav 
-      className={`px-5 pt-3 pb-2 flex items-center justify-between sticky top-0 z-20 backdrop-blur-xl transition-colors ${
+      className={`pwa-header px-5 pt-3 pb-2 flex items-center justify-between sticky top-0 z-20 backdrop-blur-xl transition-colors ${
         darkMode 
           ? 'bg-slate-950/85 border-b border-white/10 text-white' 
           : 'bg-[#FBFBFC]/90 border-b border-gray-100 text-gray-900'
@@ -26,6 +34,14 @@ export default function NavigationHeader({ darkMode, onToggleDarkMode }) {
         <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           veloce<span className="text-emerald-500">.</span>
         </span>
+      </div>
+
+      <div className="pwa-desktop-nav" aria-label="Main navigation">
+        {links.map((link) => (
+          <button key={link.id} type="button" className={activeTab === link.id ? 'active' : ''} aria-current={activeTab === link.id ? 'page' : undefined} onClick={() => onNavigate(link.id)}>
+            {link.label}{link.count > 0 && <span>{link.count}</span>}
+          </button>
+        ))}
       </div>
 
       {/* Action Icons: Dark Mode & User Profile */}
