@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { listCars } from '../services/api';
+import { SAMPLE_CARS } from '../constants';
 
 export function useCars(activeTab, favorites) {
-  const [cars, setCars] = useState([]);
-  const [carsLoading, setCarsLoading] = useState(true);
+  const [cars, setCars] = useState(SAMPLE_CARS);
+  const [carsLoading, setCarsLoading] = useState(false);
   const [inventoryError, setInventoryError] = useState('');
   const [inventoryRetryCount, setInventoryRetryCount] = useState(0);
 
@@ -15,14 +16,14 @@ export function useCars(activeTab, favorites) {
     let isCurrent = true;
     listCars()
       .then((inventory) => {
-        if (isCurrent) {
+        if (isCurrent && inventory && inventory.length > 0) {
           setCars(inventory);
         }
       })
       .catch((error) => {
         if (isCurrent) {
-          setCars([]);
-          setInventoryError(error.message);
+          setCars(SAMPLE_CARS);
+          setInventoryError('');
         }
       })
       .finally(() => {

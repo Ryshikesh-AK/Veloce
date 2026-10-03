@@ -1,3 +1,5 @@
+import { SAMPLE_CARS } from '../constants';
+
 const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')).replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
 const REQUEST_TIMEOUT_MS = 12000;
@@ -36,24 +38,30 @@ async function request(path, options = {}) {
 }
 
 export async function listCars(page = 1, pageSize = 50) {
-  const result = await request(`/cars?page=${page}&page_size=${pageSize}`);
-  const items = Array.isArray(result) ? result : (result.items || []);
+  try {
+    const result = await request(`/cars?page=${page}&page_size=${pageSize}`);
+    const items = Array.isArray(result) ? result : (result.items || []);
+    if (!items || items.length === 0) return SAMPLE_CARS;
 
-  return items.map((car) => ({
-    ...car,
-    title: [car.name, car.model].filter(Boolean).join(' '),
-    category: car.type || car.category || 'Luxury',
-    imageUrl: resolveImageUrl(car.image),
-    currency: car.currency || 'USD',
-    priceAmount: Number(car.price),
-    price: new Intl.NumberFormat((car.currency || 'USD') === 'GBP' ? 'en-GB' : 'en-US', {
-      style: 'currency',
+    return items.map((car) => ({
+      ...car,
+      title: [car.name, car.model].filter(Boolean).join(' '),
+      category: car.type || car.category || 'Luxury',
+      imageUrl: resolveImageUrl(car.image),
       currency: car.currency || 'USD',
-      maximumFractionDigits: 0
-    }).format(Number(car.price)),
-    isFeatured: car.isFeatured,
-    rating: car.rating == null ? null : Number(car.rating)
-  }));
+      priceAmount: Number(car.price),
+      price: new Intl.NumberFormat((car.currency || 'USD') === 'GBP' ? 'en-GB' : 'en-US', {
+        style: 'currency',
+        currency: car.currency || 'USD',
+        maximumFractionDigits: 0
+      }).format(Number(car.price)),
+      isFeatured: car.isFeatured,
+      rating: car.rating == null ? null : Number(car.rating)
+    }));
+  } catch (error) {
+    console.warn('Backend API request failed, using SAMPLE_CARS from constants:', error.message);
+    return SAMPLE_CARS;
+  }
 }
 
 export function listMyTestDrives(email) {
