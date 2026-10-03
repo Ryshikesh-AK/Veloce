@@ -19,9 +19,14 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "http://localhost:5173",
             "http://localhost:5174",
+            "http://localhost:5175",
+            "http://localhost:5176",
             "http://localhost:3000",
             "http://127.0.0.1:5173",
             "http://127.0.0.1:5174",
+            "http://127.0.0.1:5175",
+            "http://127.0.0.1:5176",
+            "https://veloce.ryshikeshak.workers.dev",
         ]
     )
     jwt_secret_key: str = "development-only-secret-change-before-production-32"
@@ -45,6 +50,21 @@ class Settings(BaseSettings):
     def resolve_upload_directory(cls, value: Path | str) -> Path:
         path = Path(value)
         return path if path.is_absolute() else BACKEND_DIRECTORY / path
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            if value.startswith("[") and value.endswith("]"):
+                import json
+                origins = json.loads(value)
+            else:
+                origins = [origin.strip() for origin in value.split(",") if origin.strip()]
+            return [o.rstrip("/") for o in origins]
+        if isinstance(value, list):
+            return [o.rstrip("/") for o in value]
+        return value
+
 
     @property
     def is_production(self) -> bool:
