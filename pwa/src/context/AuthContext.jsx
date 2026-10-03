@@ -25,11 +25,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (email, password) => {
-    // Mock successful authentication
+    // Check if email indicates admin role or default to customer
+    const isAdmin = email.toLowerCase().includes('admin');
     const mockUser = {
       id: 'usr_' + Date.now(),
       name: email.split('@')[0] || 'User',
       email: email,
+      role: isAdmin ? 'admin' : 'customer',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
     setUser(mockUser);
@@ -40,10 +42,12 @@ export function AuthProvider({ children }) {
   };
 
   const signup = (name, email, password) => {
+    const isAdmin = email.toLowerCase().includes('admin');
     const mockUser = {
       id: 'usr_' + Date.now(),
       name: name || email.split('@')[0],
       email: email,
+      role: isAdmin ? 'admin' : 'customer',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
     setUser(mockUser);
@@ -51,6 +55,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem('pwa_user', JSON.stringify(mockUser));
     localStorage.removeItem('pwa_guest');
     return mockUser;
+  };
+
+  const switchRole = (newRole) => {
+    if (!user) return;
+    const updatedUser = { ...user, role: newRole || (user.role === 'admin' ? 'customer' : 'admin') };
+    setUser(updatedUser);
+    localStorage.setItem('pwa_user', JSON.stringify(updatedUser));
   };
 
   const skipAuth = () => {
@@ -72,9 +83,11 @@ export function AuthProvider({ children }) {
         user,
         isGuest,
         isAuthenticated: !!user,
+        isAdmin: user?.role === 'admin',
         loading,
         login,
         signup,
+        switchRole,
         skipAuth,
         logout,
       }}

@@ -7,19 +7,28 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function NavigationHeader() {
   const { darkMode, toggleDarkMode, favorites, compareIds } = useCarContext();
-  const { user, isAuthenticated, logout, skipAuth } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout, skipAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
 
-  const links = [
+  const customerLinks = [
     { path: '/', label: 'Explore' },
     { path: '/saved', label: 'Saved', count: favorites.length },
     { path: '/compare', label: 'Compare', count: compareIds.length },
     { path: '/test-drives', label: 'Test drives' },
     { path: '/concierge', label: 'Concierge' }
   ];
+
+  const adminLinks = [
+    { path: '/admin', label: 'Fleet Inventory' },
+    { path: '/test-drives', label: 'Drive Requests' },
+    { path: '/concierge', label: 'Account & Settings' },
+    { path: '/', label: 'Client View' }
+  ];
+
+  const links = isAdmin ? adminLinks : customerLinks;
 
   return (
     <nav 
@@ -31,7 +40,7 @@ export default function NavigationHeader() {
       data-purpose="app-header"
     >
       {/* Brand Logo */}
-      <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+      <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(isAdmin ? '/admin' : '/')}>
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
           darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-emerald-50 text-emerald-600'
         }`}>
@@ -41,9 +50,16 @@ export default function NavigationHeader() {
             <circle cx="16.5" cy="14.5" r="1.5"></circle>
           </svg>
         </div>
-        <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          DriveXCars<span className="text-emerald-500">.</span>
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            DriveXCars<span className="text-emerald-500">.</span>
+          </span>
+          {isAdmin && (
+            <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/20">
+              Admin
+            </span>
+          )}
+        </div>
       </div>
 
       {!isAuthPage && (
@@ -61,8 +77,31 @@ export default function NavigationHeader() {
         </div>
       )}
 
-      {/* Action Icons: Dark Mode & User Profile */}
+      {/* Action Icons: Dark Mode, Admin Portal Link, & User Profile */}
       <div className="flex items-center gap-3">
+        {isAdmin && !isAuthPage && (
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+              }`
+            }
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+            </svg>
+            <span>Admin</span>
+          </NavLink>
+        )}
+
         <motion.button 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -90,15 +129,25 @@ export default function NavigationHeader() {
         </motion.button>
 
         {isAuthenticated ? (
-          <div className="relative group cursor-pointer" onClick={() => logout()}>
-            <div className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
-              darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-emerald-500 border-[#141719]'
-            }`}>
-              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+          <div className="flex items-center gap-2">
+            <div
+              title={`Logged in as ${user?.name || 'User'} (${user?.role || 'customer'}). Click to logout`}
+              className="relative group cursor-pointer"
+              onClick={() => logout()}
+            >
+              <div
+                className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
+                  darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-emerald-500 border-[#141719]'
+                }`}
+              >
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+              </div>
+              <span
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full ${
+                  isAdmin ? 'bg-amber-400' : 'bg-emerald-500'
+                } ${darkMode ? 'border-slate-950' : 'border-white'}`}
+              ></span>
             </div>
-            <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 rounded-full ${
-              darkMode ? 'border-slate-950' : 'border-white'
-            }`}></span>
           </div>
         ) : isAuthPage ? (
           <button

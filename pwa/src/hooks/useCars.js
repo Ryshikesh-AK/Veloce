@@ -55,6 +55,7 @@ export function useCars(activeTab, favorites) {
 
   return {
     cars,
+    setCars,
     filteredCars,
     carsLoading,
     inventoryError,
