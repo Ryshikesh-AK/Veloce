@@ -52,7 +52,7 @@ export default function LoginPage() {
             Welcome <em className="not-italic font-serif font-normal text-emerald-500">Back</em>
           </h1>
           <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Sign in to manage test drives, concierge requests, and saved vehicles.
+            Sign in to manage showroom inquiries, contact requests, and saved vehicles.
           </p>
         </div>
 

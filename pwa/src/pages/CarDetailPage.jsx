@@ -109,7 +109,7 @@ export default function CarDetailPage({ car: propCar }) {
       <button
         type="button"
         className="min-h-12 w-full rounded-lg bg-emerald-400 px-4 text-sm font-bold text-slate-950 hover:bg-emerald-300 transition-colors cursor-pointer"
-        onClick={() => navigate('/concierge')}
+        onClick={() => navigate('/contact')}
       >
         Inquire about this car
       </button>

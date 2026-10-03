@@ -58,7 +58,7 @@ export default function SignupPage() {
             Create <em className="not-italic font-serif font-normal text-emerald-500">Account</em>
           </h1>
           <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-            Unlock VIP test drive bookings, concierge messaging, and saved vehicle sync.
+            Unlock VIP showroom perks, direct contact messaging, and saved vehicle sync.
           </p>
         </div>
 

@@ -19,8 +19,8 @@ export default function AppRouter() {
       <Route path="/saved" element={<SavedPage />} />
       <Route path="/compare" element={<ComparePage />} />
       <Route path="/test-drives" element={<Navigate to="/" replace />} />
-      <Route path="/test-drive/*" element={<Navigate to="/" replace />} />
-      <Route path="/concierge" element={<ConciergePage />} />
+      <Route path="/contact" element={<ConciergePage />} />
+      <Route path="/concierge" element={<Navigate to="/contact" replace />} />
       <Route path="/car/:id" element={<CarDetailPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

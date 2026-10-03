@@ -1,5 +1,5 @@
-:root { --bg: #0b121d; --surface: #142131; --surface-soft: #1b2b3d; --text: #edf5fc; --muted: #a4b3c4; --line: #2a3b50; --accent: #58dcf5; --brand-accent: #b9f43d; --accent-dark: #082431; --deep: #58dcf5; --shadow: 0 18px 50px rgba(0,0,0,.3); }
-:root[data-theme='dark'] { --bg: #0b121d; --surface: #142131; --surface-soft: #1b2b3d; --text: #edf5fc; --muted: #a4b3c4; --line: #2a3b50; --accent: #58dcf5; --accent-dark: #082431; --deep: #58dcf5; --shadow: 0 18px 50px rgba(0,0,0,.3); }
+:root { --bg: #0b121d; --surface: #142131; --surface-soft: #1b2b3d; --text: #edf5fc; --muted: #a4b3c4; --line: #2a3b50; --accent: #b9f43d; --brand-accent: #b9f43d; --accent-dark: #253508; --deep: #b9f43d; --shadow: 0 18px 50px rgba(0,0,0,.3); }
+:root[data-theme='dark'] { --bg: #0b121d; --surface: #142131; --surface-soft: #1b2b3d; --text: #edf5fc; --muted: #a4b3c4; --line: #2a3b50; --accent: #b9f43d; --accent-dark: #253508; --deep: #b9f43d; --shadow: 0 18px 50px rgba(0,0,0,.3); }
 :root[data-theme='light'] { --bg: #f7f8fa; --surface: #fff; --surface-soft: #f1f3f5; --text: #1c232b; --muted: #7f8994; --line: #e8ebee; --accent: #b9f43d; --accent-dark: #253508; --deep: #1c232b; --shadow: 0 18px 50px rgba(20, 27, 36, .08); }
 * { box-sizing: border-box; } html { scroll-behavior: smooth; } body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Avenir Next', 'Segoe UI', sans-serif; font-size: 14px; } button, input, select, textarea { font: inherit; } button { cursor: pointer; border: 0; color: inherit; } .app-shell { display: flex; min-height: 100vh; }
 .offline-banner { position: fixed; z-index: 30; top: env(safe-area-inset-top); left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 24px)); padding: 9px 14px; border: 1px solid #d7b45e; border-radius: 0 0 6px 6px; color: #674d13; background: #fff4d6; box-shadow: 0 8px 20px rgba(20, 27, 36, .12); font-size: 11px; font-weight: 700; text-align: center; }
@@ -258,7 +258,7 @@
 :root[data-theme='dark'] .admin-pill,
 :root[data-theme='dark'] .admin-notification-count {
 	color: var(--accent);
-	background: rgba(88, 220, 245, .14);
+	background: rgba(185, 244, 61, .14);
 }
 
 :root[data-theme='dark'] .admin-panel input:focus,
@@ -282,7 +282,7 @@
 }
 
 :root[data-theme='dark'] .admin-login-page {
-	background: radial-gradient(circle at 75% 10%, rgba(88, 220, 245, .15), transparent 30%), var(--bg);
+	background: radial-gradient(circle at 75% 10%, rgba(185, 244, 61, .15), transparent 30%), var(--bg);
 }
 
 .admin-console-topbar-actions { display: flex; align-items: center; gap: 18px; min-width: 0; }

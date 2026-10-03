@@ -7,14 +7,14 @@ export const PATH_TO_TAB = {
   '/': 'explore',
   '/wishlist': 'saved',
   '/compare': 'compare',
-  '/contact': 'concierge'
+  '/contact': 'contact'
 };
 
 export const TAB_TO_PATH = {
   explore: '/',
   saved: '/wishlist',
   compare: '/compare',
-  concierge: '/contact'
+  contact: '/contact'
 };
 
 export const SAMPLE_CARS = [
