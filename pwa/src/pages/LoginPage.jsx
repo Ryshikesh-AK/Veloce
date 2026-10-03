@@ -13,20 +13,25 @@ export default function LoginPage() {
   const { darkMode, toggleDarkMode } = useCarContext();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
     setError('');
-    const loggedUser = login(email, password);
-    if (loggedUser?.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/');
+    try {
+      const loggedUser = await login(email, password);
+      if (loggedUser?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
     }
   };
+
 
   const handleSkip = () => {
     skipAuth();
@@ -118,9 +123,17 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={() => {
-              login('admin@drivexcars.com', 'admin123');
-              navigate('/admin');
+            onClick={async () => {
+              try {
+                const loggedUser = await login('admin@example.com', 'DriveXCars-admin');
+                if (loggedUser?.role === 'admin') {
+                  navigate('/admin');
+                } else {
+                  navigate('/');
+                }
+              } catch (err) {
+                setError(err.message || 'Demo login failed');
+              }
             }}
             className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-semibold rounded-xl border border-emerald-500/30 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
           >
