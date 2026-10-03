@@ -6,12 +6,16 @@ import SavedPage from '../../pages/SavedPage';
 import ComparePage from '../../pages/ComparePage';
 import ConciergePage from '../../pages/ConciergePage';
 import CarDetailPage from '../../pages/CarDetailPage';
+import LoginPage from '../../pages/LoginPage';
+import SignupPage from '../../pages/SignupPage';
 
 export default function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<ExplorePage />} />
       <Route path="/explore" element={<Navigate to="/" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route path="/saved" element={<SavedPage />} />
       <Route path="/compare" element={<ComparePage />} />
       <Route path="/test-drives" element={<Navigate to="/" replace />} />
