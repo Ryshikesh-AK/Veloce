@@ -59,7 +59,7 @@ export default function FloatingBottomDock() {
     },
     {
       id: 'admin-inventory',
-      label: 'Fleet',
+      label: 'Garage',
       path: '/admin/inventory',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -78,13 +78,12 @@ export default function FloatingBottomDock() {
       )
     },
     {
-      id: 'admin-client-view',
-      label: 'Client View',
-      path: '/',
+      id: 'admin-finance',
+      label: 'Finance',
+      path: '/admin/finance',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       )
     }
@@ -142,29 +141,31 @@ export default function FloatingBottomDock() {
             </NavLink>
           ))}
 
-          {/* Contact Button */}
-          <NavLink
-            to="/contact"
-            onClick={() => hapticTab()}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer no-underline ${
-                isActive ? 'text-emerald-500' : darkMode ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-              }`
-            }
-          >
-            <div className="relative flex items-center justify-center">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 ${
-                darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-gray-900 text-white'
-              }`}>
-                <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
+          {/* Contact Button (Only shown in customer view) */}
+          {!isAdmin && (
+            <NavLink
+              to="/contact"
+              onClick={() => hapticTab()}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer no-underline ${
+                  isActive ? 'text-emerald-500' : darkMode ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                }`
+              }
+            >
+              <div className="relative flex items-center justify-center">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 ${
+                  darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-gray-900 text-white'
+                }`}>
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </div>
               </div>
-            </div>
-            <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
-              darkMode ? 'text-slate-400 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'
-            }`}>Contact</span>
-          </NavLink>
+              <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
+                darkMode ? 'text-slate-400 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'
+              }`}>Contact</span>
+            </NavLink>
+          )}
         </nav>
       </div>
     </div>

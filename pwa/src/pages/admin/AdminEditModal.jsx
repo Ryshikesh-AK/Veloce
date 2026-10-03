@@ -8,7 +8,7 @@ const FUEL_TYPES = ['Gasoline', 'Electric', 'Hybrid'];
 const STATUSES = ['available', 'reserved', 'sold'];
 
 export default function AdminEditModal({ car, isOpen, onClose, onSave }) {
-  const { darkMode } = useCarContext();
+  const { darkMode, updateCar } = useCarContext();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -61,11 +61,17 @@ export default function AdminEditModal({ car, isOpen, onClose, onSave }) {
     const numericPrice = Number(formData.priceAmount) || 0;
     const formattedPrice = `$${numericPrice.toLocaleString()}`;
 
-    onSave(car.id, {
+    const updated = {
       ...formData,
       price: formattedPrice,
       priceAmount: numericPrice
-    });
+    };
+
+    if (typeof onSave === 'function') {
+      onSave(car.id, updated);
+    } else if (typeof updateCar === 'function') {
+      updateCar(car.id, updated);
+    }
     onClose();
   };
 

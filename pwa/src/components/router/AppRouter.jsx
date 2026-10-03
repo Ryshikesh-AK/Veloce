@@ -13,6 +13,7 @@ import AdminInventoryPage from '../../pages/admin/AdminInventoryPage';
 import AdminAddCarPage from '../../pages/admin/AdminAddCarPage';
 import AdminFeaturedPage from '../../pages/admin/AdminFeaturedPage';
 import AdminFinancePage from '../../pages/admin/AdminFinancePage';
+import AdminCustomersPage from '../../pages/admin/AdminCustomersPage';
 import { useAuth } from '../../context/AuthContext';
 
 function RequireAdmin({ children }) {
@@ -63,12 +64,16 @@ export default function AppRouter() {
         }
       />
       <Route
-        path="/admin/featured"
+        path="/admin/customers"
         element={
           <RequireAdmin>
-            <AdminFeaturedPage />
+            <AdminCustomersPage />
           </RequireAdmin>
         }
+      />
+      <Route
+        path="/admin/featured"
+        element={<Navigate to="/admin/inventory" replace />}
       />
       <Route
         path="/admin/finance"

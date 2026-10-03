@@ -21,10 +21,10 @@ export default function NavigationHeader() {
   ];
 
   const adminLinks = [
-    { path: '/admin', label: 'Fleet Inventory' },
-    { path: '/test-drives', label: 'Drive Requests' },
-    { path: '/concierge', label: 'Account & Settings' },
-    { path: '/', label: 'Client View' }
+    { path: '/admin', label: 'Overview' },
+    { path: '/admin/inventory', label: 'Car Garage' },
+    { path: '/admin/customers', label: 'Customers' },
+    { path: '/admin/finance', label: 'Financials' }
   ];
 
   const links = isAdmin ? adminLinks : customerLinks;
