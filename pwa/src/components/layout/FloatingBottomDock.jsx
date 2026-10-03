@@ -94,9 +94,9 @@ export default function FloatingBottomDock() {
             </NavLink>
           ))}
 
-          {/* Concierge Button */}
+          {/* Contact Button */}
           <NavLink
-            to="/concierge"
+            to="/contact"
             onClick={() => hapticTab()}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer no-underline ${
@@ -115,7 +115,7 @@ export default function FloatingBottomDock() {
             </div>
             <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
               darkMode ? 'text-slate-400 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'
-            }`}>Concierge</span>
+            }`}>Contact</span>
           </NavLink>
         </nav>
       </div>
