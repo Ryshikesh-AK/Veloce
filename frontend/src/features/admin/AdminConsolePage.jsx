@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { formatPrice } from '../../shared/format.js';
 import CarPhoto from '../../shared/CarPhoto.jsx';
 import {
-  ArrowLeft, ArrowRight, CalendarDays, CarFront, Check, CircleDollarSign, LayoutDashboard,
+  ArrowLeft, ArrowRight, CarFront, Check, CircleDollarSign, LayoutDashboard,
   LogOut, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Upload, X
 } from 'lucide-react';
 
 const sections = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard },
   { path: '/admin/inventory', label: 'Inventory', icon: CarFront },
-  { path: '/admin/test-drives', label: 'Test-drive queue', icon: CalendarDays },
   { path: '/admin/finance', label: 'Financial overview', icon: CircleDollarSign },
   { path: '/admin/featured', label: 'Featured cars', icon: Sparkles },
   { path: '/admin/new', label: 'Add a car', icon: Plus }
@@ -32,7 +31,7 @@ function SectionHeading({ eyebrow, title, description, action }) {
 
 export default function AdminConsolePage({
   path, cars, carsLoading, carsError, onRetryCars, featuredIds, adminEmail, onAdd, onUpdate, onRemove,
-  testDrives, onApproveTestDrive, onDeclineTestDrive, onFeaturedChange, onStatusChange,
+  onFeaturedChange, onStatusChange,
   onFinancialChange, onPriceChange, onNavigate, onClose, onLogout
 }) {
   const activePath = getActivePath(path);
@@ -57,7 +56,6 @@ export default function AdminConsolePage({
             >
               <Icon size={18} />
               <span>{label}</span>
-              {sectionPath === '/admin/test-drives' && testDrives.filter((request) => request.status === 'pending').length > 0 && <span className="nav-count">{testDrives.filter((request) => request.status === 'pending').length}</span>}
             </button>
           ))}
         </nav>
@@ -80,9 +78,8 @@ export default function AdminConsolePage({
         </header>
         <div className="admin-console-content">
           <div className="admin-page-transition" key={activePath}>
-            {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} testDrives={testDrives} adminEmail={adminEmail} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
+            {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminEmail={adminEmail} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
             {activePath === '/admin/inventory' && <InventoryPage cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={onRetryCars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onUpdate={onUpdate} onStatusChange={onStatusChange} onFinancialChange={onFinancialChange} onPriceChange={onPriceChange} onNavigate={onNavigate} />}
-            {activePath === '/admin/test-drives' && <TestDriveQueuePage requests={testDrives} onApprove={onApproveTestDrive} onDecline={onDeclineTestDrive} />}
             {activePath === '/admin/finance' && <FinancialPage cars={cars} onNavigate={onNavigate} />}
             {activePath === '/admin/featured' && <FeaturedPage cars={cars} featuredIds={featuredIds} onFeaturedChange={onFeaturedChange} />}
             {activePath === '/admin/new' && <CreateCarPage onAdd={onAdd} onDone={() => onNavigate('/admin/inventory')} />}
@@ -94,8 +91,7 @@ export default function AdminConsolePage({
   );
 }
 
-function OverviewPage({ cars, featuredIds, testDrives, adminEmail, onNavigate, onStatusSelect }) {
-  const pendingTestDrives = testDrives.filter((request) => request.status === 'pending').length;
+function OverviewPage({ cars, featuredIds, adminEmail, onNavigate, onStatusSelect }) {
   const statusCounts = cars.reduce((counts, car) => {
     const status = car.status || 'Available';
     counts[status] = (counts[status] || 0) + 1;
@@ -104,7 +100,7 @@ function OverviewPage({ cars, featuredIds, testDrives, adminEmail, onNavigate, o
 
   return (
     <>
-      <SectionHeading eyebrow="CATALOG CONTROL CENTER" title="Good to see you." description="A live view of inventory and customer appointments." action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
+      <SectionHeading eyebrow="CATALOG CONTROL CENTER" title="Good to see you." description="A live view of inventory and showroom performance." action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
       <section className="admin-account-card" aria-label="Administrator session">
         <ShieldCheck size={20} />
         <span><small>Signed in as</small><strong>{adminEmail || 'Administrator'}</strong><small>Secure session · password is never shown</small></span>
@@ -113,56 +109,18 @@ function OverviewPage({ cars, featuredIds, testDrives, adminEmail, onNavigate, o
       <div className="admin-metrics">
         <div className="admin-metric"><span>Live listings</span><strong>{cars.length}</strong><small>Vehicles in your inventory</small></div>
         <div className="admin-metric"><span>Featured cars</span><strong>{featuredIds.length}</strong><small>Shown in the home carousel</small></div>
-        <button type="button" className="admin-metric inventory-metric pending-test-drives" onClick={() => onNavigate('/admin/test-drives')}><span>Pending test drives</span><strong>{pendingTestDrives}</strong><small>Review customer requests</small></button>
         {['Available', 'Reserved', 'Sold'].map((status) => <button type="button" className={`admin-metric inventory-metric status-${status.toLowerCase()}`} key={status} onClick={() => onStatusSelect(status)}><span>{status}</span><strong>{statusCounts[status]}</strong><small>View {status.toLowerCase()} cars</small></button>)}
       </div>
       <section className="admin-quick-actions">
         <div className="admin-section-heading"><div><div className="eyebrow muted">QUICK ACTIONS</div><h3>Where would you like to go?</h3></div></div>
         <div className="admin-action-list">
           <button onClick={() => onNavigate('/admin/inventory')}><CarFront size={19} /><span><strong>Manage inventory</strong><small>Review, update, or remove listings</small></span><ArrowRight size={17} /></button>
-          <button onClick={() => onNavigate('/admin/test-drives')}><CalendarDays size={19} /><span><strong>Review test-drive requests</strong><small>Approve appointments in request order</small></span><ArrowRight size={17} /></button>
           <button onClick={() => onNavigate('/admin/finance')}><CircleDollarSign size={19} /><span><strong>View financial overview</strong><small>Review profit, pending balances, and sales</small></span><ArrowRight size={17} /></button>
           <button onClick={() => onNavigate('/admin/featured')}><Sparkles size={19} /><span><strong>Choose featured cars</strong><small>Curate the homepage carousel</small></span><ArrowRight size={17} /></button>
         </div>
       </section>
     </>
   );
-}
-
-function TestDriveQueuePage({ requests, onApprove, onDecline }) {
-  const [approvedTimes, setApprovedTimes] = useState({});
-  const pendingRequests = requests.filter((request) => request.status === 'pending').sort((a, b) => a.createdAt - b.createdAt);
-  const reviewedRequests = requests.filter((request) => request.status !== 'pending').sort((a, b) => b.createdAt - a.createdAt);
-  const formatDateTime = (value) => value ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'Not set';
-
-  return <>
-    <SectionHeading eyebrow="CUSTOMER REQUESTS" title="Test-drive queue" description={`${pendingRequests.length} pending request${pendingRequests.length === 1 ? '' : 's'}, ordered by when they arrived.`} />
-    <section className="test-drive-queue">
-      {pendingRequests.map((request, index) => <article className="test-drive-queue-item" key={request.id}>
-        <div className="test-drive-queue-position">{index + 1}</div>
-        <CarPhoto src={request.carImage} alt={`${request.carName} photo`} className="admin-vehicle-photo admin-queue-photo" />
-        <div className="test-drive-queue-details">
-          <div className="test-drive-queue-car"><strong>{request.carName}</strong><span>Preferred: {formatDateTime(request.preferredAt)}</span></div>
-          <div className="test-drive-customer"><strong>{request.customerName}</strong><a href={`mailto:${request.customerEmail}`}>{request.customerEmail}</a>{request.customerPhone && <a href={`tel:${request.customerPhone}`}>{request.customerPhone}</a>}</div>
-          <form className="test-drive-approval" onSubmit={(event) => { event.preventDefault(); const approvedAt = approvedTimes[request.id] ?? request.preferredAt; if (approvedAt) onApprove(request.id, approvedAt); }}>
-            <label>Approved appointment time<input type="datetime-local" required value={approvedTimes[request.id] ?? request.preferredAt ?? ''} onChange={(event) => setApprovedTimes((current) => ({ ...current, [request.id]: event.target.value }))} /></label>
-            <button className="primary-button" type="submit"><Check size={15} /> Approve</button>
-            <button className="secondary-button" type="button" onClick={() => onDecline(request.id)}>Decline</button>
-          </form>
-        </div>
-      </article>)}
-      {pendingRequests.length === 0 && <div className="admin-empty-state">The test-drive queue is clear.</div>}
-    </section>
-    {reviewedRequests.length > 0 && <section className="test-drive-reviewed">
-      <div className="admin-section-heading"><div><h3>Recently reviewed</h3><p>Appointment decisions and customer notifications.</p></div></div>
-      {reviewedRequests.map((request) => <article className="test-drive-reviewed-row" key={request.id}>
-        <CarPhoto src={request.carImage} alt={`${request.carName} photo`} className="admin-vehicle-photo admin-reviewed-photo" />
-        <div><strong>{request.carName}</strong><small>{request.customerName} · {request.customerEmail}</small></div>
-        <span className={`test-drive-status ${request.status}`}>{request.status === 'approved' ? 'Approved' : 'Declined'}</span>
-        <time>{request.status === 'approved' ? formatDateTime(request.approvedAt) : formatDateTime(request.createdAt)}</time>
-      </article>)}
-    </section>}
-  </>;
 }
 
 function FinancialPage({ cars, onNavigate }) {

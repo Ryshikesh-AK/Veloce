@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCars } from '../hooks/useCars';
-import { useTestDrives } from '../hooks/useTestDrives';
 import { SAVED_KEY, COMPARE_KEY, THEME_KEY } from '../constants';
 
 const CarContext = createContext(null);
@@ -26,17 +25,6 @@ export function CarProvider({ children }) {
     sortBy,
     setSortBy
   } = useCars('explore', favorites);
-
-  const {
-    customerEmail,
-    testDriveCar,
-    testDrives,
-    testDriveError,
-    findTestDrives,
-    submitTestDrive,
-    requestDriveForCar,
-    cancelDriveRequest
-  } = useTestDrives(() => {});
 
   const [selectedCar, setSelectedCar] = useState(null);
   const [toast, setToast] = useState('');
@@ -70,7 +58,6 @@ export function CarProvider({ children }) {
 
   const openCarDetails = (car) => {
     setSelectedCar(car);
-    cancelDriveRequest();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     navigate(`/car/${car.id}`);
   };
@@ -83,7 +70,6 @@ export function CarProvider({ children }) {
     toggleFavorite,
     compareIds,
     toggleCompare,
-    customerEmail,
     cars,
     filteredCars,
     carsLoading,
@@ -95,13 +81,6 @@ export function CarProvider({ children }) {
     setSelectedCategory,
     sortBy,
     setSortBy,
-    testDriveCar,
-    testDrives,
-    testDriveError,
-    findTestDrives,
-    submitTestDrive: (details) => submitTestDrive(details, setToast),
-    requestDriveForCar,
-    cancelDriveRequest,
     selectedCar,
     setSelectedCar,
     openCarDetails,

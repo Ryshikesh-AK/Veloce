@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getPathForNavItem, tabForPath } from './navigation.js';
-import { MyTestDrivesPage, TestDriveRequestModal } from '../features/test-drives/CustomerTestDrives.jsx';
 import CarCard from '../features/marketplace/CarCard.jsx';
 import ComparePage from '../features/compare/ComparePage.jsx';
 import AdminLogin from '../features/admin/AdminLogin.jsx';
@@ -9,7 +8,7 @@ import { formatPrice } from '../shared/format.js';
 import { carApi, clearAdminToken, getAdminEmail, getAdminToken } from '../shared/api.js';
 import {
   ArrowRight, BarChart3, Bell, CarFront, Check, ChevronDown, CircleHelp, Expand,
-  CalendarDays, Clock3, Eye, Heart, LayoutGrid, Leaf, Mail, MapPin, Menu, Moon, MoreHorizontal, Phone, Plus,
+  Clock3, Eye, Heart, LayoutGrid, Leaf, Mail, MapPin, Menu, Moon, MoreHorizontal, Phone, Plus,
   Search, Settings2, ShieldCheck, Sparkles, Sun, Trash2, Upload, UserRound,
   X, Zap
 } from 'lucide-react';
@@ -19,8 +18,6 @@ export default function App() {
   const [cars, setCars] = useState([]);
   const [carsLoading, setCarsLoading] = useState(true);
   const [carsError, setCarsError] = useState('');
-  const [testDrives, setTestDrives] = useState([]);
-  const [customerEmail, setCustomerEmail] = useState(() => localStorage.getItem('DriveXCars-test-drive-email') || '');
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [filter, setFilter] = useState('All cars');
   const [search, setSearch] = useState('');
@@ -32,14 +29,12 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [selectedCar, setSelectedCar] = useState(null);
-  const [testDriveCar, setTestDriveCar] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [isAdmin, setIsAdmin] = useState(() => Boolean(getAdminToken()));
   const [adminEmail, setAdminEmail] = useState(() => getAdminEmail() || '');
   const isAdminRoute = currentPath.startsWith('/admin');
   const activeTab = tabForPath(currentPath);
-  const approvedTestDriveCount = testDrives.filter((request) => request.status === 'approved' && request.customerEmail === customerEmail.trim().toLowerCase()).length;
 
   const loadCars = async () => {
     setCarsLoading(true);
@@ -53,26 +48,9 @@ export default function App() {
     }
   };
 
-  const loadTestDrives = async (admin = false) => {
-    try {
-      const requests = admin
-        ? await carApi.listTestDrives()
-        : customerEmail.trim()
-          ? await carApi.listMyTestDrives(customerEmail.trim().toLowerCase())
-          : [];
-      setTestDrives(requests);
-    } catch (error) {
-      setToast(error.message);
-    }
-  };
-
   useEffect(() => {
     loadCars();
   }, []);
-
-  useEffect(() => {
-    if (!isAdmin) loadTestDrives();
-  }, [customerEmail, isAdmin]);
 
   useEffect(() => {
     const handleExpiredAdminSession = () => {
@@ -191,39 +169,6 @@ export default function App() {
     }
   };
 
-  const requestTestDrive = async (requestDetails) => {
-    try {
-      const request = await carApi.createTestDrive(requestDetails);
-      const normalizedEmail = request.customerEmail.trim().toLowerCase();
-      setTestDrives((items) => [request, ...items.filter((item) => item.id !== request.id)]);
-      localStorage.setItem('DriveXCars-test-drive-email', normalizedEmail);
-      setCustomerEmail(normalizedEmail);
-      setTestDriveCar(null);
-      navigateTo('/test-drives');
-      setToast('Test-drive request added to the queue');
-    } catch (error) {
-      setToast(error.message);
-    }
-  };
-
-  const approveTestDrive = async (id, approvedAt) => {
-    try {
-      const updated = await carApi.reviewTestDrive(id, 'approved', approvedAt);
-      setTestDrives((items) => items.map((request) => request.id === id ? updated : request));
-    } catch (error) {
-      setToast(error.message);
-    }
-  };
-
-  const declineTestDrive = async (id) => {
-    try {
-      const updated = await carApi.reviewTestDrive(id, 'declined');
-      setTestDrives((items) => items.map((request) => request.id === id ? updated : request));
-    } catch (error) {
-      setToast(error.message);
-    }
-  };
-
   const toggleCompare = (id) => {
     setCompare((items) => {
       if (items.includes(id)) return items.filter((item) => item !== id);
@@ -242,11 +187,11 @@ export default function App() {
   };
 
   if (isAdminRoute && !isAdmin) {
-    return <AdminLogin onLogin={async (email) => { setAdminEmail(email); setIsAdmin(true); await loadTestDrives(true); }} />;
+    return <AdminLogin onLogin={async (email) => { setAdminEmail(email); setIsAdmin(true); }} />;
   }
 
   if (isAdminRoute && isAdmin) {
-    return <><AdminConsolePage path={currentPath} cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={loadCars} testDrives={testDrives} adminEmail={adminEmail} featuredIds={cars.filter((car) => car.isFeatured).map((car) => car.id)} onApproveTestDrive={approveTestDrive} onDeclineTestDrive={declineTestDrive} onAdd={addCar} onUpdate={updateCar} onRemove={removeCar} onFeaturedChange={(id, isFeatured) => updateCar(id, { isFeatured })} onStatusChange={(id, status) => updateCar(id, { status })} onFinancialChange={(id, field, value) => updateCar(id, { [field]: value === '' ? null : Number(value) })} onPriceChange={(id, price) => updateCar(id, { price })} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} onLogout={logoutAdmin} />{toast && <div className="toast" role="status"><Check size={16} /> {toast}</div>}</>;
+    return <><AdminConsolePage path={currentPath} cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={loadCars} adminEmail={adminEmail} featuredIds={cars.filter((car) => car.isFeatured).map((car) => car.id)} onAdd={addCar} onUpdate={updateCar} onRemove={removeCar} onFeaturedChange={(id, isFeatured) => updateCar(id, { isFeatured })} onStatusChange={(id, status) => updateCar(id, { status })} onFinancialChange={(id, field, value) => updateCar(id, { [field]: value === '' ? null : Number(value) })} onPriceChange={(id, price) => updateCar(id, { price })} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} onLogout={logoutAdmin} />{toast && <div className="toast" role="status"><Check size={16} /> {toast}</div>}</>;
   }
 
   return (
@@ -256,17 +201,16 @@ export default function App() {
         <div className="brand"><div className="brand-mark"><CarFront size={20} strokeWidth={2.5} /></div><span>DriveXCars<span className="brand-dot">.</span></span></div>
         <div className="sidebar-label">Workspace</div>
         <nav className="main-nav">
-          {['Discover', 'My wishlist', 'Compare cars', 'My test drives'].map((item) => (
+          {['Discover', 'My wishlist', 'Compare cars'].map((item) => (
             <button key={item} className={`nav-item ${activeTab === item ? 'active' : ''}`} onClick={() => navigateTo(item)}>
-              {item === 'Discover' ? <LayoutGrid size={18} /> : item === 'My wishlist' ? <Heart size={18} /> : item === 'Compare cars' ? <BarChart3 size={18} /> : <CalendarDays size={18} />}
-              <span>{item}</span>{item === 'My wishlist' && <span className="nav-count">{wishlist.length}</span>}{item === 'Compare cars' && compare.length > 0 && <span className="nav-count">{compare.length}</span>}{item === 'My test drives' && approvedTestDriveCount > 0 && <span className="nav-count">{approvedTestDriveCount}</span>}
+              {item === 'Discover' ? <LayoutGrid size={18} /> : item === 'My wishlist' ? <Heart size={18} /> : <BarChart3 size={18} />}
+              <span>{item}</span>{item === 'My wishlist' && <span className="nav-count">{wishlist.length}</span>}{item === 'Compare cars' && compare.length > 0 && <span className="nav-count">{compare.length}</span>}
             </button>
           ))}
         </nav>
         <div className="sidebar-label manage-label">Manage</div>
         {isAdmin && <nav className="main-nav">
           <button className="nav-item" onClick={() => navigateTo('Admin workspace')}><Settings2 size={18} /><span>Admin workspace</span><span className="admin-pill">Admin</span></button>
-          <button className="nav-item" onClick={() => navigateTo('/admin/test-drives')}><CalendarDays size={18} /><span>Test-drive queue</span>{testDrives.filter((request) => request.status === 'pending').length > 0 && <span className="nav-count">{testDrives.filter((request) => request.status === 'pending').length}</span>}</button>
         </nav>}
         <div className="sidebar-bottom">
           <button className="help-card" onClick={openContact} aria-haspopup="dialog"><div className="help-icon"><CircleHelp size={18} /></div><div><strong>Need help?</strong><span>Talk to our team</span></div><ArrowRight size={15} /></button>
@@ -279,7 +223,7 @@ export default function App() {
         <div className="page-content">
           {activeTab === 'Discover' && <section className="welcome-row"><div><div className="eyebrow"><span className="eyebrow-line" /> CURATED FOR YOU</div><h1>Find a car that<br /><em>feels like you.</em></h1><p className="hero-copy">A considered collection of exceptional cars, selected for how you live and where you’re going.</p></div><div className="stats-strip"><div><strong>{cars.length}</strong><span>Cars available</span></div><div><strong>24</strong><span>Trusted brands</span></div><div><strong>4.9<span className="star">★</span></strong><span>Average rating</span></div></div></section>}
           {activeTab === 'Discover' && featuredCar && <section className="hero-banner"><div className="hero-banner-copy"><div className="hero-kicker"><Zap size={14} fill="currentColor" /> TOP OF THE COLLECTION</div><h2>{featuredCar.name}<br /><span>{formatPrice(featuredCar.price, featuredCar.currency)}</span></h2><p>{featuredCar.description}<br />Selected for its performance, design, and presence.</p><button className="primary-button" onClick={() => { setSearch(featuredCar.name); navigateTo('Discover'); }}>Explore model <ArrowRight size={16} /></button><div className="hero-dots">{carouselCars.map((car, index) => <button key={car.id} aria-label={`Show ${car.name}`} className={index === featuredIndex % carouselCars.length ? 'active' : ''} onClick={() => setFeaturedIndex(index)} />)}</div></div><div className="hero-car-image" style={{ backgroundImage: `linear-gradient(90deg, rgba(208,216,216,.98) 0%, rgba(208,216,216,.83) 30%, rgba(208,216,216,.05) 61%), url('${featuredCar.image}')` }} /></section>}
-          {activeTab === 'My test drives' ? <MyTestDrivesPage requests={testDrives} email={customerEmail} onEmailChange={(email) => { const normalizedEmail = email.trim().toLowerCase(); setCustomerEmail(normalizedEmail); localStorage.setItem('DriveXCars-test-drive-email', normalizedEmail); }} onBrowse={() => navigateTo('Discover')} /> : activeTab !== 'Compare cars' ? <section className="collection-section"><div className="section-head"><div><div className="eyebrow muted">{activeTab === 'My wishlist' ? 'SAVED FOR LATER' : 'THE COLLECTION'}</div><h2>{activeTab === 'My wishlist' ? <>Your <em>wishlist.</em></> : <>Cars worth <em>knowing.</em></>}</h2></div><button className="text-button" onClick={() => { setFilter('All cars'); setSearch(''); navigateTo('Discover'); }}>View all <ArrowRight size={16} /></button></div>
+          {activeTab !== 'Compare cars' ? <section className="collection-section"><div className="section-head"><div><div className="eyebrow muted">{activeTab === 'My wishlist' ? 'SAVED FOR LATER' : 'THE COLLECTION'}</div><h2>{activeTab === 'My wishlist' ? <>Your <em>wishlist.</em></> : <>Cars worth <em>knowing.</em></>}</h2></div><button className="text-button" onClick={() => { setFilter('All cars'); setSearch(''); navigateTo('Discover'); }}>View all <ArrowRight size={16} /></button></div>
             <div className="filter-bar"><div className="filter-tabs">{['All cars', 'Electric', 'Sports', 'SUV', 'MPV'].map((item) => <button key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}</button>)}</div><label className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by model, make..." /></label><button className="sort-button"><span>Sort by</span> Featured <ChevronDown size={15} /></button></div>
             {carsError ? <div className="empty-state"><h3>Could not load cars</h3><p>{carsError}</p><button className="secondary-button" onClick={loadCars}>Retry</button></div> : carsLoading ? <div className="empty-state">Loading cars…</div> : <div className="car-grid">{visibleCars.map((car, index) => <CarCard key={car.id} car={car} index={index} liked={wishlist.includes(car.id)} compared={compare.includes(car.id)} onOpen={() => setSelectedCar(car)} onLike={() => toggleWishlist(car.id)} onCompare={() => toggleCompare(car.id)} />)}{visibleCars.length === 0 && <div className="empty-state">{activeTab === 'My wishlist' ? <Heart size={25} /> : <Search size={25} />}<h3>{activeTab === 'My wishlist' ? 'Your wishlist is empty' : 'No cars found'}</h3><p>{activeTab === 'My wishlist' ? 'Like a car to save it here for later.' : 'Try another model, make, or category.'}</p></div>}</div>}
           </section> : <ComparePage cars={cars.filter((car) => compare.includes(car.id))} onRemove={toggleCompare} onBrowse={() => navigateTo('Discover')} />}
@@ -288,8 +232,7 @@ export default function App() {
       </main>
       <button className="whatsapp-button" onClick={openContact}><Phone size={16} /><span>Contact us</span></button>
       {compare.length > 0 && activeTab !== 'Compare cars' && <button className="compare-float" onClick={() => navigateTo('Compare')}><BarChart3 size={17} /><span>{compare.length} selected</span><ArrowRight size={15} /></button>}
-      {selectedCar && <CarDetailsModal car={selectedCar} onClose={() => setSelectedCar(null)} onTestDrive={(car) => { setSelectedCar(null); setTestDriveCar(car); }} />}
-      {testDriveCar && <TestDriveRequestModal car={testDriveCar} defaultEmail={customerEmail} onClose={() => setTestDriveCar(null)} onSubmit={requestTestDrive} />}
+      {selectedCar && <CarDetailsModal car={selectedCar} onClose={() => setSelectedCar(null)} />}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
       {showSignup && <SignupModal onClose={() => { localStorage.setItem('DriveXCars-signup-dismissed', 'true'); setShowSignup(false); }} onSubmit={(user) => { sessionStorage.setItem('DriveXCars-member', 'true'); localStorage.setItem('DriveXCars-signup-dismissed', 'true'); setShowSignup(false); setToast(`Welcome, ${user.name}`); }} />}
       {toast && <div className="toast"><Check size={16} /> {toast}</div>}
@@ -332,7 +275,7 @@ function AdminPanel({ cars, featuredIds, standalone = false, onClose, onAdd, onR
   return <div id={standalone ? 'catalog-controls' : undefined} className={`modal-backdrop ${standalone ? 'admin-page-backdrop' : ''}`}><aside className="admin-panel"><div className="panel-header"><div><div className="eyebrow muted">CATALOG MANAGEMENT</div><h2>Admin controls</h2></div><button className="close-button" onClick={onClose}><X size={20} /></button></div><p className="panel-intro">Create listings, remove cars, and choose exactly which cars appear in the landing-page feature carousel.</p><div className="admin-section"><div className="admin-section-title"><strong>Landing page selection</strong><span>{featuredIds.length} selected</span></div><div className="feature-list">{cars.map((car) => <label className="feature-option" key={car.id}><input type="checkbox" checked={featuredIds.includes(car.id)} onChange={() => toggleFeatured(car.id)} /><img src={car.image} alt="" /><span>{car.name}</span><b>{formatPrice(car.price)}</b></label>)}</div></div><form onSubmit={submit}><div className="admin-section-title"><strong>Add a car</strong><span>Required fields marked *</span></div><label>Make / brand *<input value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Tesla" required /></label><label>Car model *<input value={form.model} onChange={(e) => update('model', e.target.value)} placeholder="e.g. Model S Plaid" required /></label><div className="form-row"><label>Year<select value={form.year} onChange={(e) => update('year', e.target.value)}><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option></select></label><label>Category<select value={form.type} onChange={(e) => update('type', e.target.value)}><option>SUV</option><option>Sports</option><option>Electric</option><option>Sedan</option></select></label></div><div className="form-row"><label>Mileage *<input type="number" value={form.mileage} onChange={(e) => update('mileage', e.target.value)} placeholder="12000" required /></label><label>Price *<div className="input-prefix"><span>$</span><input type="number" value={form.price} onChange={(e) => update('price', e.target.value)} placeholder="85000" required /></div></label></div><div className="form-row"><label>Fuel type<select value={form.fuel} onChange={(e) => update('fuel', e.target.value)}><option>Electric</option><option>Petrol</option><option>Diesel</option><option>Hybrid</option></select></label><label>Transmission<select value={form.transmission} onChange={(e) => update('transmission', e.target.value)}><option>Automatic</option><option>Manual</option></select></label></div><label>Vehicle description<textarea value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="Tell buyers what makes this car special..." rows="4" /></label><label>Car imagery<div className="upload-box">{preview ? <img src={preview} alt="Upload preview" /> : <><div className="upload-icon"><Upload size={19} /></div><strong>Drop images here or <span>browse</span></strong><small>JPG, PNG up to 10MB · 3D image supported</small></>}<input type="file" accept="image/*" onChange={handleFile} /></div></label><div className="admin-note"><Sparkles size={17} /><span><strong>Pro tip</strong> Listings with 3+ images get 2.4× more interest.</span></div><div className="panel-actions"><button type="button" className="secondary-button" onClick={onClose}>Close</button><button className="primary-button" type="submit"><Plus size={16} /> Publish car</button></div></form><div className="admin-section remove-section"><div className="admin-section-title"><strong>Remove existing cars</strong><span>Permanent catalog action</span></div>{cars.map((car) => <div className="remove-row" key={car.id}><span>{car.name}</span><button type="button" className="remove-button" onClick={() => onRemove(car.id)}><Trash2 size={14} /> Remove</button></div>)}</div></aside></div>;
 }
 
-function CarDetailsModal({ car, onClose, onTestDrive }) {
+function CarDetailsModal({ car, onClose }) {
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const specifications = [
     ['Model', car.model || car.name],
@@ -342,8 +285,6 @@ function CarDetailsModal({ car, onClose, onTestDrive }) {
     ['Transmission', car.transmission || 'Automatic'],
     ['Location', car.location]
   ];
-
-  const carIsAvailable = !car.status || car.status === 'Available';
 
   useEffect(() => {
     if (!isImageExpanded) return undefined;
@@ -365,7 +306,7 @@ function CarDetailsModal({ car, onClose, onTestDrive }) {
       <div className="details-body">
         <p className="details-description">{car.description || 'See the seller’s description for condition and service history.'}</p>
         <div className="spec-grid">{specifications.map(([label, value]) => <div className="spec-item" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
-        <div className="details-actions">{carIsAvailable ? <button className="primary-button details-contact" onClick={() => onTestDrive(car)}><CalendarDays size={15} /> Request a test drive</button> : <span className="test-drive-unavailable">This car is not currently available for test drives.</span>}<button className="secondary-button" onClick={() => window.open('https://wa.me/14155550148?text=Hi%20DriveXCars%20Motors%2C%20I%27m%20interested%20in%20the%20' + encodeURIComponent(car.name), '_blank')}><Phone size={15} /> Ask about this car</button></div>
+        <div className="details-actions"><button className="primary-button details-contact" onClick={() => window.open('https://wa.me/14155550148?text=Hi%20DriveXCars%20Motors%2C%20I%27m%20interested%20in%20the%20' + encodeURIComponent(car.name), '_blank')}><Phone size={15} /> Ask about this car</button></div>
       </div>
     </div>
     {isImageExpanded && <div className="image-lightbox" role="dialog" aria-modal="true" aria-label={`${car.name} full-size image`} onClick={(event) => { event.stopPropagation(); setIsImageExpanded(false); }}>

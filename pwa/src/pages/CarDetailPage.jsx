@@ -7,7 +7,7 @@ import { useCarContext } from '../context/CarContext';
 export default function CarDetailPage({ car: propCar }) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  const { cars, favorites, toggleFavorite, compareIds, toggleCompare, requestDriveForCar } = useCarContext();
+  const { cars, favorites, toggleFavorite, compareIds, toggleCompare } = useCarContext();
   const car = propCar || cars.find((c) => c.id === paramId);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [failedPhotoSrc, setFailedPhotoSrc] = useState('');
@@ -109,12 +109,9 @@ export default function CarDetailPage({ car: propCar }) {
       <button
         type="button"
         className="min-h-12 w-full rounded-lg bg-emerald-400 px-4 text-sm font-bold text-slate-950 hover:bg-emerald-300 transition-colors cursor-pointer"
-        onClick={() => {
-          requestDriveForCar(car);
-          navigate(`/test-drive/request/${car.id}`);
-        }}
+        onClick={() => navigate('/concierge')}
       >
-        Request a test drive
+        Inquire about this car
       </button>
 
       {isImageExpanded && (

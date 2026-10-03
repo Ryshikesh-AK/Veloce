@@ -12,7 +12,6 @@ export default function NavigationHeader() {
     { path: '/', label: 'Explore' },
     { path: '/saved', label: 'Saved', count: favorites.length },
     { path: '/compare', label: 'Compare', count: compareIds.length },
-    { path: '/test-drives', label: 'Test drives' },
     { path: '/concierge', label: 'Concierge' }
   ];
 

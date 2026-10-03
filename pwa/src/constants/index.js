@@ -7,7 +7,6 @@ export const PATH_TO_TAB = {
   '/': 'explore',
   '/wishlist': 'saved',
   '/compare': 'compare',
-  '/test-drives': 'test-drive',
   '/contact': 'concierge'
 };
 
@@ -15,7 +14,6 @@ export const TAB_TO_PATH = {
   explore: '/',
   saved: '/wishlist',
   compare: '/compare',
-  'test-drive': '/test-drives',
   concierge: '/contact'
 };
 
