@@ -14,6 +14,7 @@ export function CarProvider({ children }) {
 
   const {
     cars,
+    setCars,
     filteredCars,
     carsLoading,
     inventoryError,
@@ -62,6 +63,43 @@ export function CarProvider({ children }) {
     navigate(`/car/${car.id}`);
   };
 
+  const addCar = (newCarData) => {
+    const id = newCarData.title ? newCarData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'car-' + Date.now();
+    const newCar = {
+      id,
+      status: 'available',
+      isFeatured: false,
+      ...newCarData,
+    };
+    if (setCars) {
+      setCars((prev) => [newCar, ...prev]);
+    }
+    setToast('New vehicle added to inventory');
+  };
+
+  const updateCar = (id, updatedFields) => {
+    if (setCars) {
+      setCars((prev) => prev.map((car) => (car.id === id ? { ...car, ...updatedFields } : car)));
+    }
+    setToast('Vehicle details updated');
+  };
+
+  const deleteCar = (id) => {
+    if (setCars) {
+      setCars((prev) => prev.filter((car) => car.id !== id));
+    }
+    setToast('Vehicle removed from inventory');
+  };
+
+  const toggleCarStatus = (id, newStatus) => {
+    if (setCars) {
+      setCars((prev) =>
+        prev.map((car) => (car.id === id ? { ...car, status: newStatus || (car.status === 'available' ? 'reserved' : 'available') } : car))
+      );
+    }
+    setToast(`Vehicle status updated to ${newStatus}`);
+  };
+
   const value = {
     darkMode,
     setDarkMode,
@@ -71,6 +109,11 @@ export function CarProvider({ children }) {
     compareIds,
     toggleCompare,
     cars,
+    setCars,
+    addCar,
+    updateCar,
+    deleteCar,
+    toggleCarStatus,
     filteredCars,
     carsLoading,
     inventoryError,

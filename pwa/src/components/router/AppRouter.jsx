@@ -8,6 +8,16 @@ import ConciergePage from '../../pages/ConciergePage';
 import CarDetailPage from '../../pages/CarDetailPage';
 import LoginPage from '../../pages/LoginPage';
 import SignupPage from '../../pages/SignupPage';
+import AdminInventoryPage from '../../pages/AdminInventoryPage';
+import { useAuth } from '../../context/AuthContext';
+
+function RequireAdmin({ children }) {
+  const { isAdmin } = useAuth();
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
 
 export default function AppRouter() {
   return (
@@ -22,6 +32,14 @@ export default function AppRouter() {
       <Route path="/contact" element={<ConciergePage />} />
       <Route path="/concierge" element={<Navigate to="/contact" replace />} />
       <Route path="/car/:id" element={<CarDetailPage />} />
+      <Route
+        path="/admin"
+        element={
+          <RequireAdmin>
+            <AdminInventoryPage />
+          </RequireAdmin>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
