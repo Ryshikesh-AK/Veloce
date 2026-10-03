@@ -28,7 +28,7 @@ function AppShell() {
             className="pwa-inventory-error rounded-lg border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100 flex items-center justify-between"
             role="status"
           >
-            <span>{inventoryError} (Showing cached/sample inventory)</span>
+            <span>Live inventory is unavailable. {inventoryError}</span>
             <button
               type="button"
               className="ml-2 font-semibold underline cursor-pointer"

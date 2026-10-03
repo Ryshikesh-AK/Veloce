@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { hapticCard, hapticAction } from '../../utils/haptics';
 import { useCarContext } from '../../context/CarContext';
+import CarPhoto from './CarPhoto';
 
 export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propIsFav, isCompared: propIsComp, onToggleFavorite, onCompare, onViewDetails }) {
   const navigate = useNavigate();
@@ -69,10 +70,10 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
     >
       {/* Thumbnail Container */}
       <div className="relative h-48 w-full bg-slate-950 overflow-hidden">
-        <img 
-          alt={title} 
-          src={imageUrl} 
-          className={`w-full h-full object-cover filter brightness-95 contrast-105 ${imgObjectPos}`} 
+        <CarPhoto
+          alt={title}
+          src={imageUrl}
+          className={`w-full h-full object-cover filter brightness-95 contrast-105 ${imgObjectPos}`}
         />
         
         {status && status !== 'Available' && (

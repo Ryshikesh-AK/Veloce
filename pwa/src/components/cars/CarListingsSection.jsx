@@ -4,6 +4,8 @@ import CarCard from './CarCard';
 export default function CarListingsSection({ 
   darkMode,
   cars, 
+  inventoryCount = cars.length,
+  inventoryError = '',
   favorites, 
   compareIds = [],
   isSavedView = false,
@@ -55,10 +57,14 @@ export default function CarListingsSection({
         {cars.length === 0 && (
           <div className="border-t border-white/10 py-8" data-purpose="empty-car-list">
             <h3 className={`text-base font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {isSavedView ? 'Your saved list is empty' : 'No cars match your search'}
+              {isSavedView
+                ? inventoryError ? 'Saved cars unavailable' : 'Your saved list is empty'
+                : inventoryError ? 'Live inventory unavailable' : inventoryCount === 0 ? 'No vehicles listed yet' : 'No cars match your search'}
             </h3>
             <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-              {isSavedView ? 'Save a car from Explore and it will appear here.' : 'Try another model or category.'}
+              {isSavedView
+                ? inventoryError ? 'Reconnect and retry to load your saved vehicles.' : 'Save a car from Explore and it will appear here.'
+                : inventoryError ? 'Reconnect and retry to see current listings.' : inventoryCount === 0 ? 'New listings will appear here when they are available.' : 'Try another model or category.'}
             </p>
             {isSavedView && <button className="mt-4 min-h-10 text-sm font-semibold text-emerald-400 cursor-pointer" onClick={onBrowse}>Browse cars →</button>}
           </div>

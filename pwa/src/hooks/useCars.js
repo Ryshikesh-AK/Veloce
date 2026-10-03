@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { listCars } from '../services/api';
-import { SAMPLE_CARS } from '../constants';
 
 export function useCars(activeTab, favorites) {
   const [cars, setCars] = useState([]);
@@ -17,13 +16,13 @@ export function useCars(activeTab, favorites) {
     listCars()
       .then((inventory) => {
         if (isCurrent) {
-          setCars(inventory.length > 0 ? inventory : SAMPLE_CARS);
+          setCars(inventory);
         }
       })
       .catch((error) => {
         if (isCurrent) {
+          setCars([]);
           setInventoryError(error.message);
-          setCars(SAMPLE_CARS);
         }
       })
       .finally(() => {
@@ -42,8 +41,8 @@ export function useCars(activeTab, favorites) {
     const sourceCars = activeTab === 'saved' ? cars.filter((car) => favorites.includes(car.id)) : cars;
     const query = searchQuery.trim().toLowerCase();
     const matchingCars = sourceCars.filter((car) => {
-      const matchesCategory = selectedCategory === 'All cars' || car.category.toLowerCase() === selectedCategory.toLowerCase();
-      const matchesSearch = `${car.title} ${car.location || ''} ${car.category}`.toLowerCase().includes(query);
+      const matchesCategory = selectedCategory === 'All cars' || (car.category || '').toLowerCase() === selectedCategory.toLowerCase();
+      const matchesSearch = `${car.title || ''} ${car.location || ''} ${car.category || ''}`.toLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCars } from '../hooks/useCars';
 import { useTestDrives } from '../hooks/useTestDrives';
@@ -7,6 +8,7 @@ import { SAVED_KEY, COMPARE_KEY, THEME_KEY } from '../constants';
 const CarContext = createContext(null);
 
 export function CarProvider({ children }) {
+  const navigate = useNavigate();
   const [darkMode, setDarkMode] = useLocalStorage(THEME_KEY, true);
   const [favorites, setFavorites] = useLocalStorage(SAVED_KEY, ['porsche-911-carrera']);
   const [compareIds, setCompareIds] = useLocalStorage(COMPARE_KEY, []);
@@ -70,6 +72,7 @@ export function CarProvider({ children }) {
     setSelectedCar(car);
     cancelDriveRequest();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(`/car/${car.id}`);
   };
 
   const value = {

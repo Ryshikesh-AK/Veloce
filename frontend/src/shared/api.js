@@ -1,10 +1,15 @@
 const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
 const ADMIN_TOKEN_KEY = 'veloce-admin-token';
+const ADMIN_EMAIL_KEY = 'veloce-admin-email';
 
 export const getAdminToken = () => sessionStorage.getItem(ADMIN_TOKEN_KEY);
+export const getAdminEmail = () => sessionStorage.getItem(ADMIN_EMAIL_KEY);
 
-export const clearAdminToken = () => sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+export const clearAdminToken = () => {
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  sessionStorage.removeItem(ADMIN_EMAIL_KEY);
+};
 
 export function resolveImageUrl(image) {
   if (!image || /^(https?:|data:|blob:)/i.test(image)) return image || '';
@@ -71,6 +76,7 @@ export const carApi = {
   login(email, password) {
     return request('/auth/login', { method: 'POST', body: { email, password } }).then((result) => {
       sessionStorage.setItem(ADMIN_TOKEN_KEY, result.access_token);
+      sessionStorage.setItem(ADMIN_EMAIL_KEY, email.trim().toLowerCase());
       return result;
     });
   },

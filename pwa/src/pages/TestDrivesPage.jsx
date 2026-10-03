@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ScreenHeading from '../components/common/ScreenHeading';
 import EmptyState from '../components/common/EmptyState';
+import CarPhoto from '../components/cars/CarPhoto';
 import { useCarContext } from '../context/CarContext';
 
 export default function TestDrivesPage() {
@@ -58,7 +59,7 @@ export default function TestDrivesPage() {
             key={request.id}
           >
             <div className="flex gap-3 p-3">
-              <img
+              <CarPhoto
                 className="size-20 shrink-0 rounded-lg object-cover"
                 src={request.carImage}
                 alt={request.carName}

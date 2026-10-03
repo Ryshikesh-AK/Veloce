@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ScreenHeading from '../components/common/ScreenHeading';
 import EmptyState from '../components/common/EmptyState';
+import CarPhoto from '../components/cars/CarPhoto';
 import { useCarContext } from '../context/CarContext';
 
 export default function ComparePage() {
@@ -31,7 +32,7 @@ export default function ComparePage() {
               className="pwa-compare-card w-[82%] sm:w-[320px] min-w-[280px] snap-start overflow-hidden rounded-xl border border-white/10 bg-slate-900/70"
               key={car.id}
             >
-              <img className="aspect-[1.55] w-full object-cover" src={car.imageUrl} alt={car.title} />
+              <CarPhoto className="aspect-[1.55] w-full object-cover" src={car.imageUrl} alt={car.title} />
               <div className="space-y-4 p-4">
                 <div>
                   <h2 className="text-lg font-semibold text-white">{car.title}</h2>

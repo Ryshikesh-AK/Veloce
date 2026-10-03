@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { formatPrice } from '../../shared/format.js';
+import CarPhoto from '../../shared/CarPhoto.jsx';
 import {
-  ArrowLeft, ArrowRight, Bell, CalendarDays, CarFront, Check, CircleDollarSign, LayoutDashboard,
+  ArrowLeft, ArrowRight, CalendarDays, CarFront, Check, CircleDollarSign, LayoutDashboard,
   LogOut, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Upload, X
 } from 'lucide-react';
 
@@ -11,8 +12,7 @@ const sections = [
   { path: '/admin/test-drives', label: 'Test-drive queue', icon: CalendarDays },
   { path: '/admin/finance', label: 'Financial overview', icon: CircleDollarSign },
   { path: '/admin/featured', label: 'Featured cars', icon: Sparkles },
-  { path: '/admin/new', label: 'Add a car', icon: Plus },
-  { path: '/admin/notifications', label: 'Notifications', icon: Bell }
+  { path: '/admin/new', label: 'Add a car', icon: Plus }
 ];
 
 const getActivePath = (path) => path.startsWith('/admin/edit/') ? '/admin/edit' : sections.some((section) => section.path === path) ? path : '/admin';
@@ -31,9 +31,9 @@ function SectionHeading({ eyebrow, title, description, action }) {
 }
 
 export default function AdminConsolePage({
-  path, cars, carsLoading, carsError, onRetryCars, featuredIds, adminAlerts, onAdd, onUpdate, onRemove,
+  path, cars, carsLoading, carsError, onRetryCars, featuredIds, adminEmail, onAdd, onUpdate, onRemove,
   testDrives, onApproveTestDrive, onDeclineTestDrive, onFeaturedChange, onStatusChange,
-  onFinancialChange, onPriceChange, onClearAlerts, onNavigate, onClose, onLogout
+  onFinancialChange, onPriceChange, onNavigate, onClose, onLogout
 }) {
   const activePath = getActivePath(path);
   const [inventoryStatus, setInventoryStatus] = useState('All');
@@ -58,12 +58,10 @@ export default function AdminConsolePage({
               <Icon size={18} />
               <span>{label}</span>
               {sectionPath === '/admin/test-drives' && testDrives.filter((request) => request.status === 'pending').length > 0 && <span className="nav-count">{testDrives.filter((request) => request.status === 'pending').length}</span>}
-              {sectionPath === '/admin/notifications' && adminAlerts > 0 && <span className="nav-count">{adminAlerts}</span>}
             </button>
           ))}
         </nav>
         <div className="admin-console-sidebar-bottom">
-          <span className="admin-session-status"><ShieldCheck size={15} /> Admin session active</span>
           <button className="secondary-button" onClick={onClose}><ArrowLeft size={15} /> Back to marketplace</button>
           <button className="secondary-button" onClick={onLogout}><LogOut size={15} /> Sign out</button>
         </div>
@@ -72,18 +70,23 @@ export default function AdminConsolePage({
       <main className="admin-console-main">
         <header className="admin-console-topbar">
           <div className="admin-console-breadcrumb"><span>Veloce Motors</span><span>/</span><strong>{activePath === '/admin/edit' ? 'Edit car' : sections.find((section) => section.path === activePath)?.label}</strong></div>
-          <span className="admin-session-status"><ShieldCheck size={15} /> Secure admin area</span>
+          <div className="admin-console-topbar-actions">
+            <div className="admin-account-status" title={adminEmail || 'Administrator account'}>
+              <ShieldCheck size={16} />
+              <span><small>Signed in as</small><strong>{adminEmail || 'Administrator'}</strong></span>
+            </div>
+            <button className="secondary-button admin-topbar-signout" onClick={onLogout}><LogOut size={15} /><span>Sign out</span></button>
+          </div>
         </header>
         <div className="admin-console-content">
           <div className="admin-page-transition" key={activePath}>
-            {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminAlerts={adminAlerts} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
+            {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} testDrives={testDrives} adminEmail={adminEmail} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
             {activePath === '/admin/inventory' && <InventoryPage cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={onRetryCars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onUpdate={onUpdate} onStatusChange={onStatusChange} onFinancialChange={onFinancialChange} onPriceChange={onPriceChange} onNavigate={onNavigate} />}
             {activePath === '/admin/test-drives' && <TestDriveQueuePage requests={testDrives} onApprove={onApproveTestDrive} onDecline={onDeclineTestDrive} />}
             {activePath === '/admin/finance' && <FinancialPage cars={cars} onNavigate={onNavigate} />}
             {activePath === '/admin/featured' && <FeaturedPage cars={cars} featuredIds={featuredIds} onFeaturedChange={onFeaturedChange} />}
             {activePath === '/admin/new' && <CreateCarPage onAdd={onAdd} onDone={() => onNavigate('/admin/inventory')} />}
             {activePath === '/admin/edit' && (editingCar ? <EditCarPage key={editingCar.id} car={editingCar} onUpdate={onUpdate} onDone={() => onNavigate('/admin/inventory')} /> : <div className="admin-empty-state">This car could not be found. <button className="text-button" onClick={() => onNavigate('/admin/inventory')}>Return to inventory</button></div>)}
-            {activePath === '/admin/notifications' && <NotificationsPage count={adminAlerts} onClear={onClearAlerts} />}
           </div>
         </div>
       </main>
@@ -91,7 +94,8 @@ export default function AdminConsolePage({
   );
 }
 
-function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate, onStatusSelect }) {
+function OverviewPage({ cars, featuredIds, testDrives, adminEmail, onNavigate, onStatusSelect }) {
+  const pendingTestDrives = testDrives.filter((request) => request.status === 'pending').length;
   const statusCounts = cars.reduce((counts, car) => {
     const status = car.status || 'Available';
     counts[status] = (counts[status] || 0) + 1;
@@ -100,11 +104,16 @@ function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate, onStatusSele
 
   return (
     <>
-      <SectionHeading eyebrow="CATALOG CONTROL CENTER" title="Good to see you." description="A clear view of your marketplace, listings, and featured collection." action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
+      <SectionHeading eyebrow="CATALOG CONTROL CENTER" title="Good to see you." description="A live view of inventory and customer appointments." action={<button className="primary-button" onClick={() => onNavigate('/admin/new')}><Plus size={16} /> Add a car</button>} />
+      <section className="admin-account-card" aria-label="Administrator session">
+        <ShieldCheck size={20} />
+        <span><small>Signed in as</small><strong>{adminEmail || 'Administrator'}</strong><small>Secure session · password is never shown</small></span>
+        <span className="admin-account-active">Active</span>
+      </section>
       <div className="admin-metrics">
         <div className="admin-metric"><span>Live listings</span><strong>{cars.length}</strong><small>Vehicles in your inventory</small></div>
         <div className="admin-metric"><span>Featured cars</span><strong>{featuredIds.length}</strong><small>Shown in the home carousel</small></div>
-        <div className="admin-metric"><span>New visitors</span><strong>{adminAlerts}</strong><small>Since notifications were cleared</small></div>
+        <button type="button" className="admin-metric inventory-metric pending-test-drives" onClick={() => onNavigate('/admin/test-drives')}><span>Pending test drives</span><strong>{pendingTestDrives}</strong><small>Review customer requests</small></button>
         {['Available', 'Reserved', 'Sold'].map((status) => <button type="button" className={`admin-metric inventory-metric status-${status.toLowerCase()}`} key={status} onClick={() => onStatusSelect(status)}><span>{status}</span><strong>{statusCounts[status]}</strong><small>View {status.toLowerCase()} cars</small></button>)}
       </div>
       <section className="admin-quick-actions">
@@ -114,7 +123,6 @@ function OverviewPage({ cars, featuredIds, adminAlerts, onNavigate, onStatusSele
           <button onClick={() => onNavigate('/admin/test-drives')}><CalendarDays size={19} /><span><strong>Review test-drive requests</strong><small>Approve appointments in request order</small></span><ArrowRight size={17} /></button>
           <button onClick={() => onNavigate('/admin/finance')}><CircleDollarSign size={19} /><span><strong>View financial overview</strong><small>Review profit, pending balances, and sales</small></span><ArrowRight size={17} /></button>
           <button onClick={() => onNavigate('/admin/featured')}><Sparkles size={19} /><span><strong>Choose featured cars</strong><small>Curate the homepage carousel</small></span><ArrowRight size={17} /></button>
-          <button onClick={() => onNavigate('/admin/notifications')}><Bell size={19} /><span><strong>View notifications</strong><small>{adminAlerts ? `${adminAlerts} new visitor ${adminAlerts === 1 ? 'session' : 'sessions'}` : 'No unread visitor activity'}</small></span><ArrowRight size={17} /></button>
         </div>
       </section>
     </>
@@ -132,7 +140,7 @@ function TestDriveQueuePage({ requests, onApprove, onDecline }) {
     <section className="test-drive-queue">
       {pendingRequests.map((request, index) => <article className="test-drive-queue-item" key={request.id}>
         <div className="test-drive-queue-position">{index + 1}</div>
-        <img src={request.carImage} alt="" />
+        <CarPhoto src={request.carImage} alt={`${request.carName} photo`} className="admin-vehicle-photo admin-queue-photo" />
         <div className="test-drive-queue-details">
           <div className="test-drive-queue-car"><strong>{request.carName}</strong><span>Preferred: {formatDateTime(request.preferredAt)}</span></div>
           <div className="test-drive-customer"><strong>{request.customerName}</strong><a href={`mailto:${request.customerEmail}`}>{request.customerEmail}</a>{request.customerPhone && <a href={`tel:${request.customerPhone}`}>{request.customerPhone}</a>}</div>
@@ -148,7 +156,7 @@ function TestDriveQueuePage({ requests, onApprove, onDecline }) {
     {reviewedRequests.length > 0 && <section className="test-drive-reviewed">
       <div className="admin-section-heading"><div><h3>Recently reviewed</h3><p>Appointment decisions and customer notifications.</p></div></div>
       {reviewedRequests.map((request) => <article className="test-drive-reviewed-row" key={request.id}>
-        <img src={request.carImage} alt="" />
+        <CarPhoto src={request.carImage} alt={`${request.carName} photo`} className="admin-vehicle-photo admin-reviewed-photo" />
         <div><strong>{request.carName}</strong><small>{request.customerName} · {request.customerEmail}</small></div>
         <span className={`test-drive-status ${request.status}`}>{request.status === 'approved' ? 'Approved' : 'Declined'}</span>
         <time>{request.status === 'approved' ? formatDateTime(request.approvedAt) : formatDateTime(request.createdAt)}</time>
@@ -259,7 +267,7 @@ function InventoryPage({ cars, carsLoading, carsError, onRetryCars, statusFilter
       <div className="admin-inventory-list">
         {filteredCars.map((car) => (
           <article className="admin-inventory-row" key={car.id}>
-            <img src={car.image} alt={car.name} />
+            <CarPhoto src={car.image} alt={`${car.name} photo`} className="admin-vehicle-photo admin-inventory-photo" />
             <div className="admin-inventory-copy"><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><span>{car.year} · {car.type} · {car.location}</span><button type="button" className="admin-price-edit" onClick={() => onNavigate(`/admin/edit/${car.id}`)}><Pencil size={13} /><span>Edit details</span></button></div>
             <div className="admin-price-editor">
               {editingPriceId === car.id ? <form className="admin-price-form" onSubmit={(event) => savePrice(event, car.id)}>
@@ -301,7 +309,7 @@ function FeaturedPage({ cars, featuredIds, onFeaturedChange }) {
           {cars.map((car) => (
             <label className="admin-featured-row" key={car.id}>
               <input type="checkbox" checked={featuredIds.includes(car.id)} onChange={() => onFeaturedChange(car.id, !car.isFeatured)} />
-              <img src={car.image} alt="" />
+              <CarPhoto src={car.image} alt={`${car.name} photo`} className="admin-vehicle-photo admin-featured-photo" />
               <span><strong>{car.name}{car.model ? ` ${car.model}` : ''}</strong><small>{car.year} · {car.type}</small></span>
               <b>{formatPrice(car.price, car.currency)}</b>
             </label>

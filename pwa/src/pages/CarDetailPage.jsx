@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ScreenHeading from '../components/common/ScreenHeading';
+import CarPhoto from '../components/cars/CarPhoto';
 import { useCarContext } from '../context/CarContext';
 
 export default function CarDetailPage({ car: propCar }) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const { cars, favorites, toggleFavorite, compareIds, toggleCompare, requestDriveForCar } = useCarContext();
-  const [isImageExpanded, setIsImageExpanded] = useState(false);
-
   const car = propCar || cars.find((c) => c.id === paramId);
+  const [isImageExpanded, setIsImageExpanded] = useState(false);
+  const [failedPhotoSrc, setFailedPhotoSrc] = useState('');
+  const isPhotoUnavailable = !car?.imageUrl || failedPhotoSrc === car.imageUrl;
+
   const isFavorite = car ? favorites.includes(car.id) : false;
   const isCompared = car ? compareIds.includes(car.id) : false;
 
@@ -43,14 +46,19 @@ export default function CarDetailPage({ car: propCar }) {
         <ScreenHeading eyebrow="VEHICLE DETAILS" title={car.title} onBack={() => navigate(-1)} />
       </div>
       <div className="pwa-detail-image relative overflow-hidden rounded-xl bg-slate-900">
-        <img className="pwa-detail-photo aspect-[1.18] w-full object-cover" src={car.imageUrl} alt={car.title} />
-        <button
+        <CarPhoto
+          className="pwa-detail-photo aspect-[1.18] w-full object-cover"
+          src={car.imageUrl}
+          alt={car.title}
+          onError={() => setFailedPhotoSrc(car.imageUrl)}
+        />
+        {!isPhotoUnavailable && <button
           className="pwa-full-image-trigger cursor-pointer"
           type="button"
           onClick={() => setIsImageExpanded(true)}
         >
           View full image
-        </button>
+        </button>}
         <span className="absolute bottom-3 left-3 rounded-md bg-black/70 px-3 py-1.5 text-xs font-semibold text-white">
           {car.status || car.badge || 'Available'}
         </span>
@@ -125,7 +133,7 @@ export default function CarDetailPage({ car: propCar }) {
           >
             Close
           </button>
-          <img src={car.imageUrl} alt={car.title} className="max-h-[90vh] max-w-[90vw] object-contain" onClick={(event) => event.stopPropagation()} />
+          <CarPhoto src={car.imageUrl} alt={car.title} className="max-h-[90vh] max-w-[90vw] object-contain" />
         </div>
       )}
     </section>

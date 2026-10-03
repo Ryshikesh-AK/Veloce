@@ -1,5 +1,6 @@
 const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')).replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
+const REQUEST_TIMEOUT_MS = 12000;
 
 export function resolveImageUrl(image) {
   if (!image || /^(https?:|data:|blob:)/i.test(image)) return image || '';
@@ -10,19 +11,28 @@ async function request(path, options = {}) {
   if (!API_ORIGIN) {
     throw new Error('Live inventory is not configured. Set VITE_API_BASE_URL to the Veloce API URL and redeploy.');
   }
-  let response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    response = await fetch(`${API_ROOT}${path}`, options);
-  } catch {
-    throw new Error('Could not reach the Veloce service. Check your connection and try again.');
+    let response;
+    try {
+      response = await fetch(`${API_ROOT}${path}`, { ...options, signal: controller.signal });
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('The Veloce service took too long to respond. Please try again.');
+      }
+      throw new Error('Could not reach the Veloce service. Check your connection and try again.');
+    }
+    const payload = response.status === 204 ? null : await response.json().catch(() => null);
+    if (!response.ok) {
+      const detail = payload?.detail;
+      const message = Array.isArray(detail) ? detail.map((item) => item.msg).join(', ') : detail;
+      throw new Error(message || `Veloce request failed (${response.status}). Please try again.`);
+    }
+    return payload;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  const payload = response.status === 204 ? null : await response.json().catch(() => null);
-  if (!response.ok) {
-    const detail = payload?.detail;
-    const message = Array.isArray(detail) ? detail.map((item) => item.msg).join(', ') : detail;
-    throw new Error(message || `Request failed (${response.status})`);
-  }
-  return payload;
 }
 
 export async function listCars(page = 1, pageSize = 50) {

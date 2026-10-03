@@ -49,6 +49,28 @@ def test_production_settings_require_cloudinary_credentials() -> None:
         )
 
 
+@pytest.mark.parametrize("origin", ["http://127.0.0.1:5173", "http://127.0.0.1:5174"])
+def test_local_development_origins_are_allowed_by_cors(origin: str) -> None:
+    response = client.options(
+        "/api/v1/cars",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == origin
+
+
+def test_relative_upload_directory_is_anchored_to_backend() -> None:
+    from app.core.config import BACKEND_DIRECTORY, Settings
+
+    settings = Settings(_env_file=None, upload_directory="uploads")
+
+    assert settings.upload_directory == BACKEND_DIRECTORY / "uploads"
+
+
 def setup_function() -> None:
     with Session(test_engine) as db:
         for table in reversed(Base.metadata.sorted_tables):

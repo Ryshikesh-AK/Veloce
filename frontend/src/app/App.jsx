@@ -6,7 +6,7 @@ import ComparePage from '../features/compare/ComparePage.jsx';
 import AdminLogin from '../features/admin/AdminLogin.jsx';
 import AdminConsolePage from '../features/admin/AdminConsolePage.jsx';
 import { formatPrice } from '../shared/format.js';
-import { carApi, clearAdminToken, getAdminToken } from '../shared/api.js';
+import { carApi, clearAdminToken, getAdminEmail, getAdminToken } from '../shared/api.js';
 import {
   ArrowRight, BarChart3, Bell, CarFront, Check, ChevronDown, CircleHelp, Expand,
   CalendarDays, Clock3, Eye, Heart, LayoutGrid, Leaf, MapPin, Menu, Moon, MoreHorizontal, Phone, Plus,
@@ -35,8 +35,8 @@ export default function App() {
   const [testDriveCar, setTestDriveCar] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const [adminAlerts, setAdminAlerts] = useState(() => Number(localStorage.getItem('veloce-admin-alerts') || 0));
   const [isAdmin, setIsAdmin] = useState(() => Boolean(getAdminToken()));
+  const [adminEmail, setAdminEmail] = useState(() => getAdminEmail() || '');
   const isAdminRoute = currentPath.startsWith('/admin');
   const activeTab = tabForPath(currentPath);
   const approvedTestDriveCount = testDrives.filter((request) => request.status === 'approved' && request.customerEmail === customerEmail.trim().toLowerCase()).length;
@@ -77,6 +77,7 @@ export default function App() {
   useEffect(() => {
     const handleExpiredAdminSession = () => {
       setIsAdmin(false);
+      setAdminEmail('');
       setToast('Your admin session expired. Please sign in again.');
     };
     window.addEventListener('veloce-admin-session-expired', handleExpiredAdminSession);
@@ -99,13 +100,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const visitorIsKnown = sessionStorage.getItem('veloce-visitor-counted') === 'true';
-    if (!visitorIsKnown && !isAdmin) {
-      sessionStorage.setItem('veloce-visitor-counted', 'true');
-      const nextAlerts = Number(localStorage.getItem('veloce-admin-alerts') || 0) + 1;
-      localStorage.setItem('veloce-admin-alerts', String(nextAlerts));
-      setAdminAlerts(nextAlerts);
-    }
+    if (isAdmin) return undefined;
     if (sessionStorage.getItem('veloce-member') !== 'true' && localStorage.getItem('veloce-signup-dismissed') !== 'true') {
       const timer = setTimeout(() => setShowSignup(true), 5000);
       return () => clearTimeout(timer);
@@ -243,14 +238,15 @@ export default function App() {
   const logoutAdmin = () => {
     clearAdminToken();
     setIsAdmin(false);
+    setAdminEmail('');
   };
 
   if (isAdminRoute && !isAdmin) {
-    return <AdminLogin onLogin={async () => { setIsAdmin(true); await loadTestDrives(true); }} />;
+    return <AdminLogin onLogin={async (email) => { setAdminEmail(email); setIsAdmin(true); await loadTestDrives(true); }} />;
   }
 
   if (isAdminRoute && isAdmin) {
-    return <><AdminConsolePage path={currentPath} cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={loadCars} testDrives={testDrives} adminAlerts={adminAlerts} featuredIds={cars.filter((car) => car.isFeatured).map((car) => car.id)} onApproveTestDrive={approveTestDrive} onDeclineTestDrive={declineTestDrive} onAdd={addCar} onUpdate={updateCar} onRemove={removeCar} onFeaturedChange={(id, isFeatured) => updateCar(id, { isFeatured })} onStatusChange={(id, status) => updateCar(id, { status })} onFinancialChange={(id, field, value) => updateCar(id, { [field]: value === '' ? null : Number(value) })} onPriceChange={(id, price) => updateCar(id, { price })} onClearAlerts={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} onLogout={logoutAdmin} />{toast && <div className="toast" role="status"><Check size={16} /> {toast}</div>}</>;
+    return <><AdminConsolePage path={currentPath} cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={loadCars} testDrives={testDrives} adminEmail={adminEmail} featuredIds={cars.filter((car) => car.isFeatured).map((car) => car.id)} onApproveTestDrive={approveTestDrive} onDeclineTestDrive={declineTestDrive} onAdd={addCar} onUpdate={updateCar} onRemove={removeCar} onFeaturedChange={(id, isFeatured) => updateCar(id, { isFeatured })} onStatusChange={(id, status) => updateCar(id, { status })} onFinancialChange={(id, field, value) => updateCar(id, { [field]: value === '' ? null : Number(value) })} onPriceChange={(id, price) => updateCar(id, { price })} onNavigate={navigateTo} onClose={() => navigateTo('Discover')} onLogout={logoutAdmin} />{toast && <div className="toast" role="status"><Check size={16} /> {toast}</div>}</>;
   }
 
   return (
@@ -270,7 +266,7 @@ export default function App() {
         <div className="sidebar-label manage-label">Manage</div>
         {isAdmin && <nav className="main-nav">
           <button className="nav-item" onClick={() => navigateTo('Admin workspace')}><Settings2 size={18} /><span>Admin workspace</span><span className="admin-pill">Admin</span></button>
-          <button className="nav-item" onClick={() => { localStorage.setItem('veloce-admin-alerts', '0'); setAdminAlerts(0); }}><Bell size={18} /><span>Notifications</span>{adminAlerts > 0 && <span className="nav-count">{adminAlerts}</span>}<span className="notification-dot" /></button>
+          <button className="nav-item" onClick={() => navigateTo('/admin/test-drives')}><CalendarDays size={18} /><span>Test-drive queue</span>{testDrives.filter((request) => request.status === 'pending').length > 0 && <span className="nav-count">{testDrives.filter((request) => request.status === 'pending').length}</span>}</button>
         </nav>}
         <div className="sidebar-bottom">
           <button className="help-card" onClick={openContact} aria-haspopup="dialog"><div className="help-icon"><CircleHelp size={18} /></div><div><strong>Need help?</strong><span>Talk to our team</span></div><ArrowRight size={15} /></button>

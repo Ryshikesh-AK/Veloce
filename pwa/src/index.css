@@ -3,20 +3,20 @@
 @theme {
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Newsreader, Georgia, serif;
-  --color-slate-950: #141719;
-  --color-slate-900: #30383c;
-  --color-slate-800: #30383c;
-  --color-emerald-400: #b9f43d;
-  --color-emerald-500: #b9f43d;
-  --color-emerald-600: #b9f43d;
+  --color-slate-950: #0b121d;
+  --color-slate-900: #142131;
+  --color-slate-800: #203147;
+  --color-emerald-400: #58dcf5;
+  --color-emerald-500: #28c5e8;
+  --color-emerald-600: #159bbf;
   --shadow-subtle: 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
   --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 :root {
   font-family: Inter, system-ui, sans-serif;
-  color: #f3f5f2;
-  background: #141719;
+  color: #eef5fb;
+  background: #0b121d;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -34,7 +34,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  background: #141719;
+  background: #0b121d;
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
 }
@@ -45,9 +45,9 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    radial-gradient(ellipse at 50% -12%, rgba(48, 56, 60, 0.55), transparent 42rem),
+    radial-gradient(ellipse at 50% -12%, rgba(32, 49, 71, 0.6), transparent 42rem),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 12px),
-    #141719;
+    #0b121d;
 }
 
 button,
@@ -61,7 +61,7 @@ button {
 
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid #79c99a;
+  outline: 2px solid #58dcf5;
   outline-offset: 3px;
 }
 
@@ -99,8 +99,8 @@ input:focus-visible {
   transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 0.75rem;
-  background: rgba(23, 31, 25, 0.96);
-  color: #f3f5f2;
+  background: rgba(20, 33, 49, 0.97);
+  color: #eef5fb;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -114,13 +114,16 @@ input:focus-visible {
   min-height: 100svh;
   margin-inline: auto;
   overflow: visible;
-  background: linear-gradient(180deg, #141719 0%, #30383c 36rem, #141719 100%);
+  background: linear-gradient(180deg, #0b121d 0%, #142131 36rem, #0b121d 100%);
   box-shadow: 0 0 64px rgba(0, 0, 0, 0.32);
 }
 
 .pwa-shell[data-theme='light'] {
   color-scheme: light;
   background: #fbfbfc;
+  --color-emerald-400: #b9f43d;
+  --color-emerald-500: #b9f43d;
+  --color-emerald-600: #b9f43d;
 }
 
 .pwa-shell[data-theme='light'] [data-purpose$='-screen'] .text-white {
@@ -212,6 +215,22 @@ input:focus-visible {
   place-items: center;
   padding: 3.5rem 1.25rem 1.25rem;
   background: rgba(5, 8, 10, .97);
+}
+
+.pwa-photo-fallback {
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #162334, #24364b);
+  color: #c5d2e2;
+  text-align: center;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.pwa-shell[data-theme='light'] .pwa-photo-fallback {
+  background: linear-gradient(135deg, #e7edf3, #d6e0e9);
+  color: #435263;
 }
 
 .pwa-image-lightbox img {
@@ -354,8 +373,8 @@ input:focus-visible {
   .pwa-desktop-nav button.active,
   .pwa-desktop-nav a:hover,
   .pwa-desktop-nav a.active {
-    color: #b9f43d;
-    background: rgba(185, 244, 61, .12);
+    color: #58dcf5;
+    background: rgba(88, 220, 245, .12);
   }
 
   .pwa-shell[data-theme='light'] .pwa-desktop-nav button:hover,

@@ -16,6 +16,7 @@ export default function SavedPage() {
     sortBy,
     setSortBy,
     cars,
+    inventoryError,
     favorites,
     compareIds,
     toggleFavorite,
@@ -39,6 +40,8 @@ export default function SavedPage() {
       <CarListingsSection
         darkMode={darkMode}
         cars={savedCars}
+        inventoryCount={cars.length}
+        inventoryError={inventoryError}
         favorites={favorites}
         compareIds={compareIds}
         isSavedView={true}

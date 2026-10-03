@@ -14,7 +14,9 @@ export default function ExplorePage() {
     setSelectedCategory,
     sortBy,
     setSortBy,
+    cars,
     filteredCars,
+    inventoryError,
     favorites,
     compareIds,
     toggleFavorite,
@@ -37,6 +39,8 @@ export default function ExplorePage() {
       <CarListingsSection
         darkMode={darkMode}
         cars={filteredCars}
+        inventoryCount={cars.length}
+        inventoryError={inventoryError}
         favorites={favorites}
         compareIds={compareIds}
         isSavedView={false}
