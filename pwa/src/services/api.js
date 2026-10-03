@@ -2,7 +2,8 @@ import { SAMPLE_CARS } from '../constants';
 
 const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')).replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
-const REQUEST_TIMEOUT_MS = 12000;
+const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS) || 12000;
+const ENABLE_MOCK_FALLBACK = import.meta.env.VITE_ENABLE_MOCK_FALLBACK !== 'false';
 
 export function resolveImageUrl(image) {
   if (!image || /^(https?:|data:|blob:)/i.test(image)) return image || '';
@@ -41,7 +42,7 @@ export async function listCars(page = 1, pageSize = 50) {
   try {
     const result = await request(`/cars?page=${page}&page_size=${pageSize}`);
     const items = Array.isArray(result) ? result : (result.items || []);
-    if (!items || items.length === 0) return SAMPLE_CARS;
+    if (!items || items.length === 0) return ENABLE_MOCK_FALLBACK ? SAMPLE_CARS : [];
 
     return items.map((car) => ({
       ...car,
@@ -59,8 +60,11 @@ export async function listCars(page = 1, pageSize = 50) {
       rating: car.rating == null ? null : Number(car.rating)
     }));
   } catch (error) {
-    console.warn('Backend API request failed, using SAMPLE_CARS from constants:', error.message);
-    return SAMPLE_CARS;
+    if (ENABLE_MOCK_FALLBACK) {
+      console.warn('Backend API request failed, using SAMPLE_CARS from constants:', error.message);
+      return SAMPLE_CARS;
+    }
+    throw error;
   }
 }
 
