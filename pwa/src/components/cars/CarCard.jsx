@@ -23,8 +23,30 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
     imgObjectPos = 'object-cover'
   } = car;
 
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+
+  const imagesList = Array.isArray(car.images) && car.images.length > 0
+    ? car.images
+    : (imageUrl || car.image)
+    ? [imageUrl || car.image]
+    : [];
+
+  const displayPhotoUrl = imagesList[currentImageIndex] || imageUrl || '';
+
   const isFavorite = propIsFav ?? context.favorites.includes(id);
   const isCompared = propIsComp ?? context.compareIds.includes(id);
+
+  const handleNextCardImage = (event) => {
+    event.stopPropagation();
+    hapticAction();
+    setCurrentImageIndex((prev) => (prev + 1) % imagesList.length);
+  };
+
+  const handlePrevCardImage = (event) => {
+    event.stopPropagation();
+    hapticAction();
+    setCurrentImageIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
+  };
 
   const handleToggleFav = (event) => {
     event.stopPropagation();
@@ -68,16 +90,56 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
       }`} 
       data-purpose="car-card"
     >
-      {/* Thumbnail Container */}
-      <div className="relative h-48 w-full bg-slate-950 overflow-hidden">
+      {/* Thumbnail Container with Carousel Controls */}
+      <div className="relative h-48 w-full bg-slate-950 overflow-hidden group">
         <CarPhoto
           alt={title}
-          src={imageUrl}
-          className={`w-full h-full object-cover filter brightness-95 contrast-105 ${imgObjectPos}`}
+          src={displayPhotoUrl}
+          className={`w-full h-full object-cover filter brightness-95 contrast-105 transition-all duration-300 ${imgObjectPos}`}
         />
+
+        {/* Carousel Prev/Next Buttons */}
+        {imagesList.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrevCardImage}
+              aria-label="Previous photo"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={handleNextCardImage}
+              aria-label="Next photo"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
+            >
+              ›
+            </button>
+
+            {/* Carousel Dot Indicators */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10 bg-slate-950/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+              {imagesList.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(idx);
+                  }}
+                  className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
+                    currentImageIndex === idx ? 'bg-emerald-400 w-3' : 'bg-white/50 hover:bg-white'
+                  }`}
+                  aria-label={`Go to photo ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
         
         {status && status !== 'Available' && (
-          <div className="absolute left-3 top-3 rounded-md border border-white/15 bg-slate-950/85 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md">
+          <div className="absolute left-3 top-3 rounded-md border border-white/15 bg-slate-950/85 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md z-10">
             {status}
           </div>
         )}
@@ -88,7 +150,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           whileTap={{ scale: 0.9 }}
           onClick={handleToggleFav}
           aria-label={isFavorite ? 'Remove from saved cars' : 'Save car'}
-          className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-transform cursor-pointer ${
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-transform cursor-pointer z-10 ${
             isFavorite 
               ? 'text-rose-500 border-rose-500/30 bg-slate-950/80' 
               : darkMode 
@@ -101,7 +163,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           </svg>
         </motion.button>
 
-        <div className="absolute bottom-3 right-3">
+        <div className="absolute bottom-3 right-3 z-10">
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

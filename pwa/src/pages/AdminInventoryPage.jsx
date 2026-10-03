@@ -30,6 +30,7 @@ export default function AdminInventoryPage() {
     location: '',
     description: '',
     imageUrl: '',
+    images: [],
     horsepower: '',
     topSpeed: '',
     acceleration: '',
@@ -41,11 +42,17 @@ export default function AdminInventoryPage() {
     keyFeaturesStr: '',
   });
 
-  const [imagePreview, setImagePreview] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
 
   // Handle Edit click
   const handleOpenEdit = (car) => {
     setEditingCar(car);
+    const existingImages = Array.isArray(car.images) && car.images.length > 0
+      ? car.images
+      : (car.imageUrl || car.image)
+      ? [car.imageUrl || car.image]
+      : [];
+
     setFormData({
       title: car.title || car.name || '',
       brand: car.brand || (car.title ? car.title.split(' ')[0] : ''),
@@ -55,7 +62,8 @@ export default function AdminInventoryPage() {
       priceAmount: car.priceAmount || car.price || '',
       location: car.location || '',
       description: car.description || '',
-      imageUrl: car.imageUrl || car.image || '',
+      imageUrl: car.imageUrl || car.image || existingImages[0] || '',
+      images: existingImages,
       horsepower: car.horsepower || car.hp || '450',
       topSpeed: car.topSpeed || '180 mph',
       acceleration: car.acceleration || '3.5s',
@@ -66,7 +74,7 @@ export default function AdminInventoryPage() {
       isFeatured: Boolean(car.isFeatured),
       keyFeaturesStr: Array.isArray(car.keyFeatures) ? car.keyFeatures.join(', ') : '',
     });
-    setImagePreview(car.imageUrl || car.image || '');
+    setNewImageUrl('');
     setIsModalOpen(true);
   };
 
@@ -82,6 +90,7 @@ export default function AdminInventoryPage() {
       location: 'Los Angeles, CA',
       description: '',
       imageUrl: '',
+      images: [],
       horsepower: '450',
       topSpeed: '185 mph',
       acceleration: '3.6s',
@@ -92,8 +101,45 @@ export default function AdminInventoryPage() {
       isFeatured: false,
       keyFeaturesStr: 'Sport Chrono Package, Leather Interior, Adaptive Suspension',
     });
-    setImagePreview('');
+    setNewImageUrl('');
     setIsModalOpen(true);
+  };
+
+  const handleAddImageUrl = () => {
+    if (!newImageUrl.trim()) return;
+    setFormData((prev) => {
+      const updatedImages = [...prev.images, newImageUrl.trim()];
+      return {
+        ...prev,
+        images: updatedImages,
+        imageUrl: prev.imageUrl || updatedImages[0]
+      };
+    });
+    setNewImageUrl('');
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData((prev) => {
+      const updatedImages = prev.images.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...prev,
+        images: updatedImages,
+        imageUrl: updatedImages[0] || ''
+      };
+    });
+  };
+
+  const handleSetPrimaryImage = (indexToPrimary) => {
+    setFormData((prev) => {
+      const targetImage = prev.images[indexToPrimary];
+      const otherImages = prev.images.filter((_, idx) => idx !== indexToPrimary);
+      const reorderedImages = [targetImage, ...otherImages];
+      return {
+        ...prev,
+        images: reorderedImages,
+        imageUrl: targetImage
+      };
+    });
   };
 
   const handleImageFileUpload = (e) => {
@@ -101,8 +147,15 @@ export default function AdminInventoryPage() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, imageUrl: reader.result }));
-        setImagePreview(reader.result);
+        const uploadedUrl = reader.result;
+        setFormData((prev) => {
+          const updatedImages = [...prev.images, uploadedUrl];
+          return {
+            ...prev,
+            images: updatedImages,
+            imageUrl: prev.imageUrl || updatedImages[0]
+          };
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -121,10 +174,20 @@ export default function AdminInventoryPage() {
       maximumFractionDigits: 0,
     }).format(Number(formData.priceAmount));
 
+    const finalImages = formData.images.length > 0
+      ? formData.images
+      : formData.imageUrl
+      ? [formData.imageUrl]
+      : [];
+
     const carPayload = {
       ...formData,
       priceAmount: Number(formData.priceAmount),
       price: formattedPrice,
+      imageUrl: finalImages[0] || formData.imageUrl || '',
+      images: finalImages,
+      fuel: formData.fuelType,
+      fuelType: formData.fuelType,
       rating: 4.9,
       keyFeatures: formData.keyFeaturesStr
         .split(',')
@@ -416,30 +479,76 @@ export default function AdminInventoryPage() {
                 </div>
               </div>
 
-              {/* Image Input Section (Dual URL & File Drop) */}
-              <div className="border-t border-slate-800/80 pt-3">
-                <label className="block text-slate-400 mb-1">Vehicle Image (URL or Upload)</label>
-                <div className="flex gap-2 mb-2">
+              {/* Multi-Image Input Section */}
+              <div className="border-t border-slate-800/80 pt-3 space-y-2">
+                <label className="block text-slate-400">Vehicle Photos Gallery (Multiple Images Support)</label>
+                <div className="flex gap-2">
                   <input
                     type="url"
-                    placeholder="https://images.unsplash.com/..."
-                    value={formData.imageUrl}
-                    onChange={(e) => {
-                      setFormData({ ...formData, imageUrl: e.target.value });
-                      setImagePreview(e.target.value);
+                    placeholder="Enter photo URL (https://images.unsplash.com/...)"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddImageUrl();
+                      }
                     }}
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100"
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-emerald-500"
                   />
-                  <label className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg cursor-pointer border border-slate-700 flex items-center">
+                  <button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    className="px-3.5 py-2 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-lg font-semibold border border-emerald-500/30 text-xs"
+                  >
+                    + Add Image
+                  </button>
+                  <label className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg cursor-pointer border border-slate-700 flex items-center gap-1 font-semibold text-xs">
                     Upload
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageFileUpload} />
                   </label>
                 </div>
 
-                {imagePreview && (
-                  <div className="mt-2 relative w-full h-32 rounded-lg overflow-hidden border border-slate-800 bg-slate-950">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                {/* Thumbnails Gallery List */}
+                {formData.images && formData.images.length > 0 ? (
+                  <div className="space-y-2 pt-2">
+                    <p className="text-[11px] text-slate-400">
+                      {formData.images.length} photo{formData.images.length > 1 ? 's' : ''} attached (First photo is set as primary thumbnail):
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1 bg-slate-950/60 rounded-xl border border-slate-800">
+                      {formData.images.map((imgUrl, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-slate-800 bg-slate-900 aspect-[1.3]">
+                          <img src={imgUrl} alt={`Car photo ${idx + 1}`} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                            {idx === 0 ? (
+                              <span className="text-[10px] bg-emerald-500 text-slate-950 font-bold px-1.5 py-0.5 rounded">
+                                ★ Primary
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSetPrimaryImage(idx)}
+                                className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-1.5 py-0.5 rounded border border-slate-700"
+                              >
+                                Set Primary
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx)}
+                              className="text-[10px] bg-rose-500/80 hover:bg-rose-600 text-white px-1.5 py-0.5 rounded"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-[11px] text-slate-500 italic pt-1">
+                    No images added yet. Add photo URLs or click Upload to build a gallery.
+                  </p>
                 )}
               </div>
 
