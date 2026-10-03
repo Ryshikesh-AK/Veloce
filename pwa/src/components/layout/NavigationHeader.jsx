@@ -78,7 +78,7 @@ export default function NavigationHeader() {
 
       {/* Action Icons: Dark Mode, Admin Portal Link, & User Profile */}
       <div className="flex items-center gap-3">
-        {isAdmin && !isAuthPage && (
+        {isAdmin && !isAuthPage && !location.pathname.startsWith('/admin') && (
           <NavLink
             to="/admin"
             className={({ isActive }) =>

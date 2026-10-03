@@ -8,7 +8,11 @@ import ConciergePage from '../../pages/ConciergePage';
 import CarDetailPage from '../../pages/CarDetailPage';
 import LoginPage from '../../pages/LoginPage';
 import SignupPage from '../../pages/SignupPage';
-import AdminInventoryPage from '../../pages/AdminInventoryPage';
+import AdminDashboardPage from '../../pages/admin/AdminDashboardPage';
+import AdminInventoryPage from '../../pages/admin/AdminInventoryPage';
+import AdminAddCarPage from '../../pages/admin/AdminAddCarPage';
+import AdminFeaturedPage from '../../pages/admin/AdminFeaturedPage';
+import AdminFinancePage from '../../pages/admin/AdminFinancePage';
 import { useAuth } from '../../context/AuthContext';
 
 function RequireAdmin({ children }) {
@@ -32,11 +36,45 @@ export default function AppRouter() {
       <Route path="/contact" element={<ConciergePage />} />
       <Route path="/concierge" element={<Navigate to="/contact" replace />} />
       <Route path="/car/:id" element={<CarDetailPage />} />
+      
+      {/* Structured Admin Section */}
       <Route
         path="/admin"
         element={
           <RequireAdmin>
+            <AdminDashboardPage />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/inventory"
+        element={
+          <RequireAdmin>
             <AdminInventoryPage />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/new"
+        element={
+          <RequireAdmin>
+            <AdminAddCarPage />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/featured"
+        element={
+          <RequireAdmin>
+            <AdminFeaturedPage />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/finance"
+        element={
+          <RequireAdmin>
+            <AdminFinancePage />
           </RequireAdmin>
         }
       />
