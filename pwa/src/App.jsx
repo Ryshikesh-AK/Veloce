@@ -1,24 +1,28 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import NavigationHeader from './components/layout/NavigationHeader';
 import FloatingBottomDock from './components/layout/FloatingBottomDock';
 import Toast from './components/common/Toast';
 import AppRouter from './components/router/AppRouter';
 import { CarProvider, useCarContext } from './context/CarContext';
+import { AuthProvider } from './context/AuthContext';
 
 function AppShell() {
   const { darkMode, inventoryError, carsLoading, retryFetch, toast } = useCarContext();
+  const location = useLocation();
+
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
 
   return (
     <div
       data-theme={darkMode ? 'dark' : 'light'}
-      className={`pwa-shell w-full min-h-screen flex flex-col relative pb-32 transition-colors duration-300 ${
+      className={`pwa-shell w-full min-h-screen flex flex-col relative ${isAuthPage ? 'pb-8' : 'pb-32'} transition-colors duration-300 ${
         darkMode
           ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
           : 'bg-[#FBFBFC] text-slate-900 selection:bg-emerald-500 selection:text-slate-950'
       }`}
     >
-      {/* Navigation Header */}
+      {/* Universal Navigation Header */}
       <NavigationHeader />
 
       {/* Main Container */}
@@ -44,8 +48,8 @@ function AppShell() {
         <AppRouter />
       </main>
 
-      {/* Floating Bottom Navigation */}
-      <FloatingBottomDock />
+      {/* Floating Bottom Navigation (Hidden on Auth pages) */}
+      {!isAuthPage && <FloatingBottomDock />}
 
       {/* Feedback Toast */}
       <Toast message={toast} />
@@ -56,9 +60,11 @@ function AppShell() {
 export default function App() {
   return (
     <BrowserRouter>
-      <CarProvider>
-        <AppShell />
-      </CarProvider>
+      <AuthProvider>
+        <CarProvider>
+          <AppShell />
+        </CarProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

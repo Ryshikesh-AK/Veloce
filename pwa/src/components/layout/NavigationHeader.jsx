@@ -1,12 +1,17 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { hapticTab } from '../../utils/haptics';
 import { useCarContext } from '../../context/CarContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function NavigationHeader() {
   const { darkMode, toggleDarkMode, favorites, compareIds } = useCarContext();
+  const { user, isAuthenticated, logout, skipAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
 
   const links = [
     { path: '/', label: 'Explore' },
@@ -41,18 +46,20 @@ export default function NavigationHeader() {
         </span>
       </div>
 
-      <div className="pwa-desktop-nav" aria-label="Main navigation">
-        {links.map((link) => (
-          <NavLink
-            key={link.path}
-            to={link.path}
-            className={({ isActive }) => (isActive ? 'active' : '')}
-          >
-            {link.label}
-            {link.count > 0 && <span>{link.count}</span>}
-          </NavLink>
-        ))}
-      </div>
+      {!isAuthPage && (
+        <div className="pwa-desktop-nav" aria-label="Main navigation">
+          {links.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              className={({ isActive }) => (isActive ? 'active' : '')}
+            >
+              {link.label}
+              {link.count > 0 && <span>{link.count}</span>}
+            </NavLink>
+          ))}
+        </div>
+      )}
 
       {/* Action Icons: Dark Mode & User Profile */}
       <div className="flex items-center gap-3">
@@ -81,16 +88,52 @@ export default function NavigationHeader() {
             </svg>
           )}
         </motion.button>
-        <div className="relative">
-          <div className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
-            darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-emerald-500 border-[#141719]'
-          }`}>
-            JM
+
+        {isAuthenticated ? (
+          <div className="relative group cursor-pointer" onClick={() => logout()}>
+            <div className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
+              darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-emerald-500 border-[#141719]'
+            }`}>
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+            </div>
+            <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 rounded-full ${
+              darkMode ? 'border-slate-950' : 'border-white'
+            }`}></span>
           </div>
-          <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 rounded-full ${
-            darkMode ? 'border-slate-950' : 'border-white'
-          }`}></span>
-        </div>
+        ) : isAuthPage ? (
+          <button
+            onClick={() => {
+              skipAuth();
+              if (window.history.length > 1 && window.history.state?.idx > 0) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }}
+            className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-full border transition-all duration-300 flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer ${
+              darkMode 
+                ? 'text-slate-200 hover:text-white bg-slate-900 border-emerald-500/30 hover:border-emerald-500/60' 
+                : 'text-slate-700 hover:text-slate-900 bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+            }`}
+          >
+            <span>Skip for now</span>
+            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            className={`group relative overflow-hidden text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+              darkMode 
+                ? 'bg-slate-900/90 text-slate-100 border-emerald-500/30 hover:border-emerald-500/60 hover:shadow-[0_0_15px_rgba(185,244,61,0.2)]' 
+                : 'bg-white text-slate-900 border-slate-200 hover:border-emerald-500/50 hover:shadow-md'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 group-hover:scale-125 transition-transform" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
     </nav>
   );
