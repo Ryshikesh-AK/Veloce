@@ -190,7 +190,7 @@ export default function AdminGarageSection() {
           </div>
 
           {/* High-Impact Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <div className="flex items-center shrink-0">
             <Link
               to="/admin/new"
               className="inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl text-sm font-extrabold text-slate-950 bg-gradient-to-r from-emerald-400 to-[#b9f43d] hover:from-emerald-300 hover:to-[#a8e630] shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer no-underline text-center"
@@ -199,20 +199,6 @@ export default function AdminGarageSection() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               <span>Add Vehicle to Garage</span>
-            </Link>
-
-            <Link
-              to="/admin/customers"
-              className={`inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-sm font-bold border transition-all text-center no-underline ${
-                darkMode
-                  ? 'border-slate-700 bg-slate-950/80 text-slate-200 hover:bg-slate-800 hover:text-white'
-                  : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-100 shadow-xs'
-              }`}
-            >
-              <svg className="w-5 h-5 text-rose-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-              <span>Wishlist Buyers ({customerLeads.length})</span>
             </Link>
           </div>
         </div>

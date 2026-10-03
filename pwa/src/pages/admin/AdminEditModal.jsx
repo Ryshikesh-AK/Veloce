@@ -292,18 +292,60 @@ export default function AdminEditModal({ car, isOpen, onClose, onSave }) {
             <h3 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Media & Imagery
             </h3>
-            <div>
-              <label className="block font-medium mb-1">Vehicle Image URL</label>
-              <input
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className={`w-full rounded-xl p-2.5 border transition-all ${
+            <div className="space-y-3">
+              {/* File Upload Option */}
+              <div>
+                <label className="block font-medium mb-1">Upload New Image File</label>
+                <label className={`flex items-center justify-center gap-2 w-full p-2.5 rounded-xl border border-dashed cursor-pointer transition-colors ${
                   darkMode
-                    ? 'bg-slate-950 border-slate-800 text-slate-100 focus:border-emerald-500'
-                    : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-emerald-500'
-                }`}
-              />
+                    ? 'border-slate-700 bg-slate-950/60 hover:border-emerald-500 text-slate-300'
+                    : 'border-slate-300 bg-slate-50 hover:border-emerald-500 text-slate-700'
+                }`}>
+                  <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span className="text-xs font-semibold">Choose photo from device...</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData((prev) => ({ ...prev, imageUrl: event.target?.result }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Or Divider */}
+              <div className="relative flex items-center justify-center">
+                <span className="h-px w-full bg-slate-200 dark:bg-slate-800" />
+                <span className="absolute px-2 text-[10px] uppercase font-bold text-slate-400 bg-white dark:bg-slate-900">
+                  OR ENTER URL
+                </span>
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Vehicle Image URL</label>
+                <input
+                  type="url"
+                  placeholder="https://images.unsplash.com/..."
+                  value={formData.imageUrl?.startsWith('data:') ? '' : formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  className={`w-full rounded-xl p-2.5 border transition-all ${
+                    darkMode
+                      ? 'bg-slate-950 border-slate-800 text-slate-100 focus:border-emerald-500'
+                      : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-emerald-500'
+                  }`}
+                />
+              </div>
+
               {formData.imageUrl && (
                 <div className="mt-2.5">
                   <img
@@ -349,16 +391,6 @@ export default function AdminEditModal({ car, isOpen, onClose, onSave }) {
                   ))}
                 </select>
               </div>
-
-              <label className="flex items-center gap-2 cursor-pointer font-medium">
-                <input
-                  type="checkbox"
-                  checked={formData.isFeatured}
-                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                  className="rounded text-emerald-500 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
-                />
-                <span>Feature on Homepage</span>
-              </label>
             </div>
           </div>
 

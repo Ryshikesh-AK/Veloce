@@ -342,25 +342,68 @@ export default function AdminAddCarPage() {
               >
                 <h3 className="mb-3 text-base font-semibold">Vehicle Imagery</h3>
 
-                <div className="mb-4">
-                  <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                    High-Res Image URL
-                  </label>
-                  <input
-                    type="url"
-                    name="image"
-                    placeholder="https://images.unsplash.com/..."
-                    value={form.image}
-                    onChange={(e) => {
-                      setPreviewError(false);
-                      handleChange(e);
-                    }}
-                    className={`w-full rounded-xl border px-3.5 py-2.5 text-xs transition-all focus:outline-none focus:ring-2 ${
+                <div className="mb-4 space-y-3">
+                  {/* File Upload Option */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Upload Image File
+                    </label>
+                    <label className={`flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-dashed cursor-pointer transition-colors ${
                       darkMode
-                        ? 'border-slate-800 bg-slate-950 text-slate-100 focus:border-[#b9f43d] focus:ring-[#b9f43d]/20'
-                        : 'border-slate-300 bg-slate-50 text-slate-900 focus:border-[#b9f43d] focus:ring-[#b9f43d]/40'
-                    }`}
-                  />
+                        ? 'border-slate-700 bg-slate-950/60 hover:border-emerald-500 text-slate-300'
+                        : 'border-slate-300 bg-slate-50 hover:border-emerald-500 text-slate-700'
+                    }`}>
+                      <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <span className="text-xs font-semibold">Choose photo from device...</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setPreviewError(false);
+                              setForm((prev) => ({ ...prev, image: event.target?.result }));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Or Image URL Option */}
+                  <div className="relative flex items-center justify-center">
+                    <span className="h-px w-full bg-slate-200 dark:bg-slate-800" />
+                    <span className="absolute px-2 text-[10px] uppercase font-bold text-slate-400 bg-white dark:bg-slate-900">
+                      OR ENTER URL
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                      High-Res Image URL
+                    </label>
+                    <input
+                      type="url"
+                      name="image"
+                      placeholder="https://images.unsplash.com/..."
+                      value={form.image?.startsWith('data:') ? '' : form.image}
+                      onChange={(e) => {
+                        setPreviewError(false);
+                        handleChange(e);
+                      }}
+                      className={`w-full rounded-xl border px-3.5 py-2.5 text-xs transition-all focus:outline-none focus:ring-2 ${
+                        darkMode
+                          ? 'border-slate-800 bg-slate-950 text-slate-100 focus:border-[#b9f43d] focus:ring-[#b9f43d]/20'
+                          : 'border-slate-300 bg-slate-50 text-slate-900 focus:border-[#b9f43d] focus:ring-[#b9f43d]/40'
+                      }`}
+                    />
+                  </div>
                 </div>
 
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-100 dark:border-slate-800 dark:bg-slate-950">
@@ -374,7 +417,7 @@ export default function AdminAddCarPage() {
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center p-4 text-center text-xs text-slate-400">
                       <svg className="mb-2 h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {previewError ? 'Image failed to load. Check URL.' : 'Preview will display here'}
                     </div>
@@ -396,17 +439,6 @@ export default function AdminAddCarPage() {
                     type="checkbox"
                     name="isAvailable"
                     checked={form.isAvailable}
-                    onChange={handleChange}
-                    className="h-4 w-4 rounded accent-[#b9f43d]"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm">Featured in Showcase</span>
-                  <input
-                    type="checkbox"
-                    name="isFeatured"
-                    checked={form.isFeatured}
                     onChange={handleChange}
                     className="h-4 w-4 rounded accent-[#b9f43d]"
                   />
