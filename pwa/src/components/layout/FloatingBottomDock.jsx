@@ -102,7 +102,12 @@ export default function FloatingBottomDock() {
   const tabs = isAdmin ? adminTabs : customerTabs;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none" data-purpose="floating-nav-container">
+    <div
+      className={`fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none ${
+        isAdmin ? 'md:hidden' : ''
+      }`}
+      data-purpose="floating-nav-container"
+    >
       <div className="pwa-bottom-dock w-full max-w-lg px-3 pb-3 safe-bottom pointer-events-auto">
         <nav className={`backdrop-blur-xl border rounded-2xl px-2 py-2 shadow-2xl flex items-center justify-around transition-colors ${
           darkMode 

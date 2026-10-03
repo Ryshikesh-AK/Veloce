@@ -163,7 +163,7 @@ export default function AdminCustomersPage() {
                 </div>
                 <div className={`p-3 rounded-xl border ${darkMode ? 'bg-slate-950/60 border-slate-800' : 'bg-white border-slate-200'}`}>
                   <strong className="block text-blue-400 font-bold mb-1">3. Admin Calls to Close</strong>
-                  Admin clicks "Call Customer", asks if they are ready to purchase or book a private test.
+                  Admin clicks "Call Customer", asks if they are ready to purchase or schedule showroom inspection.
                 </div>
               </div>
             </div>
@@ -309,7 +309,7 @@ export default function AdminCustomersPage() {
               <span className={`text-[11px] font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                 Status:
               </span>
-              {['All', 'Pending Call', 'Contacted', 'Interested', 'Scheduled Test'].map((st) => (
+              {['All', 'Pending Call', 'Contacted', 'Interested'].map((st) => (
                 <button
                   key={st}
                   type="button"
@@ -437,7 +437,6 @@ export default function AdminCustomersPage() {
                           <option value="Pending Call">Pending Call</option>
                           <option value="Contacted">Contacted</option>
                           <option value="Interested">Interested</option>
-                          <option value="Scheduled Test">Scheduled Test</option>
                         </select>
                       </td>
 

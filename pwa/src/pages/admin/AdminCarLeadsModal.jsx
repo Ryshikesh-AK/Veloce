@@ -197,7 +197,6 @@ export default function AdminCarLeadsModal({ car, isOpen, onClose, leads = [], o
                         <option value="Pending Call">Pending Call</option>
                         <option value="Contacted">Contacted</option>
                         <option value="Interested">Interested / Negotiating</option>
-                        <option value="Scheduled Test">Scheduled Test Drive</option>
                       </select>
                     </div>
                   </div>

@@ -13,7 +13,7 @@ export const INITIAL_LEADS = [
     addedDate: '2 hours ago',
     budget: '$150,000',
     notes: 'Wishlisted after comparing Porsche 911 vs RS e-tron GT. Wants weekend track package & immediate delivery.',
-    callStatus: 'Pending Call', // Pending Call | Contacted | Interested | Scheduled Test
+    callStatus: 'Pending Call', // Pending Call | Contacted | Interested
   },
   {
     id: 'lead-2',
@@ -38,8 +38,8 @@ export const INITIAL_LEADS = [
     intentLevel: 'Ready to Buy',
     addedDate: 'Yesterday',
     budget: '$145,000',
-    notes: 'High-intent EV enthusiast. Inquired about 800V rapid charging specs and requested private test drive delivery.',
-    callStatus: 'Scheduled Test',
+    notes: 'High-intent EV enthusiast. Inquired about 800V rapid charging specs and requested private delivery inspection.',
+    callStatus: 'Interested',
   },
   {
     id: 'lead-4',

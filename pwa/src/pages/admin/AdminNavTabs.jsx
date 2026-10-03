@@ -61,28 +61,28 @@ export default function AdminNavTabs({ title, description, subtitle, actions }) 
   ];
 
   return (
-    <header className="space-y-4 mb-6">
+    <header className="space-y-3 mb-4">
       {/* Top Banner Card */}
       <div
-        className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+        className={`p-4 sm:px-6 sm:py-4 rounded-2xl border transition-all ${
           darkMode
-            ? 'bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-900/50 border-slate-800 shadow-xl'
-            : 'bg-gradient-to-r from-white via-slate-50 to-slate-100/40 border-slate-200/90 shadow-sm'
+            ? 'bg-slate-900/90 border-slate-800 shadow-md'
+            : 'bg-white border-slate-200/90 shadow-xs'
         }`}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
+          <div className="min-w-0">
+            <h1 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
               {title}
             </h1>
             {subText && (
-              <p className={`text-xs sm:text-sm mt-1 max-w-2xl ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              <p className={`text-xs sm:text-sm mt-0.5 max-w-2xl truncate sm:whitespace-normal ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 {subText}
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-center">
+          <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
             {actions}
           </div>
         </div>

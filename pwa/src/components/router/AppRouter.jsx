@@ -24,11 +24,19 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+function HomeRoute() {
+  const { isAdmin } = useAuth();
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+  return <ExplorePage />;
+}
+
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<ExplorePage />} />
-      <Route path="/explore" element={<Navigate to="/" replace />} />
+      <Route path="/" element={<HomeRoute />} />
+      <Route path="/explore" element={<HomeRoute />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/saved" element={<SavedPage />} />
