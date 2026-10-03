@@ -25,28 +25,42 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
   const isFavorite = propIsFav ?? context.favorites.includes(id);
   const isCompared = propIsComp ?? context.compareIds.includes(id);
 
-  const handleToggleFav = () => {
+  const handleToggleFav = (event) => {
+    event.stopPropagation();
     hapticAction();
     if (onToggleFavorite) onToggleFavorite(id);
     else context.toggleFavorite(id);
   };
 
-  const handleCompare = () => {
+  const handleCompare = (event) => {
+    event.stopPropagation();
     hapticAction();
     if (onCompare) onCompare(car);
     else context.toggleCompare(id);
   };
 
-  const handleView = () => {
+  const handleView = (event) => {
+    event?.stopPropagation();
     hapticCard();
     if (onViewDetails) onViewDetails(car);
     else navigate(`/car/${id}`);
   };
 
+  const handleCardKeyDown = (event) => {
+    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    handleView();
+  };
+
   return (
     <motion.article 
       whileHover={{ y: -2 }}
-      className={`rounded-2xl border overflow-hidden shadow-xl transition-all ${
+      onClick={handleView}
+      onKeyDown={handleCardKeyDown}
+      role="link"
+      tabIndex={0}
+      aria-label={`View details for ${title}`}
+      className={`rounded-2xl border overflow-hidden shadow-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
         darkMode 
           ? 'bg-slate-900/60 backdrop-blur-md border-white/10 text-white hover:border-emerald-500/30' 
           : 'bg-white border-gray-200/70 text-gray-900 shadow-subtle hover:shadow-md'
