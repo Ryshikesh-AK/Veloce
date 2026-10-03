@@ -76,6 +76,23 @@ export function createTestDrive(details) {
   }).then(normalizeTestDrive);
 }
 
+export function loginApi(email, password) {
+  return request('/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function getMeApi(token) {
+  return request('/auth/me', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 function normalizeTestDrive(request) {
   return { ...request, carImage: resolveImageUrl(request.carImage) };
 }
+
