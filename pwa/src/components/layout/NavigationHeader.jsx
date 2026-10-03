@@ -28,7 +28,7 @@ export default function NavigationHeader() {
       {/* Brand Logo */}
       <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
-          darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
+          darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-emerald-50 text-emerald-600'
         }`}>
           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
             <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"></path>
@@ -83,7 +83,7 @@ export default function NavigationHeader() {
         </motion.button>
         <div className="relative">
           <div className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
-            darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-[#b9f43d] border-[#141719]'
+            darkMode ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/30' : 'bg-[#141719] text-emerald-500 border-[#141719]'
           }`}>
             JM
           </div>
