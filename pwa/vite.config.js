@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.svg', 'pwa-512x512.svg'],
       manifest: {
-        name: 'Veloce PWA App',
-        short_name: 'VelocePWA',
+        name: 'DriveXCars PWA App',
+        short_name: 'DriveXCarsPWA',
         description: 'A React Progressive Web Application',
         theme_color: '#0f172a',
         background_color: '#0f172a',

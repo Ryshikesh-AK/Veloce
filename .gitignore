@@ -42,11 +42,11 @@ Thumbs.db
 
 # Python backend
 backend/.venv/
-backend/veloce.db
+backend/DriveXCars.db
 backend/**/__pycache__/
 backend/.pytest_cache/
 backend/.mypy_cache/
 backend/uploads/
-backend/local_veloce.db
-backend/test_veloce.db
-/test_veloce.db
+backend/local_DriveXCars.db
+backend/test_DriveXCars.db
+/test_DriveXCars.db

@@ -24,7 +24,7 @@ class Car(Base):
     fuel: Mapped[str] = mapped_column(String(30), default="Petrol")
     transmission: Mapped[str] = mapped_column(String(30), default="Automatic")
     rating: Mapped[Decimal | None] = mapped_column(Numeric(2, 1), nullable=True)
-    location: Mapped[str] = mapped_column(String(120), default="Veloce showroom")
+    location: Mapped[str] = mapped_column(String(120), default="DriveXCars showroom")
     image: Mapped[str] = mapped_column(String(500))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     accent: Mapped[str | None] = mapped_column(String(30), nullable=True)

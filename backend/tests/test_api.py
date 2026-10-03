@@ -1,6 +1,6 @@
 import os
 
-os.environ["DATABASE_URL"] = "sqlite:///./test_veloce.db"
+os.environ["DATABASE_URL"] = "sqlite:///./test_DriveXCars.db"
 os.environ["ADMIN_EMAIL"] = "admin@example.com"
 os.environ["ADMIN_PASSWORD"] = "test-password"
 
@@ -183,7 +183,7 @@ def test_admin_image_upload_uses_cloudinary(monkeypatch) -> None:
     def fake_upload(image, **options):
         assert image.read() == b"\x89PNG\r\n\x1a\nimage-data"
         uploaded_options.update(options)
-        return {"secure_url": "https://res.cloudinary.com/test-cloud/image/upload/veloce/cars/test.png"}
+        return {"secure_url": "https://res.cloudinary.com/test-cloud/image/upload/DriveXCars/cars/test.png"}
 
     monkeypatch.setattr(cars.uploader, "upload", fake_upload)
     response = client.post(
@@ -194,7 +194,7 @@ def test_admin_image_upload_uses_cloudinary(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json()["image"].startswith("https://res.cloudinary.com/")
-    assert uploaded_options["folder"] == "veloce/cars"
+    assert uploaded_options["folder"] == "DriveXCars/cars"
     assert uploaded_options["resource_type"] == "image"
 
 

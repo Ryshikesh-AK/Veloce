@@ -9,7 +9,7 @@ export function resolveImageUrl(image) {
 
 async function request(path, options = {}) {
   if (!API_ORIGIN) {
-    throw new Error('Live inventory is not configured. Set VITE_API_BASE_URL to the Veloce API URL and redeploy.');
+    throw new Error('Live inventory is not configured. Set VITE_API_BASE_URL to the DriveXCars API URL and redeploy.');
   }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -19,15 +19,15 @@ async function request(path, options = {}) {
       response = await fetch(`${API_ROOT}${path}`, { ...options, signal: controller.signal });
     } catch (error) {
       if (error.name === 'AbortError') {
-        throw new Error('The Veloce service took too long to respond. Please try again.');
+        throw new Error('The DriveXCars service took too long to respond. Please try again.');
       }
-      throw new Error('Could not reach the Veloce service. Check your connection and try again.');
+      throw new Error('Could not reach the DriveXCars service. Check your connection and try again.');
     }
     const payload = response.status === 204 ? null : await response.json().catch(() => null);
     if (!response.ok) {
       const detail = payload?.detail;
       const message = Array.isArray(detail) ? detail.map((item) => item.msg).join(', ') : detail;
-      throw new Error(message || `Veloce request failed (${response.status}). Please try again.`);
+      throw new Error(message || `DriveXCars request failed (${response.status}). Please try again.`);
     }
     return payload;
   } finally {

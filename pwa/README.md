@@ -1,4 +1,4 @@
-# Veloce Storefront
+# DriveXCars Storefront
 
 The installable storefront shares live inventory, images, currency, and customer test-drive endpoints with the web marketplace. Its layout adapts from a compact phone view to desktop navigation and multi-column inventory.
 

@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("fuel", sa.String(30), nullable=False, server_default="Petrol"),
         sa.Column("transmission", sa.String(30), nullable=False, server_default="Automatic"),
         sa.Column("rating", sa.Numeric(2, 1)),
-        sa.Column("location", sa.String(120), nullable=False, server_default="Veloce showroom"),
+        sa.Column("location", sa.String(120), nullable=False, server_default="DriveXCars showroom"),
         sa.Column("image", sa.String(500), nullable=False),
         sa.Column("description", sa.Text()),
         sa.Column("accent", sa.String(30)),

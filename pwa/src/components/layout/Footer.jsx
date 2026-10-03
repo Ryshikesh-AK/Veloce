@@ -12,7 +12,7 @@ export default function Footer({ darkMode }) {
         <span>Secure luxury marketplace guarantee</span>
       </div>
       <p className={`text-[11px] ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-        © 2024 Veloce Motors Inc. All rights reserved.
+        © 2024 DriveXCars Motors Inc. All rights reserved.
       </p>
     </footer>
   );

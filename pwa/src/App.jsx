@@ -38,7 +38,7 @@ function AppShell() {
             </button>
           </div>
         )}
-        {carsLoading && <div className="text-xs text-slate-400" role="status">Loading Veloce inventory…</div>}
+        {carsLoading && <div className="text-xs text-slate-400" role="status">Loading DriveXCars inventory…</div>}
 
         {/* View Router */}
         <AppRouter />

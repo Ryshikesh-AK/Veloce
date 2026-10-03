@@ -1,10 +1,10 @@
-# Veloce Motors API
+# DriveXCars Motors API
 
-FastAPI backend for the existing Veloce React marketplace. PostgreSQL is the application database.
+FastAPI backend for the existing DriveXCars React marketplace. PostgreSQL is the application database.
 
 ## Local development
 
-1. Create a PostgreSQL database named `veloce` and a user with access to it.
+1. Create a PostgreSQL database named `DriveXCars` and a user with access to it.
 2. Copy `.env.example` to `.env` and set `DATABASE_URL`, a unique `JWT_SECRET_KEY`, and admin password. For local development, image uploads use `./uploads`; configure all three Cloudinary variables to use remote image storage.
 3. Start the API:
 

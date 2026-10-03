@@ -44,7 +44,7 @@ export default function AdminConsolePage({
       <aside className="admin-console-sidebar">
         <a className="brand admin-console-brand" href="/" onClick={(event) => { event.preventDefault(); onClose(); }}>
           <span className="brand-mark"><CarFront size={20} strokeWidth={2.5} /></span>
-          <span>veloce<span className="brand-dot">.</span></span>
+          <span>DriveXCars<span className="brand-dot">.</span></span>
         </a>
         <div className="admin-console-label">Admin workspace</div>
         <nav className="admin-console-nav" aria-label="Admin pages">
@@ -69,7 +69,7 @@ export default function AdminConsolePage({
 
       <main className="admin-console-main">
         <header className="admin-console-topbar">
-          <div className="admin-console-breadcrumb"><span>Veloce Motors</span><span>/</span><strong>{activePath === '/admin/edit' ? 'Edit car' : sections.find((section) => section.path === activePath)?.label}</strong></div>
+          <div className="admin-console-breadcrumb"><span>DriveXCars Motors</span><span>/</span><strong>{activePath === '/admin/edit' ? 'Edit car' : sections.find((section) => section.path === activePath)?.label}</strong></div>
           <div className="admin-console-topbar-actions">
             <div className="admin-account-status" title={adminEmail || 'Administrator account'}>
               <ShieldCheck size={16} />
@@ -330,7 +330,7 @@ function CarEditorForm({ car, onSave, onCancel, submitLabel }) {
     price: car?.price == null ? '' : String(car.price), costBasis: car?.costBasis == null ? '' : String(car.costBasis),
     soldPrice: car?.soldPrice == null ? '' : String(car.soldPrice), pendingAmount: car?.pendingAmount == null ? '' : String(car.pendingAmount),
     mileage: String(car?.mileage ?? ''), fuel: car?.fuel || 'Petrol', transmission: car?.transmission || 'Automatic',
-    location: car?.location || 'Veloce showroom', description: car?.description || '',
+    location: car?.location || 'DriveXCars showroom', description: car?.description || '',
     status: car?.status || 'Available', isFeatured: Boolean(car?.isFeatured)
   }));
   const [imageFile, setImageFile] = useState(null);
@@ -381,7 +381,7 @@ function CarEditorForm({ car, onSave, onCancel, submitLabel }) {
       fuel: form.fuel,
       transmission: form.transmission,
       rating: car?.rating ?? null,
-      location: form.location.trim() || 'Veloce showroom',
+      location: form.location.trim() || 'DriveXCars showroom',
       image: car?.imagePath || fallbackCarImage,
       description: form.description.trim() || null,
       accent: car?.accent || null,

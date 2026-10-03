@@ -8,7 +8,7 @@ export default function ConciergePage() {
   return (
     <section className="space-y-5 max-w-xl mx-auto" data-purpose="concierge-screen">
       <ScreenHeading
-        eyebrow="VELOCE MOTORS"
+        eyebrow="DriveXCars MOTORS"
         title="A little help goes a long way."
         description="Speak with our showroom team about a vehicle, financing, or your next visit."
       />
@@ -30,6 +30,12 @@ export default function ConciergePage() {
           href="tel:+1234567890"
         >
           Call +1 (234) 567-890
+        </a>
+        <a
+          className="flex min-h-12 items-center justify-center rounded-lg border border-white/15 px-4 text-sm font-semibold text-white hover:bg-white/5 transition-colors"
+          href="mailto:info@drivexcars.co.uk"
+        >
+          Email info@drivexcars.co.uk
         </a>
         <a
           className="flex min-h-12 items-center justify-center rounded-lg border border-white/15 px-4 text-sm font-semibold text-white hover:bg-white/5 transition-colors"

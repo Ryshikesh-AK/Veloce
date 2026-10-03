@@ -73,7 +73,7 @@ export default function CarDetailPage({ car: propCar }) {
         </div>
       </div>
       <p className="pwa-detail-description text-sm leading-6 text-slate-300">
-        {car.description || 'Visit Veloce to learn more about this vehicle.'}
+        {car.description || 'Visit DriveXCars to learn more about this vehicle.'}
       </p>
       <div className="pwa-detail-specs grid grid-cols-2 gap-2 border-y border-white/10 py-4">
         {[
@@ -82,7 +82,7 @@ export default function CarDetailPage({ car: propCar }) {
           ['Mileage', `${Number(car.mileage || 0).toLocaleString()} mi`],
           ['Fuel', car.fuel || 'Not listed'],
           ['Transmission', car.transmission || 'Not listed'],
-          ['Location', car.location || 'Veloce showroom']
+          ['Location', car.location || 'DriveXCars showroom']
         ].map(([label, value]) => (
           <div className="py-1" key={label}>
             <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</div>

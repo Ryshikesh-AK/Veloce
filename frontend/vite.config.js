@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-192.svg', 'pwa-512.svg', 'pwa-maskable.svg'],
       manifest: {
-        name: 'Veloce Motors',
-        short_name: 'Veloce',
+        name: 'DriveXCars Motors',
+        short_name: 'DriveXCars',
         description: 'A considered collection of exceptional cars.',
         theme_color: '#f7f8fa',
         background_color: '#f7f8fa',

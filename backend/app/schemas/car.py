@@ -17,7 +17,7 @@ class CarBase(BaseModel):
     fuel: str = Field(default="Petrol", max_length=30)
     transmission: str = Field(default="Automatic", max_length=30)
     rating: Decimal | None = Field(default=None, ge=0, le=5, max_digits=2, decimal_places=1)
-    location: str = Field(default="Veloce showroom", max_length=120)
+    location: str = Field(default="DriveXCars showroom", max_length=120)
     image: HttpUrl | str
     description: str | None = None
     accent: str | None = Field(default=None, max_length=30)

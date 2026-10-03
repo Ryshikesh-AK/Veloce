@@ -1,7 +1,7 @@
-export const SAVED_KEY = 'veloce-pwa-saved-cars';
-export const COMPARE_KEY = 'veloce-pwa-compare-cars';
-export const EMAIL_KEY = 'veloce-test-drive-email';
-export const THEME_KEY = 'veloce-pwa-theme';
+export const SAVED_KEY = 'DriveXCars-pwa-saved-cars';
+export const COMPARE_KEY = 'DriveXCars-pwa-compare-cars';
+export const EMAIL_KEY = 'DriveXCars-test-drive-email';
+export const THEME_KEY = 'DriveXCars-pwa-theme';
 
 export const PATH_TO_TAB = {
   '/': 'explore',

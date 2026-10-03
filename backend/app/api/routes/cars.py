@@ -42,7 +42,7 @@ def _store_car_image(content: bytes, filename: str) -> str:
         )
         result = uploader.upload(
             BytesIO(content),
-            folder="veloce/cars",
+            folder="DriveXCars/cars",
             public_id=Path(filename).stem,
             resource_type="image",
             overwrite=False,

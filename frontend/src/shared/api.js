@@ -1,7 +1,7 @@
 const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
-const ADMIN_TOKEN_KEY = 'veloce-admin-token';
-const ADMIN_EMAIL_KEY = 'veloce-admin-email';
+const ADMIN_TOKEN_KEY = 'DriveXCars-admin-token';
+const ADMIN_EMAIL_KEY = 'DriveXCars-admin-email';
 
 export const getAdminToken = () => sessionStorage.getItem(ADMIN_TOKEN_KEY);
 export const getAdminEmail = () => sessionStorage.getItem(ADMIN_EMAIL_KEY);
@@ -46,7 +46,7 @@ async function request(path, { body, headers: suppliedHeaders, auth = false, met
   });
   if (response.status === 401 && auth) {
     clearAdminToken();
-    window.dispatchEvent(new Event('veloce-admin-session-expired'));
+    window.dispatchEvent(new Event('DriveXCars-admin-session-expired'));
   }
   if (response.status === 204) return null;
 

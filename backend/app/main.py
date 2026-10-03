@@ -19,7 +19,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version="1.0.0",
-    description="REST API for the Veloce Motors car marketplace.",
+    description="REST API for the DriveXCars Motors car marketplace.",
     lifespan=lifespan,
 )
 

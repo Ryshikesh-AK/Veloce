@@ -1,6 +1,6 @@
-# Veloce Motors
+# DriveXCars Motors
 
-Veloce Motors is split into three independently runnable applications:
+DriveXCars Motors is split into three independently runnable applications:
 
 - `frontend/`: responsive React and Vite marketplace and admin interface.
 - `pwa/`: installable storefront for mobile and desktop, sharing live inventory and customer APIs with the web app.
@@ -20,7 +20,7 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Create a PostgreSQL database named `veloce`, then update `backend/.env` with its `DATABASE_URL`, a unique `JWT_SECRET_KEY`, and admin password. Initialize and start the API:
+Create a PostgreSQL database named `DriveXCars`, then update `backend/.env` with its `DATABASE_URL`, a unique `JWT_SECRET_KEY`, and admin password. Initialize and start the API:
 
 ```powershell
 alembic upgrade head
@@ -54,7 +54,7 @@ The PWA is available at `http://localhost:5174`. The backend's development CORS 
 
 ### PWA install and offline behavior
 
-Create a production frontend build with `npm run build` and preview it with `npm run preview`. The build includes the Veloce web app manifest and service worker, so browsers can install it as a desktop or mobile app. Service workers require HTTPS in production; `localhost` is allowed for local testing.
+Create a production frontend build with `npm run build` and preview it with `npm run preview`. The build includes the DriveXCars web app manifest and service worker, so browsers can install it as a desktop or mobile app. Service workers require HTTPS in production; `localhost` is allowed for local testing.
 
 The installed app caches the frontend shell and can open previously visited routes while offline. Inventory, images served by the API, authentication, uploads, test-drive requests, and admin changes remain online-only and are not queued. Configure the deployed frontend URL in the backend `CORS_ORIGINS` setting.
 

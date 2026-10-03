@@ -1,4 +1,4 @@
-export const TEST_DRIVES_KEY = 'veloce-test-drive-requests';
+export const TEST_DRIVES_KEY = 'DriveXCars-test-drive-requests';
 
 export const readTestDrives = () => {
   try {

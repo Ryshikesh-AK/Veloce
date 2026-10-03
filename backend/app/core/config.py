@@ -9,10 +9,10 @@ BACKEND_DIRECTORY = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
-    app_name: str = "Veloce Motors API"
+    app_name: str = "DriveXCars Motors API"
     api_prefix: str = "/api/v1"
     environment: str = "development"
-    database_url: str = "postgresql+psycopg://veloce:veloce@localhost:5432/veloce"
+    database_url: str = "postgresql+psycopg://DriveXCars:DriveXCars@localhost:5432/DriveXCars"
     auto_create_tables: bool = False
     upload_directory: Path = BACKEND_DIRECTORY / "uploads"
     cors_origins: list[str] = Field(
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 60
     admin_email: str = "admin@example.com"
-    admin_password: str = "veloce-admin"
+    admin_password: str = "DriveXCars-admin"
     cloudinary_cloud_name: str | None = None
     cloudinary_api_key: str | None = None
     cloudinary_api_secret: str | None = None
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
         if self.is_production:
             if len(self.jwt_secret_key) < 32 or self.jwt_secret_key.startswith("development-only"):
                 raise ValueError("JWT_SECRET_KEY must be a unique 32+ character production secret")
-            if self.admin_password in {"veloce-admin", "change-me"}:
+            if self.admin_password in {"DriveXCars-admin", "change-me"}:
                 raise ValueError("ADMIN_PASSWORD must be changed in production")
             if not self.cloudinary_enabled:
                 raise ValueError("Cloudinary credentials are required in production for persistent image storage")

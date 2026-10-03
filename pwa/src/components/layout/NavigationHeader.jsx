@@ -37,7 +37,7 @@ export default function NavigationHeader() {
           </svg>
         </div>
         <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          veloce<span className="text-emerald-500">.</span>
+          DriveXCars<span className="text-emerald-500">.</span>
         </span>
       </div>
 
