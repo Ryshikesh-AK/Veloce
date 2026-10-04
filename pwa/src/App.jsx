@@ -3,6 +3,7 @@ import { BrowserRouter, useLocation } from 'react-router-dom';
 import NavigationHeader from './components/layout/NavigationHeader';
 import FloatingBottomDock from './components/layout/FloatingBottomDock';
 import Toast from './components/common/Toast';
+import ChatConcierge from './components/chat/ChatConcierge';
 import AppRouter from './components/router/AppRouter';
 import { CarProvider, useCarContext } from './context/CarContext';
 import { AuthProvider } from './context/AuthContext';
@@ -50,6 +51,9 @@ function AppShell() {
 
       {/* Floating Bottom Navigation (Hidden on Auth pages) */}
       {!isAuthPage && <FloatingBottomDock />}
+
+      {/* DriveX AI Luxury Concierge Floating FAB & Chat Drawer */}
+      {!isAuthPage && <ChatConcierge />}
 
       {/* Feedback Toast */}
       <Toast message={toast} />
