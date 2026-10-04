@@ -49,6 +49,11 @@ export async function listCars(page = 1, pageSize = 50) {
       title: [car.name, car.model].filter(Boolean).join(' '),
       category: car.type || car.category || 'Luxury',
       imageUrl: resolveImageUrl(car.image),
+      images: Array.isArray(car.images) && car.images.length > 0
+        ? car.images.map(resolveImageUrl)
+        : (typeof car.images === 'string' && car.images.trim().startsWith('[')
+            ? (function() { try { return JSON.parse(car.images).map(resolveImageUrl); } catch { return [resolveImageUrl(car.image)]; } })()
+            : (car.image ? [resolveImageUrl(car.image)] : [])),
       currency: car.currency || 'USD',
       priceAmount: Number(car.price),
       price: new Intl.NumberFormat((car.currency || 'USD') === 'GBP' ? 'en-GB' : 'en-US', {

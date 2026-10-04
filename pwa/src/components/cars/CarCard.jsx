@@ -24,28 +24,109 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
   } = car;
 
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const isSwipingRef = React.useRef(false);
+  const touchStartPos = React.useRef(null);
+  const pointerStartPos = React.useRef(null);
 
-  const imagesList = Array.isArray(car.images) && car.images.length > 0
-    ? car.images
-    : (imageUrl || car.image)
-    ? [imageUrl || car.image]
-    : [];
+  const imagesList = React.useMemo(() => {
+    if (Array.isArray(car.images) && car.images.length > 0) {
+      return car.images;
+    }
+    if (typeof car.images === 'string' && car.images.trim()) {
+      try {
+        const parsed = JSON.parse(car.images);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        // use fallback below
+      }
+    }
+    const fallback = imageUrl || car.image || car.imageUrl;
+    return fallback ? [fallback] : [];
+  }, [car.images, imageUrl, car.image, car.imageUrl]);
 
-  const displayPhotoUrl = imagesList[currentImageIndex] || imageUrl || '';
+  const displayPhotoUrl = imagesList[currentImageIndex] || imageUrl || car.image || '';
 
   const isFavorite = propIsFav ?? context.favorites.includes(id);
   const isCompared = propIsComp ?? context.compareIds.includes(id);
 
   const handleNextCardImage = (event) => {
-    event.stopPropagation();
+    event?.stopPropagation();
     hapticAction();
     setCurrentImageIndex((prev) => (prev + 1) % imagesList.length);
   };
 
   const handlePrevCardImage = (event) => {
-    event.stopPropagation();
+    event?.stopPropagation();
     hapticAction();
     setCurrentImageIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
+  };
+
+  // Touch Swipe Handlers for mobile sliding
+  const handleTouchStart = (e) => {
+    isSwipingRef.current = false;
+    const touch = e.touches[0];
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartPos.current) return;
+    const touch = e.touches[0];
+    const diffX = touch.clientX - touchStartPos.current.x;
+    const diffY = touch.clientY - touchStartPos.current.y;
+    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+      isSwipingRef.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartPos.current) return;
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartPos.current.x;
+    const diffY = touch.clientY - touchStartPos.current.y;
+    touchStartPos.current = null;
+
+    if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY)) {
+      e.stopPropagation();
+      if (diffX < 0) {
+        handleNextCardImage(e);
+      } else {
+        handlePrevCardImage(e);
+      }
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 150);
+    } else {
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 50);
+    }
+  };
+
+  // Pointer Swipe Handlers for mouse/trackpad dragging
+  const handlePointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    isSwipingRef.current = false;
+    pointerStartPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e) => {
+    if (!pointerStartPos.current) return;
+    const diffX = e.clientX - pointerStartPos.current.x;
+    const diffY = e.clientY - pointerStartPos.current.y;
+    pointerStartPos.current = null;
+
+    if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY)) {
+      e.stopPropagation();
+      if (diffX < 0) {
+        handleNextCardImage(e);
+      } else {
+        handlePrevCardImage(e);
+      }
+      isSwipingRef.current = true;
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 150);
+    }
   };
 
   const handleToggleFav = (event) => {
@@ -63,6 +144,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
   };
 
   const handleView = (event) => {
+    if (isSwipingRef.current) return;
     event?.stopPropagation();
     hapticCard();
     if (onViewDetails) onViewDetails(car);
@@ -90,8 +172,15 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
       }`} 
       data-purpose="car-card"
     >
-      {/* Thumbnail Container with Carousel Controls */}
-      <div className="relative h-48 w-full bg-slate-950 overflow-hidden group">
+      {/* Thumbnail Container with Carousel Controls & Touch Gesture Support */}
+      <div 
+        className="relative h-48 w-full bg-slate-950 overflow-hidden group select-none touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+      >
         <CarPhoto
           alt={title}
           src={displayPhotoUrl}
@@ -103,19 +192,19 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           <>
             <button
               type="button"
-              onClick={handlePrevCardImage}
-              aria-label="Previous photo"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
+              onClick={handleNextCardImage}
+              aria-label="Next photo"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-70 hover:opacity-100 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
             >
-              ‹
+              ›
             </button>
             <button
               type="button"
-              onClick={handleNextCardImage}
-              aria-label="Next photo"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
+              onClick={handlePrevCardImage}
+              aria-label="Previous photo"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-70 hover:opacity-100 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
             >
-              ›
+              ‹
             </button>
 
             {/* Carousel Dot Indicators */}

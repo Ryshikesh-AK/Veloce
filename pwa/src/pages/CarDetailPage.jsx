@@ -25,6 +25,9 @@ export default function CarDetailPage({ car: propCar }) {
   const isFavorite = car ? favorites.includes(car.id) : false;
   const isCompared = car ? compareIds.includes(car.id) : false;
 
+  const touchStartPos = React.useRef(null);
+  const pointerStartPos = React.useRef(null);
+
   const handleNextImage = (e) => {
     e?.stopPropagation();
     setActiveImageIndex((prev) => (prev + 1) % imagesList.length);
@@ -33,6 +36,49 @@ export default function CarDetailPage({ car: propCar }) {
   const handlePrevImage = (e) => {
     e?.stopPropagation();
     setActiveImageIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
+  };
+
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartPos.current) return;
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - touchStartPos.current.x;
+    const diffY = touch.clientY - touchStartPos.current.y;
+    touchStartPos.current = null;
+
+    if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY)) {
+      e.stopPropagation();
+      if (diffX < 0) {
+        handleNextImage(e);
+      } else {
+        handlePrevImage(e);
+      }
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointerStartPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e) => {
+    if (!pointerStartPos.current) return;
+    const diffX = e.clientX - pointerStartPos.current.x;
+    const diffY = e.clientY - pointerStartPos.current.y;
+    pointerStartPos.current = null;
+
+    if (Math.abs(diffX) > 25 && Math.abs(diffX) > Math.abs(diffY)) {
+      e.stopPropagation();
+      if (diffX < 0) {
+        handleNextImage(e);
+      } else {
+        handlePrevImage(e);
+      }
+    }
   };
 
   useEffect(() => {
@@ -69,7 +115,13 @@ export default function CarDetailPage({ car: propCar }) {
 
       {/* Main Showcase Image Carousel */}
       <div className="space-y-3">
-        <div className="pwa-detail-image relative overflow-hidden rounded-xl bg-slate-900 group">
+        <div 
+          className="pwa-detail-image relative overflow-hidden rounded-xl bg-slate-900 group select-none touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+        >
           <CarPhoto
             className="pwa-detail-photo aspect-[1.25] sm:aspect-[1.5] w-full object-cover transition-all duration-300"
             src={activePhotoUrl}
