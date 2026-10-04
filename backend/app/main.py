@@ -36,6 +36,9 @@ if not settings.cloudinary_enabled:
     app.mount("/uploads", StaticFiles(directory=settings.upload_directory, check_dir=False), name="uploads")
 app.include_router(api_router, prefix=settings.api_prefix)
 
+from app.api.routes.ai import router as ai_direct_router
+app.include_router(ai_direct_router, prefix="/api/ai", tags=["ai-direct"])
+
 
 @app.get("/", tags=["system"])
 def root() -> dict[str, str]:

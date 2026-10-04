@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { useCarContext } from '../../context/CarContext';
 import AdminNavTabs from './AdminNavTabs';
+import { generateCarDescription } from '../../services/aiService';
 
 const INITIAL_FORM = {
   name: '',
@@ -33,6 +35,57 @@ export default function AdminAddCarPage() {
   const { addCar, darkMode, setToast } = useCarContext();
   const [form, setForm] = useState(INITIAL_FORM);
   const [previewError, setPreviewError] = useState(false);
+  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
+  const [aiValidationHint, setAiValidationHint] = useState('');
+
+  const handleAutoGenerateStory = async () => {
+    setAiValidationHint('');
+
+    // Requirement 3: If Vehicle Name or Brand is missing, show a brief validation hint asking the user to fill those first.
+    if (!form.name?.trim() || !form.brand?.trim()) {
+      const hint = 'Please provide both the Vehicle Name and Brand before generating with AI.';
+      setAiValidationHint(hint);
+      if (setToast) {
+        setToast(hint);
+      }
+      return;
+    }
+
+    // Collect currently entered form values (Requirement 2)
+    const payload = {
+      name: form.name.trim(),
+      brand: form.brand.trim(),
+      category: form.category || 'Luxury',
+      year: form.year,
+      horsepower: form.specs?.horsepower || '',
+      acceleration: form.specs?.acceleration || '',
+      features: form.features || '',
+    };
+
+    setIsGeneratingStory(true);
+
+    try {
+      const generatedCopy = await generateCarDescription(payload);
+      if (generatedCopy) {
+        setForm((prev) => ({
+          ...prev,
+          description: generatedCopy,
+        }));
+        if (setToast) {
+          setToast('Vehicle story successfully generated with AI!');
+        }
+      }
+    } catch (err) {
+      console.error('AI generation error:', err);
+      const errMsg = err?.message || 'Could not auto-generate description. Please try again.';
+      setAiValidationHint(errMsg);
+      if (setToast) {
+        setToast(errMsg);
+      }
+    } finally {
+      setIsGeneratingStory(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -246,9 +299,44 @@ export default function AdminAddCarPage() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                      Detailed Overview / Story
-                    </label>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                        Detailed Overview / Story
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAutoGenerateStory}
+                        disabled={isGeneratingStory}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold shadow-xs transition-all duration-200 ${
+                          isGeneratingStory
+                            ? 'cursor-not-allowed border border-slate-700 bg-slate-800 text-slate-400 opacity-80'
+                            : darkMode
+                            ? 'border border-[#b9f43d]/30 bg-[#b9f43d]/10 text-[#b9f43d] hover:bg-[#b9f43d]/20 active:scale-95'
+                            : 'border border-slate-300 bg-slate-900 text-[#b9f43d] hover:bg-slate-800 active:scale-95 shadow-sm'
+                        }`}
+                        title="Generate an evocative luxury car story using Gemini AI"
+                      >
+                        {isGeneratingStory ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#b9f43d]" />
+                            <span>Generating story...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5 text-[#b9f43d]" />
+                            <span>✨ Auto-Generate with AI</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {aiValidationHint && (
+                      <div className="mb-2 flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-500 dark:text-amber-400 animate-fade-in">
+                        <span className="font-semibold">Notice:</span>
+                        <span>{aiValidationHint}</span>
+                      </div>
+                    )}
+
                     <textarea
                       name="description"
                       rows={3}

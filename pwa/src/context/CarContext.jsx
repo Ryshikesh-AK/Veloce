@@ -28,12 +28,26 @@ export function CarProvider({ children }) {
   } = useCars('explore', favorites);
 
   const [selectedCar, setSelectedCar] = useState(null);
-  const [toast, setToast] = useState('');
+  const [toast, setToastState] = useState('');
+
+  const setToast = (val) => {
+    if (!val) {
+      setToastState('');
+      return;
+    }
+    if (typeof val === 'object' && val.message) {
+      setToastState(val.message);
+    } else if (typeof val === 'string') {
+      setToastState(val);
+    } else {
+      setToastState(String(val));
+    }
+  };
 
   // Toast timer auto-dismiss
   useEffect(() => {
     if (!toast) return undefined;
-    const timer = window.setTimeout(() => setToast(''), 2800);
+    const timer = window.setTimeout(() => setToastState(''), 2800);
     return () => window.clearTimeout(timer);
   }, [toast]);
 

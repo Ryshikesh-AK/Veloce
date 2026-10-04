@@ -100,3 +100,18 @@ function normalizeTestDrive(request) {
   return { ...request, carImage: resolveImageUrl(request.carImage) };
 }
 
+export async function generateDescriptionApi(vehicleData) {
+  const url = `${API_ORIGIN}/api/ai/generate-description`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(vehicleData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || errorData.error || `Generation failed (${response.status})`);
+  }
+  const data = await response.json();
+  return data.description;
+}
+
