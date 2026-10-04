@@ -7,18 +7,19 @@ from cloudinary import uploader
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.core.security import require_admin
 from app.db.session import get_db
-from app.models.car import Car
+from app.models.car import Car, CarDocument, CarImage
 from app.schemas.car import CarCreate, CarListResponse, CarResponse, CarUpdate
 
 
 router = APIRouter()
 MAX_IMAGE_SIZE = 10 * 1024 * 1024
+MAX_DOC_SIZE = 25 * 1024 * 1024
 IMAGE_SIGNATURES = {
     ".jpg": ("image/jpeg", lambda content: content.startswith(b"\xff\xd8\xff")),
     ".jpeg": ("image/jpeg", lambda content: content.startswith(b"\xff\xd8\xff")),
@@ -65,7 +66,7 @@ def list_cars(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=24, ge=1, le=100),
 ) -> CarListResponse:
-    statement = select(Car)
+    statement = select(Car).options(selectinload(Car.images), selectinload(Car.documents))
     count_statement = select(func.count()).select_from(Car)
     filters = []
     if search:
@@ -114,7 +115,8 @@ async def upload_car_image(request: Request) -> dict[str, str]:
 
 @router.get("/{car_id}", response_model=CarResponse)
 def get_car(car_id: int, db: Session = Depends(get_db)) -> Car:
-    car = db.get(Car, car_id)
+    statement = select(Car).where(Car.id == car_id).options(selectinload(Car.images), selectinload(Car.documents))
+    car = db.scalar(statement)
     if car is None:
         raise _not_found()
     return car
@@ -122,11 +124,21 @@ def get_car(car_id: int, db: Session = Depends(get_db)) -> Car:
 
 @router.post("", response_model=CarResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_admin)])
 def create_car(payload: CarCreate, db: Session = Depends(get_db)) -> Car:
-    car = Car(**payload.model_dump())
+    data = payload.model_dump()
+    images_data = data.pop("images", [])
+    documents_data = data.pop("documents", [])
+
+    car = Car(**data)
     db.add(car)
+    db.flush()
+
+    for img in images_data:
+        db.add(CarImage(car_id=car.id, **img))
+    for doc in documents_data:
+        db.add(CarDocument(car_id=car.id, **doc))
+
     db.commit()
-    db.refresh(car)
-    return car
+    return get_car(car.id, db)
 
 
 @router.patch("/{car_id}", response_model=CarResponse, dependencies=[Depends(require_admin)])
@@ -137,8 +149,8 @@ def update_car(car_id: int, payload: CarUpdate, db: Session = Depends(get_db)) -
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(car, field, value)
     db.commit()
-    db.refresh(car)
-    return car
+    return get_car(car.id, db)
+
 
 
 @router.delete("/{car_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
@@ -147,11 +159,4 @@ def delete_car(car_id: int, db: Session = Depends(get_db)) -> None:
     if car is None:
         raise _not_found()
     db.delete(car)
-    try:
-        db.commit()
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot delete a car with existing test-drive requests",
-        ) from exc
+    db.commit()

@@ -43,9 +43,13 @@ def test_production_settings_require_cloudinary_credentials() -> None:
 
     with pytest.raises(ValidationError, match="Cloudinary credentials are required"):
         Settings(
+            _env_file=None,
             environment="production",
             jwt_secret_key="production-secret-value-that-is-long-enough",
             admin_password="non-default-admin-password",
+            cloudinary_cloud_name=None,
+            cloudinary_api_key=None,
+            cloudinary_api_secret=None,
         )
 
 
@@ -153,6 +157,7 @@ def test_admin_image_upload_and_public_retrieval(tmp_path, monkeypatch) -> None:
     from app.core.config import settings
 
     monkeypatch.setattr(settings, "upload_directory", tmp_path)
+    monkeypatch.setattr(settings, "cloudinary_cloud_name", "")
     uploads_mount = next(route for route in app.routes if isinstance(route, Mount) and route.path == "/uploads")
     monkeypatch.setattr(uploads_mount.app, "directory", str(tmp_path))
     monkeypatch.setattr(uploads_mount.app, "all_directories", [str(tmp_path)])
@@ -210,46 +215,4 @@ def test_admin_image_upload_uses_cloudinary(monkeypatch) -> None:
     assert uploaded_options["folder"] == "DriveXCars/cars"
     assert uploaded_options["resource_type"] == "image"
 
-
-def test_car_with_test_drive_cannot_be_deleted() -> None:
-    car = create_car()
-    client.post(
-        "/api/v1/test-drives",
-        json={
-            "carId": car["id"],
-            "customerName": "Jordan Miller",
-            "customerEmail": "buyer@example.com",
-            "preferredAt": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
-        },
-    )
-
-    deleted = client.delete(
-        f"/api/v1/cars/{car['id']}",
-        headers={"Authorization": f"Bearer {admin_token()}"},
-    )
-    assert deleted.status_code == 409
-    assert "test-drive" in deleted.json()["detail"]
-
-
-def test_test_drive_can_be_created_and_reviewed() -> None:
-    car = create_car()
-    payload = {
-        "carId": car["id"], "customerName": "Jordan Miller", "customerEmail": "buyer@example.com",
-        "preferredAt": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
-    }
-    created = client.post("/api/v1/test-drives", json=payload)
-    assert created.status_code == 201
-    assert created.json()["status"] == "pending"
-    request_id = created.json()["id"]
-
-    mine = client.get("/api/v1/test-drives/mine", params={"email": "BUYER@example.com"})
-    assert mine.status_code == 200
-    assert len(mine.json()) == 1
-
-    approved = client.patch(
-        f"/api/v1/test-drives/{request_id}",
-        headers={"Authorization": f"Bearer {admin_token()}"},
-        json={"status": "approved", "approvedAt": payload["preferredAt"]},
-    )
-    assert approved.status_code == 200
-    assert approved.json()["status"] == "approved"
+

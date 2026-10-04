@@ -24,7 +24,7 @@ export default function SavedPage() {
     openCarDetails
   } = useCarContext();
 
-  const savedCars = cars.filter((car) => favorites.includes(car.id));
+  const savedCars = cars.filter((car) => favorites.some((favId) => String(favId) === String(car.id)));
 
   return (
     <>

@@ -3,14 +3,44 @@ import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCars } from '../hooks/useCars';
 import { SAVED_KEY, COMPARE_KEY, THEME_KEY } from '../constants';
+import { useAuth } from './AuthContext';
+import { createLeadApi } from '../services/api';
+import PhoneLeadModal from '../components/common/PhoneLeadModal';
+import storageService from '../services/storageService';
 
 const CarContext = createContext(null);
 
 export function CarProvider({ children }) {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useLocalStorage(THEME_KEY, true);
-  const [favorites, setFavorites] = useLocalStorage(SAVED_KEY, ['porsche-911-carrera']);
+  const { user } = useAuth();
+  const [darkMode, setDarkMode] = useLocalStorage(THEME_KEY, false);
+  const [favorites, setFavorites] = useLocalStorage(SAVED_KEY, []);
   const [compareIds, setCompareIds] = useLocalStorage(COMPARE_KEY, []);
+
+  const clearUserData = () => {
+    setFavorites([]);
+    setCompareIds([]);
+    setSelectedCar(null);
+    if (setSearchQuery) setSearchQuery('');
+    if (setSelectedCategory) setSelectedCategory('All cars');
+    if (setSortBy) setSortBy('featured');
+    storageService.removeGuestUser();
+    storageService.removeItem(SAVED_KEY);
+    storageService.removeItem(COMPARE_KEY);
+  };
+
+  useEffect(() => {
+    const handleAppReset = () => {
+      clearUserData();
+      localStorage.removeItem('DriveXCars-admin-customer-leads');
+    };
+    window.addEventListener('app:logout', handleAppReset);
+    window.addEventListener('app:login', handleAppReset);
+    return () => {
+      window.removeEventListener('app:logout', handleAppReset);
+      window.removeEventListener('app:login', handleAppReset);
+    };
+  }, []);
 
   const {
     cars,
@@ -30,7 +60,10 @@ export function CarProvider({ children }) {
   const [selectedCar, setSelectedCar] = useState(null);
   const [toast, setToastState] = useState('');
 
-  // Sync dark class and color-scheme to documentElement with smooth transition support
+  // Lead modal state for guest users
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [targetCarForLead, setTargetCarForLead] = useState(null);
+
   useEffect(() => {
     const root = document.documentElement;
     if (darkMode) {
@@ -43,7 +76,6 @@ export function CarProvider({ children }) {
   }, [darkMode]);
 
   const toggleDarkMode = () => {
-    // Check if View Transition API is supported for buttery-smooth circular or cross-fade transitions
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {
       document.startViewTransition(() => {
         setDarkMode((prev) => !prev);
@@ -67,17 +99,83 @@ export function CarProvider({ children }) {
     }
   };
 
-  // Toast timer auto-dismiss
   useEffect(() => {
     if (!toast) return undefined;
     const timer = window.setTimeout(() => setToastState(''), 2800);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const toggleFavorite = (carId) => {
+  const toggleFavorite = async (carId) => {
     const wasSaved = favorites.includes(carId);
-    setFavorites((previous) => (wasSaved ? previous.filter((id) => id !== carId) : [...previous, carId]));
-    setToast(wasSaved ? 'Removed from saved cars' : 'Saved for later');
+
+    if (wasSaved) {
+      setFavorites((prev) => prev.filter((id) => id !== carId));
+      setToast('Removed from saved cars');
+      return;
+    }
+
+    // Saving car to wishlist:
+    const targetCar = cars.find((c) => String(c.id) === String(carId)) || { id: carId, title: carId };
+
+    if (user) {
+      // Logged in user: Post lead in background and save favorite
+      setFavorites((prev) => [...prev, carId]);
+      setToast('Saved for later');
+      try {
+        await createLeadApi(
+          {
+            name: user.name || 'User',
+            phone: user.phone || 'N/A',
+            email: user.email,
+            car_id: isNaN(Number(carId)) ? null : Number(carId),
+            action_type: 'wishlist',
+            notes: `Wishlisted ${targetCar.title || targetCar.name || carId}`,
+          },
+          user.token
+        );
+      } catch (err) {
+        console.warn('Could not record lead:', err);
+      }
+    } else {
+      // Guest user: Check if guest info already exists in localStorage via storageService
+      const savedGuest = storageService.getGuestUser();
+
+      if (savedGuest?.phone) {
+        // Already entered mobile number before! Reuse it directly
+        setFavorites((prev) => [...prev, carId]);
+        setToast(`Saved to wishlist!`);
+        try {
+          await createLeadApi(
+            {
+              name: savedGuest.name || 'Guest User',
+              phone: savedGuest.phone,
+              car_id: isNaN(Number(carId)) ? null : Number(carId),
+              action_type: 'wishlist',
+              notes: `Wishlisted ${targetCar.title || targetCar.name || carId} as guest user`,
+            }
+          );
+        } catch (err) {
+          console.warn('Could not record lead:', err);
+        }
+      } else {
+        // Guest user entering mobile number for the first time: Prompt modal
+        setTargetCarForLead(targetCar);
+        setLeadModalOpen(true);
+      }
+    }
+  };
+
+  const handleGuestLeadSuccess = (leadData) => {
+    if (leadData) {
+      storageService.setGuestUser(leadData);
+    }
+    if (targetCarForLead?.id) {
+      const carId = targetCarForLead.id;
+      if (!favorites.includes(carId)) {
+        setFavorites((prev) => [...prev, carId]);
+      }
+      setToast(`Saved to wishlist! Thanks ${leadData.name}.`);
+    }
   };
 
   const toggleCompare = (carId) => {
@@ -145,6 +243,7 @@ export function CarProvider({ children }) {
     toggleFavorite,
     compareIds,
     toggleCompare,
+    clearUserData,
     cars,
     setCars,
     addCar,
@@ -168,7 +267,18 @@ export function CarProvider({ children }) {
     setToast
   };
 
-  return <CarContext.Provider value={value}>{children}</CarContext.Provider>;
+  return (
+    <CarContext.Provider value={value}>
+      {children}
+      <PhoneLeadModal
+        isOpen={leadModalOpen}
+        onClose={() => setLeadModalOpen(false)}
+        car={targetCarForLead}
+        onSuccess={handleGuestLeadSuccess}
+        userToken={user?.token}
+      />
+    </CarContext.Provider>
+  );
 }
 
 export function useCarContext() {

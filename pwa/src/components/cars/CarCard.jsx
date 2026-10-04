@@ -364,14 +364,21 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
 
       {/* Card Content Body */}
       <div className="p-4 space-y-2">
+        {car.submodel && car.submodel.toLowerCase() !== title.toLowerCase() && (
+          <p className={`text-xs font-semibold tracking-wide ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            {car.submodel}
+          </p>
+        )}
+
         <div className="flex items-center justify-between">
           <h3 className={`font-bold text-base tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
-          <div className={`flex items-center text-xs font-semibold ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
-            <span className="text-emerald-500 mr-1">★</span> {rating}
-          </div>
         </div>
         
-        <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>{year} • {category} • {location}</p>
+        {/* Specs line: Transmission • Fuel */}
+        <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+          {[car.transmission, car.fuel || car.fuelType || 'Petrol'].filter(Boolean).join(' • ')}
+        </p>
+
         {/* Card Bottom Divider & Price CTA */}
         <div className={`pt-3 mt-1 border-t flex items-center justify-between ${
           darkMode ? 'border-white/10' : 'border-gray-100'
@@ -388,6 +395,19 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
             View details
             <span className="group-hover:translate-x-0.5 transition-transform text-emerald-500">→</span>
           </motion.button>
+        </div>
+
+        {/* Location, Year, & Mileage Footer Bar with Location Pin Icon */}
+        <div className={`pt-2 flex items-center gap-1.5 text-[11px] font-medium ${
+          darkMode ? 'text-slate-400 border-t border-white/5' : 'text-gray-500 border-t border-gray-100'
+        }`}>
+          <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="truncate">
+            {[location, year, car.mileageFormatted || (car.mileage ? `${Number(car.mileage).toLocaleString()} miles` : '')].filter(Boolean).join(' • ')}
+          </span>
         </div>
       </div>
     </motion.article>

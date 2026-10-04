@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loginApi } from '../services/api';
+import { loginApi, registerApi } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -26,10 +26,21 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  const clearGuestAndUserDataOnLogin = () => {
+    localStorage.removeItem('guest_user_info');
+    localStorage.removeItem('DriveXCars-pwa-saved-cars');
+    localStorage.removeItem('DriveXCars-pwa-compare-cars');
+    localStorage.removeItem('DriveXCars-test-drive-email');
+    localStorage.removeItem('DriveXCars-admin-customer-leads');
+    localStorage.removeItem('drivexcars_saved_v2');
+    localStorage.removeItem('drivexcars_compare_v2');
+    window.dispatchEvent(new Event('app:login'));
+  };
+
   const login = async (email, password) => {
+    clearGuestAndUserDataOnLogin();
     try {
       const response = await loginApi(email, password);
-      // Backend response: { access_token, token_type, expires_in, user: { id, email, name, role } }
       const userSession = {
         ...response.user,
         token: response.access_token,
@@ -40,7 +51,6 @@ export function AuthProvider({ children }) {
       localStorage.setItem('pwa_user', JSON.stringify(userSession));
       return userSession;
     } catch (error) {
-      // Fallback for customer or offline demo mode if backend call fails
       const isAdmin = email.toLowerCase().includes('admin');
       const fallbackUser = {
         id: 'usr_' + Date.now(),
@@ -56,18 +66,33 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signup = (name, email, password) => {
-    const newUser = {
-      id: 'usr_' + Date.now(),
-      name: name || email.split('@')[0],
-      email: email,
-      role: 'customer',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    };
-    setUser(newUser);
-    setIsGuest(false);
-    localStorage.setItem('pwa_user', JSON.stringify(newUser));
-    return newUser;
+  const signup = async (name, email, password, phone = null) => {
+    clearGuestAndUserDataOnLogin();
+    try {
+      const response = await registerApi(name, email, password, phone);
+      const userSession = {
+        ...response.user,
+        token: response.access_token,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      };
+      setUser(userSession);
+      setIsGuest(false);
+      localStorage.setItem('pwa_user', JSON.stringify(userSession));
+      return userSession;
+    } catch (error) {
+      const fallbackUser = {
+        id: 'usr_' + Date.now(),
+        name: name || email.split('@')[0],
+        email: email,
+        phone: phone,
+        role: 'customer',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      };
+      setUser(fallbackUser);
+      setIsGuest(false);
+      localStorage.setItem('pwa_user', JSON.stringify(fallbackUser));
+      return fallbackUser;
+    }
   };
 
   const switchRole = (newRole) => {
@@ -86,9 +111,23 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     setIsGuest(true);
-    localStorage.removeItem('pwa_user');
-  };
 
+    // Retain theme preferences, clear all user & session storage
+    const keysToPreserve = ['drivexcars_theme_v2', 'drivexcars_theme', 'pwa_theme'];
+    const preservedValues = {};
+    keysToPreserve.forEach((k) => {
+      const val = localStorage.getItem(k);
+      if (val !== null) preservedValues[k] = val;
+    });
+
+    localStorage.clear();
+
+    Object.entries(preservedValues).forEach(([k, val]) => {
+      localStorage.setItem(k, val);
+    });
+
+    window.dispatchEvent(new Event('app:logout'));
+  };
 
   return (
     <AuthContext.Provider

@@ -8,10 +8,10 @@ import ConciergePage from '../../pages/ConciergePage';
 import CarDetailPage from '../../pages/CarDetailPage';
 import LoginPage from '../../pages/LoginPage';
 import SignupPage from '../../pages/SignupPage';
+import ProfilePage from '../../pages/ProfilePage';
 import AdminDashboardPage from '../../pages/admin/AdminDashboardPage';
 import AdminInventoryPage from '../../pages/admin/AdminInventoryPage';
 import AdminAddCarPage from '../../pages/admin/AdminAddCarPage';
-import AdminFeaturedPage from '../../pages/admin/AdminFeaturedPage';
 import AdminFinancePage from '../../pages/admin/AdminFinancePage';
 import AdminCustomersPage from '../../pages/admin/AdminCustomersPage';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +39,7 @@ export default function AppRouter() {
       <Route path="/explore" element={<HomeRoute />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/saved" element={<SavedPage />} />
       <Route path="/compare" element={<ComparePage />} />
       <Route path="/test-drives" element={<Navigate to="/" replace />} />

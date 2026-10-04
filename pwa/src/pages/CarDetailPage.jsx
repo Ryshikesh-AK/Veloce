@@ -3,15 +3,50 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ScreenHeading from '../components/common/ScreenHeading';
 import CarPhoto from '../components/cars/CarPhoto';
 import { useCarContext } from '../context/CarContext';
+import { getCarById } from '../services/api';
 
 export default function CarDetailPage({ car: propCar }) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const { cars, favorites, toggleFavorite, compareIds, toggleCompare } = useCarContext();
-  const car = propCar || cars.find((c) => c.id === paramId);
+
+  const contextCar = propCar || cars.find((c) => String(c.id) === String(paramId));
+  const [car, setCar] = useState(contextCar);
+  const [loading, setLoading] = useState(!contextCar && Boolean(paramId));
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [failedPhotoSrc, setFailedPhotoSrc] = useState('');
+
+  useEffect(() => {
+    if (propCar) {
+      setCar(propCar);
+      setLoading(false);
+      return;
+    }
+
+    const matchedInContext = cars.find((c) => String(c.id) === String(paramId));
+    if (matchedInContext) {
+      setCar(matchedInContext);
+    }
+
+    if (paramId) {
+      let active = true;
+      if (!matchedInContext) setLoading(true);
+      getCarById(paramId)
+        .then((fetchedCar) => {
+          if (active && fetchedCar) {
+            setCar(fetchedCar);
+          }
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    }
+  }, [paramId, propCar, cars]);
 
   const imagesList = Array.isArray(car?.images) && car.images.length > 0
     ? car.images
@@ -91,6 +126,15 @@ export default function CarDetailPage({ car: propCar }) {
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [isImageExpanded, imagesList.length]);
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center space-y-3">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+        <p className="text-slate-400 text-sm font-medium">Loading vehicle details...</p>
+      </div>
+    );
+  }
 
   if (!car) {
     return (
@@ -198,9 +242,6 @@ export default function CarDetailPage({ car: propCar }) {
           <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Price</p>
           <p className="mt-1 text-2xl font-bold text-white">{car.price}</p>
         </div>
-        <div className="text-right text-sm text-emerald-300">
-          {car.rating == null ? 'New listing' : `★ ${car.rating}`}
-        </div>
       </div>
       <p className="pwa-detail-description text-sm leading-6 text-slate-300">
         {car.description || 'Visit DriveXCars to learn more about this vehicle.'}
@@ -223,6 +264,32 @@ export default function CarDetailPage({ car: propCar }) {
           </div>
         ))}
       </div>
+
+      {Array.isArray(car.documents) && car.documents.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Vehicle Documents</h3>
+          <div className="grid grid-cols-1 gap-2">
+            {car.documents.map((doc, idx) => (
+              <a
+                key={doc.id || idx}
+                href={doc.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 hover:bg-slate-800 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📄</span>
+                  <div>
+                    <div className="text-sm font-medium text-white">{doc.fileName}</div>
+                    <div className="text-[11px] text-slate-400">{doc.fileType}</div>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-lime-400">Download ↓</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {Array.isArray(car.keyFeatures) && car.keyFeatures.length > 0 && (
         <div className="space-y-2">
