@@ -118,14 +118,15 @@ export default function FloatingBottomDock() {
             <NavLink
               key={tab.id}
               to={tab.path}
+              end={tab.path === '/' || tab.path === '/admin'}
               onClick={() => hapticTab()}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center flex-1 py-1 group transition-colors cursor-pointer no-underline ${
-                  isActive 
-                    ? 'text-emerald-500 font-semibold' 
-                    : darkMode 
-                      ? 'text-slate-400 hover:text-white' 
-                      : 'text-gray-500 hover:text-gray-900'
+                `flex flex-col items-center justify-center flex-1 py-1 px-1.5 rounded-full transition-all duration-200 cursor-pointer no-underline select-none ${
+                  isActive
+                    ? 'bg-[#bef264] text-black font-semibold shadow-xs scale-105'
+                    : darkMode
+                      ? 'text-slate-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-black/5'
                 }`
               }
             >
@@ -133,22 +134,27 @@ export default function FloatingBottomDock() {
                 <>
                   <div className="relative flex items-center justify-center">
                     {tab.icon}
-                    {isActive && (
-                      <span className="absolute -bottom-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-sm shadow-emerald-500"></span>
-                    )}
-                    {tab.badge > 0 && !isActive && (
-                      <span className="absolute -top-1 -right-2 bg-emerald-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none ring-2 ring-slate-900">
+                    {tab.badge > 0 && (
+                      <span
+                        className={`absolute -top-1 -right-2 text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none ring-2 ${
+                          isActive
+                            ? 'bg-black text-[#bef264] ring-[#bef264]'
+                            : 'bg-emerald-500 text-white ring-slate-900'
+                        }`}
+                      >
                         {tab.badge}
                       </span>
                     )}
                   </div>
-                  <span className={`text-[10px] tracking-tight mt-1 ${
-                    isActive 
-                      ? 'font-semibold text-emerald-500' 
-                      : darkMode 
-                        ? 'font-medium text-slate-400 group-hover:text-white' 
-                        : 'font-medium text-gray-500 group-hover:text-gray-900'
-                  }`}>
+                  <span
+                    className={`text-[10px] tracking-tight mt-0.5 transition-colors duration-200 ${
+                      isActive
+                        ? 'font-bold text-black'
+                        : darkMode
+                          ? 'font-medium text-slate-400 group-hover:text-white'
+                          : 'font-medium text-gray-500 group-hover:text-gray-900'
+                    }`}
+                  >
                     {tab.label}
                   </span>
                 </>
@@ -162,23 +168,55 @@ export default function FloatingBottomDock() {
               to="/contact"
               onClick={() => hapticTab()}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer no-underline ${
-                  isActive ? 'text-emerald-500' : darkMode ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                `flex flex-col items-center justify-center flex-1 py-1 px-1.5 rounded-full transition-all duration-200 group cursor-pointer no-underline select-none ${
+                  isActive
+                    ? 'bg-[#bef264] text-black font-semibold shadow-xs scale-105'
+                    : darkMode
+                      ? 'text-slate-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-black/5'
                 }`
               }
             >
-              <div className="relative flex items-center justify-center">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-xs transition-transform group-hover:scale-105 ${
-                  darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-gray-900 text-white'
-                }`}>
-                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round"></path>
-                  </svg>
-                </div>
-              </div>
-              <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${
-                darkMode ? 'text-slate-400 group-hover:text-white' : 'text-gray-500 group-hover:text-gray-900'
-              }`}>Contact</span>
+              {({ isActive }) => (
+                <>
+                  <div className="relative flex items-center justify-center">
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105 ${
+                        isActive
+                          ? 'bg-black/10 text-black'
+                          : darkMode
+                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                            : 'bg-gray-900 text-white'
+                      }`}
+                    >
+                      <svg
+                        className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-emerald-400'}`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[10px] tracking-tight mt-0.5 transition-colors duration-200 ${
+                      isActive
+                        ? 'font-bold text-black'
+                        : darkMode
+                          ? 'font-medium text-slate-400 group-hover:text-white'
+                          : 'font-medium text-gray-500 group-hover:text-gray-900'
+                    }`}
+                  >
+                    Contact
+                  </span>
+                </>
+              )}
             </NavLink>
           )}
         </nav>

@@ -24,6 +24,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
   } = car;
 
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
   const isSwipingRef = React.useRef(false);
   const touchStartPos = React.useRef(null);
   const pointerStartPos = React.useRef(null);
@@ -43,6 +44,17 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
     const fallback = imageUrl || car.image || car.imageUrl;
     return fallback ? [fallback] : [];
   }, [car.images, imageUrl, car.image, car.imageUrl]);
+
+  // Auto-Play Slideshow every 3.8s, paused when card is hovered or swiped
+  React.useEffect(() => {
+    if (imagesList.length <= 1 || isHovered) return undefined;
+
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % imagesList.length);
+    }, 3800);
+
+    return () => clearInterval(timer);
+  }, [imagesList.length, isHovered]);
 
   const displayPhotoUrl = imagesList[currentImageIndex] || imageUrl || car.image || '';
 
@@ -136,6 +148,51 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
     else context.toggleFavorite(id);
   };
 
+  // Native Web Share or Clipboard Fallback
+  const handleShare = async (event) => {
+    event.stopPropagation();
+    hapticAction();
+
+    const shareUrl = `${window.location.origin}/car/${id}`;
+    const shareTitle = `${title} | DriveXCars`;
+    const shareText = `Explore ${title} (${price}) on DriveXCars.`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      if (context.setToast) {
+        context.setToast('Link Copied!');
+      }
+    } catch {
+      if (context.setToast) {
+        context.setToast('Could not copy link');
+      }
+    }
+  };
+
   const handleCompare = (event) => {
     event.stopPropagation();
     hapticAction();
@@ -160,6 +217,8 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
   return (
     <motion.article 
       whileHover={{ y: -2 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={handleView}
       onKeyDown={handleCardKeyDown}
       role="link"
@@ -181,11 +240,21 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       >
-        <CarPhoto
-          alt={title}
-          src={displayPhotoUrl}
-          className={`w-full h-full object-cover filter brightness-95 contrast-105 transition-all duration-300 ${imgObjectPos}`}
-        />
+        {/* Slideshow Image Stack with smooth crossfade and subtle Ken Burns zoom */}
+        {imagesList.map((imgSrc, idx) => (
+          <div
+            key={imgSrc || idx}
+            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              idx === currentImageIndex ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <CarPhoto
+              alt={title}
+              src={imgSrc}
+              className={`w-full h-full object-cover filter brightness-95 contrast-105 transition-transform duration-700 ease-out group-hover:scale-105 ${imgObjectPos}`}
+            />
+          </div>
+        ))}
 
         {/* Carousel Prev/Next Buttons */}
         {imagesList.length > 1 && (
@@ -207,18 +276,21 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
               ‹
             </button>
 
-            {/* Carousel Dot Indicators */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10 bg-slate-950/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
+            {/* Carousel Dot Indicators - Synchronized with lime accent */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10 bg-slate-950/60 px-2.5 py-1 rounded-full backdrop-blur-sm">
               {imagesList.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    hapticAction();
                     setCurrentImageIndex(idx);
                   }}
-                  className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
-                    currentImageIndex === idx ? 'bg-emerald-400 w-3' : 'bg-white/50 hover:bg-white'
+                  className={`rounded-full transition-all duration-300 cursor-pointer ${
+                    currentImageIndex === idx
+                      ? 'bg-[#bef264] w-3.5 h-1.5 shadow-xs'
+                      : 'bg-white/40 hover:bg-white/70 w-1.5 h-1.5'
                   }`}
                   aria-label={`Go to photo ${idx + 1}`}
                 />
@@ -233,24 +305,50 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           </div>
         )}
 
-        {/* Favorite Button */}
-        <motion.button 
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleToggleFav}
-          aria-label={isFavorite ? 'Remove from saved cars' : 'Save car'}
-          className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-transform cursor-pointer z-10 ${
-            isFavorite 
-              ? 'text-rose-500 border-rose-500/30 bg-slate-950/80' 
-              : darkMode 
-                ? 'bg-slate-950/80 border-white/10 text-slate-300' 
-                : 'bg-white/90 border-gray-200 text-gray-700'
-          }`}
-        >
-          <svg className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 stroke-rose-500' : 'stroke-current fill-transparent'}`} strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-          </svg>
-        </motion.button>
+        {/* Top-Right Action Buttons: Share & Favorite */}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+          {/* Circular Share Button */}
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleShare}
+            aria-label="Share car listing"
+            title="Share or copy link"
+            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer border border-white/40"
+          >
+            <svg
+              className="w-3.5 h-3.5 stroke-current fill-none stroke-[2.2]"
+              viewBox="0 0 24 24"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          </motion.button>
+
+          {/* Favorite Button */}
+          <motion.button 
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleToggleFav}
+            aria-label={isFavorite ? 'Remove from saved cars' : 'Save car'}
+            className={`w-8 h-8 rounded-full backdrop-blur-sm border flex items-center justify-center transition-transform cursor-pointer shadow-sm ${
+              isFavorite 
+                ? 'text-rose-500 border-rose-500/30 bg-white/90' 
+                : 'bg-white/80 border-white/40 text-slate-700 hover:bg-white'
+            }`}
+          >
+            <svg className={`w-4 h-4 ${isFavorite ? 'fill-rose-500 stroke-rose-500' : 'stroke-current fill-transparent'}`} strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </motion.button>
+        </div>
 
         <div className="absolute bottom-3 right-3 z-10">
           <motion.button 

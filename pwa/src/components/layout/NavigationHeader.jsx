@@ -63,16 +63,44 @@ export default function NavigationHeader() {
 
       {!isAuthPage && (
         <div className="pwa-desktop-nav" aria-label="Main navigation">
-          {links.map((link) => (
-            <NavLink
-              key={link.path}
-              to={link.path}
-              className={({ isActive }) => (isActive ? 'active' : '')}
-            >
-              {link.label}
-              {link.count > 0 && <span>{link.count}</span>}
-            </NavLink>
-          ))}
+          <div
+            className={`rounded-full p-1 flex items-center gap-1 border transition-all ${
+              darkMode
+                ? 'bg-slate-900/80 border-slate-800'
+                : 'bg-slate-100/80 border-slate-200/60'
+            }`}
+          >
+            {links.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                end={link.path === '/' || link.path === '/admin'}
+                onClick={() => hapticTab()}
+                className={({ isActive }) =>
+                  `inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer no-underline select-none ${
+                    isActive
+                      ? 'bg-[#bef264] text-slate-950 font-bold shadow-sm scale-102'
+                      : darkMode
+                        ? 'text-slate-400 hover:text-slate-100 font-medium hover:bg-white/5'
+                        : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-black/5'
+                  }`
+                }
+              >
+                <span>{link.label}</span>
+                {link.count > 0 && (
+                  <span
+                    className={`inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] font-bold ${
+                      link.isActive
+                        ? 'bg-black text-[#bef264]'
+                        : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                    }`}
+                  >
+                    {link.count}
+                  </span>
+                )}
+              </NavLink>
+            ))}
+          </div>
         </div>
       )}
 

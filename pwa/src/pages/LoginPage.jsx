@@ -44,7 +44,7 @@ export default function LoginPage() {
 
   return (
     <div 
-      className={`min-h-screen flex flex-col justify-between px-6 py-4 relative transition-colors duration-300 ${
+      className={`h-screen overflow-hidden flex flex-col justify-between px-6 py-4 relative transition-colors duration-300 ${
         darkMode ? 'bg-[#0b121d] text-slate-100' : 'bg-[#FBFBFC] text-slate-900'
       }`}
       data-purpose="login-screen"
@@ -54,26 +54,29 @@ export default function LoginPage() {
         darkMode ? 'bg-[#b9f43d]/10' : 'bg-emerald-500/10'
       }`} />
 
-      {/* Main Form Box */}
-      <div className="w-full max-w-md mx-auto my-auto z-10 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">
+      {/* Top spacer / header alignment anchor */}
+      <div className="w-full shrink-0" />
+
+      {/* Main Form Box (centered in viewport) */}
+      <div className="w-full max-w-md mx-auto my-auto z-10 py-2">
+        <div className="mb-5">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-1.5">
             Welcome <em className="not-italic font-serif font-normal text-emerald-500">Back</em>
           </h1>
-          <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+          <p className={`text-xs sm:text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Sign in to manage showroom inquiries, contact requests, and saved vehicles.
           </p>
         </div>
 
         {error && (
-          <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-medium text-center">
+          <div className="mb-4 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-medium text-center">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className={`block text-xs font-semibold mb-1.5 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>
+            <label className={`block text-xs font-semibold mb-1 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>
               Email Address
             </label>
             <input
@@ -82,7 +85,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
               required
-              className={`w-full px-4 py-3 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${
+              className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${
                 darkMode 
                   ? 'bg-[#142131] border-slate-800 text-white placeholder-slate-500' 
                   : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
@@ -91,7 +94,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-1.5">
+            <div className="flex justify-between items-center mb-1">
               <label className={`block text-xs font-semibold ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>
                 Password
               </label>
@@ -103,7 +106,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className={`w-full px-4 py-3 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${
+              className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${
                 darkMode 
                   ? 'bg-[#142131] border-slate-800 text-white placeholder-slate-500' 
                   : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
@@ -113,7 +116,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm mt-3 cursor-pointer"
+            className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm mt-2 cursor-pointer"
           >
             <span>Sign In</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -135,16 +138,16 @@ export default function LoginPage() {
                 setError(err.message || 'Demo login failed');
               }
             }}
-            className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-semibold rounded-xl border border-emerald-500/30 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
+            className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl border border-slate-700/80 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer shadow-sm hover:border-emerald-500/40"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <span>⚡ Quick Demo Login as Admin</span>
           </button>
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-6 text-center">
           <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
             Don't have an account?{' '}
             <Link to="/signup" className="text-emerald-500 font-bold hover:underline">

@@ -4,6 +4,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { useCarContext } from '../../context/CarContext';
 import AdminNavTabs from './AdminNavTabs';
 import { generateCarDescription } from '../../services/aiService';
+import { hapticAction, hapticSuccess, hapticError } from '../../utils/haptics';
 
 const INITIAL_FORM = {
   name: '',
@@ -40,9 +41,11 @@ export default function AdminAddCarPage() {
 
   const handleAutoGenerateStory = async () => {
     setAiValidationHint('');
+    hapticAction();
 
     // Validation: If Vehicle Name / Model or Brand is missing, show inline warning that auto-clears after 3.5s
     if (!form.name?.trim() || !form.brand?.trim()) {
+      hapticError();
       const hint = 'Please enter vehicle model or brand first to generate with AI';
       setAiValidationHint(hint);
       window.setTimeout(() => {
@@ -67,6 +70,7 @@ export default function AdminAddCarPage() {
     try {
       const generatedCopy = await generateCarDescription(payload);
       if (generatedCopy) {
+        hapticSuccess();
         setForm((prev) => ({
           ...prev,
           description: generatedCopy,
@@ -76,6 +80,7 @@ export default function AdminAddCarPage() {
         }
       }
     } catch (err) {
+      hapticError();
       console.error('AI generation error:', err);
       const errMsg = err?.message || 'Could not auto-generate description. Please try again.';
       setAiValidationHint(errMsg);

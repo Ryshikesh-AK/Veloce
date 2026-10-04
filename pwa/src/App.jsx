@@ -16,7 +16,7 @@ function AppShell() {
   return (
     <div
       data-theme={darkMode ? 'dark' : 'light'}
-      className={`pwa-shell w-full min-h-screen flex flex-col relative ${isAuthPage ? 'pb-8' : 'pb-32'} transition-colors duration-300 ${
+      className={`pwa-shell w-full ${isAuthPage ? 'h-screen overflow-hidden' : 'min-h-screen pb-32'} flex flex-col relative transition-colors duration-300 ${
         darkMode
           ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
           : 'bg-[#FBFBFC] text-slate-900 selection:bg-emerald-500 selection:text-slate-950'
@@ -26,7 +26,7 @@ function AppShell() {
       <NavigationHeader />
 
       {/* Main Container */}
-      <main className="pwa-main flex-1 space-y-4 pt-3 px-4 max-w-7xl mx-auto w-full" data-purpose="main-content">
+      <main className={`pwa-main flex-1 ${isAuthPage ? 'overflow-hidden flex flex-col pt-0 px-0 max-w-full' : 'space-y-4 pt-3 px-4 max-w-7xl mx-auto w-full'}`} data-purpose="main-content">
         {inventoryError && (
           <div
             className="pwa-inventory-error rounded-lg border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100 flex items-center justify-between"

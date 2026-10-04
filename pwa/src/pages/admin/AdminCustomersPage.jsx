@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Search } from 'lucide-react';
 import { useCarContext } from '../../context/CarContext';
 import AdminNavTabs from './AdminNavTabs';
 import { INITIAL_LEADS, CUSTOMER_LEADS_STORAGE_KEY } from '../../data/customerLeads';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { hapticFilter } from '../../utils/haptics';
 
 export default function AdminCustomersPage() {
   const { cars, darkMode, setToast } = useCarContext();
@@ -11,13 +13,19 @@ export default function AdminCustomersPage() {
   const [statusFilter, setStatusFilter] = useState('All');
 
   const filteredLeads = leads.filter((lead) => {
-    const q = search.toLowerCase();
+    const q = search.toLowerCase().trim();
+    const matchedCar = cars.find(
+      (c) => c.id === lead.carId || c.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') === lead.carId
+    );
+    const carTitle = (matchedCar?.title || matchedCar?.name || lead.carId || '').toLowerCase();
+
     const matchSearch =
       !q ||
       lead.customerName.toLowerCase().includes(q) ||
       lead.email.toLowerCase().includes(q) ||
       lead.phone.toLowerCase().includes(q) ||
-      lead.location.toLowerCase().includes(q);
+      lead.location.toLowerCase().includes(q) ||
+      carTitle.includes(q);
 
     const matchStatus = statusFilter === 'All' || lead.callStatus === statusFilter;
     return matchSearch && matchStatus;
@@ -291,40 +299,48 @@ export default function AdminCustomersPage() {
           }`}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* Shortened placeholder with inline magnifying glass icon on the left */}
             <div className="relative flex-1">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <Search className="h-4 w-4" />
+              </div>
               <input
                 type="text"
-                placeholder="Search customers by name, phone, email, or city..."
+                placeholder="Search customers or cars..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className={`w-full rounded-xl border pl-4 pr-4 py-2 text-xs transition-all focus:outline-none focus:ring-2 ${
+                className={`w-full rounded-xl border pl-9 pr-4 py-2 text-xs transition-all focus:outline-none focus:ring-2 ${
                   darkMode
-                    ? 'border-slate-800 bg-slate-950 text-slate-100 placeholder-slate-500 focus:border-emerald-500'
-                    : 'border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:border-emerald-500'
+                    ? 'border-slate-800 bg-slate-950 text-slate-100 placeholder-slate-500 focus:border-[#bef264]'
+                    : 'border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:border-[#bef264]'
                 }`}
               />
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className={`text-[11px] font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                Status:
-              </span>
-              {['All', 'Pending Call', 'Contacted', 'Interested'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setStatusFilter(st)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
-                    statusFilter === st
-                      ? 'bg-emerald-500 text-slate-950 font-bold'
-                      : darkMode
-                      ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
+            {/* Status Buttons in a Single Horizontal Scroll Row (prevent wrap, lime active, soft grey inactive) */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap py-0.5">
+              {['All', 'Pending Call', 'Contacted', 'Interested'].map((st) => {
+                const isActive = statusFilter === st;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => {
+                      hapticFilter();
+                      setStatusFilter(st);
+                    }}
+                    className={`rounded-lg px-3 py-1 text-xs transition-all duration-150 cursor-pointer select-none ${
+                      isActive
+                        ? 'bg-[#bef264] text-black font-semibold shadow-xs scale-102'
+                        : darkMode
+                        ? 'bg-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

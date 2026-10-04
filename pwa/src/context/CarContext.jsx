@@ -30,6 +30,29 @@ export function CarProvider({ children }) {
   const [selectedCar, setSelectedCar] = useState(null);
   const [toast, setToastState] = useState('');
 
+  // Sync dark class and color-scheme to documentElement with smooth transition support
+  useEffect(() => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.add('dark');
+      root.style.colorScheme = 'dark';
+    } else {
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    // Check if View Transition API is supported for buttery-smooth circular or cross-fade transitions
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      document.startViewTransition(() => {
+        setDarkMode((prev) => !prev);
+      });
+    } else {
+      setDarkMode((prev) => !prev);
+    }
+  };
+
   const setToast = (val) => {
     if (!val) {
       setToastState('');
@@ -117,7 +140,7 @@ export function CarProvider({ children }) {
   const value = {
     darkMode,
     setDarkMode,
-    toggleDarkMode: () => setDarkMode((prev) => !prev),
+    toggleDarkMode,
     favorites,
     toggleFavorite,
     compareIds,

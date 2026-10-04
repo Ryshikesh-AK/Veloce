@@ -37,6 +37,19 @@ html {
   background: #0b121d;
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark {
+  background: #0b121d;
+  color: #eef5fb;
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  background: #fbfbfc;
+  color: #0f172a;
+  color-scheme: light;
 }
 
 body {
@@ -48,6 +61,20 @@ body {
     radial-gradient(ellipse at 50% -12%, rgba(32, 49, 71, 0.6), transparent 42rem),
     repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 12px),
     #0b121d;
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html:not(.dark) body {
+  background:
+    radial-gradient(ellipse at 50% -12%, rgba(220, 252, 231, 0.4), transparent 42rem),
+    #fbfbfc;
+}
+
+/* Smooth Crossfade for Native View Transitions API */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 button,
@@ -116,6 +143,7 @@ input:focus-visible {
   overflow: visible;
   background: linear-gradient(180deg, #0b121d 0%, #142131 36rem, #0b121d 100%);
   box-shadow: 0 0 64px rgba(0, 0, 0, 0.32);
+  transition: background 300ms cubic-bezier(0.4, 0, 0.2, 1), background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1), border-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .pwa-shell[data-theme='light'] {
@@ -350,50 +378,6 @@ input:focus-visible {
   .pwa-desktop-nav {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-  }
-
-  .pwa-desktop-nav button,
-  .pwa-desktop-nav a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 42px;
-    padding: 0 0.9rem;
-    border-radius: 0.65rem;
-    color: #9ca3af;
-    background: transparent;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: color .18s, background .18s;
-  }
-
-  .pwa-desktop-nav button:hover,
-  .pwa-desktop-nav button.active,
-  .pwa-desktop-nav a:hover,
-  .pwa-desktop-nav a.active {
-    color: #b9f43d;
-    background: rgba(185, 244, 61, .12);
-  }
-
-  .pwa-shell[data-theme='light'] .pwa-desktop-nav button:hover,
-  .pwa-shell[data-theme='light'] .pwa-desktop-nav button.active,
-  .pwa-shell[data-theme='light'] .pwa-desktop-nav a:hover,
-  .pwa-shell[data-theme='light'] .pwa-desktop-nav a.active {
-    color: #253508;
-  }
-
-  .pwa-desktop-nav button span,
-  .pwa-desktop-nav a span {
-    display: grid;
-    min-width: 1.15rem;
-    height: 1.15rem;
-    place-items: center;
-    border-radius: 999px;
-    color: #253508;
-    background: #b9f43d;
-    font-size: .65rem;
   }
 
   .pwa-main {
