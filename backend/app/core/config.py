@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://DriveXCars:DriveXCars@localhost:5432/DriveXCars"
     auto_create_tables: bool = False
     upload_directory: Path = BACKEND_DIRECTORY / "uploads"
-    cors_origins: list[str] = Field(
+    cors_origins: list[str] | str = Field(
         default_factory=lambda: [
             "http://localhost:5173",
             "http://localhost:5174",
