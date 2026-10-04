@@ -43,6 +43,16 @@ export default function ChatConcierge() {
     }
   }, [isOpen, messages]);
 
+  const [isWaving, setIsWaving] = useState(true);
+
+  // Auto-wave for 3 seconds on page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsWaving(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleToggle = () => {
     hapticTab();
     setIsOpen((prev) => !prev);
@@ -105,24 +115,122 @@ export default function ChatConcierge() {
 
   return (
     <>
-      {/* Floating Action Button (FAB) positioned bottom-20 on mobile (clear of bottom dock) & bottom-6 on desktop */}
-      <div className="fixed bottom-20 md:bottom-6 right-5 z-40">
-        <motion.button
+      {/* Floating Action Button (FAB) pinned at bottom-20 right-4 on mobile (clearing bottom dock) & bottom-6 right-5 on desktop */}
+      <div className="fixed bottom-20 right-4 md:bottom-6 md:right-5 z-40">
+        <button
           type="button"
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
           onClick={handleToggle}
+          onMouseEnter={() => setIsWaving(true)}
+          onMouseLeave={() => setIsWaving(false)}
           aria-label={isOpen ? 'Close AI Concierge' : 'Open AI Concierge'}
-          className="group relative flex items-center justify-center w-13 h-13 rounded-full bg-slate-900 text-white hover:bg-slate-800 border border-slate-700 shadow-xl shadow-black/40 cursor-pointer transition-all duration-200"
+          className="group relative w-13 h-13 rounded-full bg-slate-900 border-2 border-[#bef264] text-white shadow-xl hover:scale-105 transition-transform flex items-center justify-center cursor-pointer select-none"
         >
           {/* Subtle brand lime glow pulse */}
-          <span className="absolute -inset-0.5 rounded-full bg-gradient-to-tr from-[#bef264]/40 to-emerald-400/20 blur-xs opacity-75 group-hover:opacity-100 transition-opacity" />
+          <span className="absolute -inset-1 rounded-full bg-[#bef264]/20 blur-xs opacity-75 group-hover:opacity-100 transition-opacity" />
 
           <div className="relative flex items-center justify-center">
             {isOpen ? (
-              <X className="w-5 h-5 text-slate-200 group-hover:text-white transition-transform group-hover:rotate-90 duration-200" />
+              <X className="w-5 h-5 text-[#bef264] transition-transform group-hover:rotate-90 duration-200" />
             ) : (
-              <Sparkles className="w-5 h-5 text-[#bef264] group-hover:scale-110 transition-transform duration-200" />
+              /* Cute Modern SVG Robot Avatar with Separate Waving Hand */
+              <svg
+                className="w-7 h-7 overflow-visible"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Robot Antenna */}
+                <path
+                  d="M16 6V3"
+                  stroke="#bef264"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                />
+                <circle cx="16" cy="2.5" r="1.5" fill="#bef264" />
+
+                {/* Left Ear / Audio Node */}
+                <rect x="5" y="11" width="2" height="4" rx="1" fill="#bef264" />
+
+                {/* Right Ear / Audio Node */}
+                <rect x="25" y="11" width="2" height="4" rx="1" fill="#bef264" />
+
+                {/* Robot Head Outer Box */}
+                <rect
+                  x="7"
+                  y="6"
+                  width="18"
+                  height="14"
+                  rx="4.5"
+                  fill="#1e293b"
+                  stroke="#bef264"
+                  strokeWidth="1.5"
+                />
+
+                {/* Visor Screen */}
+                <rect
+                  x="9.5"
+                  y="8.5"
+                  width="13"
+                  height="7"
+                  rx="2.5"
+                  fill="#0b121d"
+                />
+
+                {/* Glowing Robot Eyes */}
+                <circle cx="12.5" cy="12" r="1.5" fill="#bef264" />
+                <circle cx="19.5" cy="12" r="1.5" fill="#bef264" />
+
+                {/* Friendly Smile Line */}
+                <path
+                  d="M14 17.2C14.8 17.8 17.2 17.8 18 17.2"
+                  stroke="#bef264"
+                  strokeWidth="1.25"
+                  strokeLinecap="round"
+                />
+
+                {/* Robot Body */}
+                <path
+                  d="M10 21.5C10 20.7 10.7 20 11.5 20H20.5C21.3 20 22 20.7 22 21.5V25C22 26.7 20.7 28 19 28H13C11.3 28 10 26.7 10 25V21.5Z"
+                  fill="#1e293b"
+                  stroke="#94a3b8"
+                  strokeWidth="1.2"
+                />
+
+                {/* Chest Glow Light */}
+                <circle cx="16" cy="24" r="1.2" fill="#bef264" />
+
+                {/* Static Left Arm (Resting) */}
+                <path
+                  d="M9 21.5L6.5 24.5"
+                  stroke="#94a3b8"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                />
+
+                {/* Waving Right Arm / Hand */}
+                <g
+                  className={`${isWaving ? 'animate-robot-wave' : 'group-hover-robot-wave'}`}
+                  style={{
+                    transformOrigin: '23px 21px',
+                  }}
+                >
+                  {/* Arm segment reaching up */}
+                  <path
+                    d="M23 21L26.5 16.5"
+                    stroke="#bef264"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
+                  {/* Cute curved mitten / waving hand */}
+                  <path
+                    d="M26 15.5C26 14.7 26.7 14 27.5 14C28.3 14 29 14.7 29 15.5C29 16.3 28.3 17 27.5 17"
+                    stroke="#bef264"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    fill="#bef264"
+                  />
+                </g>
+              </svg>
             )}
           </div>
 
@@ -130,7 +238,7 @@ export default function ChatConcierge() {
           {!isOpen && (
             <span className="absolute top-0 right-0 w-3 h-3 bg-[#bef264] border-2 border-slate-950 rounded-full" />
           )}
-        </motion.button>
+        </button>
       </div>
 
       {/* Modern Chat Window / Drawer: Bottom-sheet on mobile, floating widget card on desktop */}

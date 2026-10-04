@@ -77,6 +77,29 @@ html:not(.dark) body {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Waving Hand Animation for AI Concierge Robot Avatar */
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20%, 60% {
+    transform: rotate(-25deg);
+  }
+  40%, 80% {
+    transform: rotate(10deg);
+  }
+}
+
+.animate-robot-wave {
+  animation: wave 1.2s ease-in-out infinite;
+  transform-origin: bottom left;
+}
+
+.group:hover .group-hover-robot-wave {
+  animation: wave 1.2s ease-in-out infinite;
+  transform-origin: bottom left;
+}
+
 button,
 input {
   font: inherit;
