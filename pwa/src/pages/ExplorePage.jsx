@@ -2,6 +2,7 @@ import React from 'react';
 import HeroSection from '../components/cars/HeroSection';
 import SearchAndFilters from '../components/cars/SearchAndFilters';
 import CarListingsSection from '../components/cars/CarListingsSection';
+import TrustBanner from '../components/cars/TrustBanner';
 import Footer from '../components/layout/Footer';
 import { useCarContext } from '../context/CarContext';
 
@@ -48,6 +49,7 @@ export default function ExplorePage() {
         onCompare={(car) => toggleCompare(car.id)}
         onViewDetails={openCarDetails}
       />
+      <TrustBanner darkMode={darkMode} />
       <Footer darkMode={darkMode} />
     </>
   );

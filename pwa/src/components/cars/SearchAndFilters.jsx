@@ -57,7 +57,7 @@ export default function SearchAndFilters({
       </div>
 
       {/* Filter Pill Tabs */}
-      <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-0.5">
+      <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-3">
         {categories.map((cat) => {
           const isActive = selectedCategory === cat;
           return (
