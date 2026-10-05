@@ -115,8 +115,8 @@ export default function ChatConcierge() {
 
   return (
     <>
-      {/* Floating Action Button (FAB) pinned at bottom-20 right-4 on mobile & z-50 bottom-6 right-6 on desktop */}
-      <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50">
+      {/* Floating Action Button (FAB) pinned at bottom-20 right-4 on mobile (clearing bottom dock) & bottom-6 right-5 on desktop */}
+      <div className="fixed bottom-20 right-4 md:bottom-6 md:right-5 z-40">
         <button
           type="button"
           onClick={handleToggle}
