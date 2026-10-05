@@ -18,15 +18,52 @@ import {
 import CarPhoto from '../components/cars/CarPhoto';
 import { useCarContext } from '../context/CarContext';
 import { hapticAction } from '../utils/haptics';
+import { getCarById } from '../services/api';
 
 export default function CarDetailPage({ car: propCar }) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const { cars, favorites, toggleFavorite, compareIds, toggleCompare, darkMode } = useCarContext();
   const car = propCar || cars.find((c) => c.id === paramId);
+  const { cars, favorites, toggleFavorite, compareIds, toggleCompare } = useCarContext();
+
+  const contextCar = propCar || cars.find((c) => String(c.id) === String(paramId));
+  const [car, setCar] = useState(contextCar);
+  const [loading, setLoading] = useState(!contextCar && Boolean(paramId));
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [failedPhotoSrc, setFailedPhotoSrc] = useState('');
+
+  useEffect(() => {
+    if (propCar) {
+      setCar(propCar);
+      setLoading(false);
+      return;
+    }
+
+    const matchedInContext = cars.find((c) => String(c.id) === String(paramId));
+    if (matchedInContext) {
+      setCar(matchedInContext);
+    }
+
+    if (paramId) {
+      let active = true;
+      if (!matchedInContext) setLoading(true);
+      getCarById(paramId)
+        .then((fetchedCar) => {
+          if (active && fetchedCar) {
+            setCar(fetchedCar);
+          }
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    }
+  }, [paramId, propCar, cars]);
 
   const imagesList = Array.isArray(car?.images) && car.images.length > 0
     ? car.images
@@ -108,6 +145,15 @@ export default function CarDetailPage({ car: propCar }) {
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [isImageExpanded, imagesList.length]);
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center space-y-3">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+        <p className="text-slate-400 text-sm font-medium">Loading vehicle details...</p>
+      </div>
+    );
+  }
 
   if (!car) {
     return (
@@ -356,6 +402,50 @@ export default function CarDetailPage({ car: propCar }) {
                 </div>
               </div>
             )}
+        {/* Thumbnail Carousel Bar */}
+        {imagesList.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {imagesList.map((imgUrl, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveImageIndex(idx)}
+                className={`relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                  activeImageIndex === idx
+                    ? 'border-emerald-400 ring-2 ring-emerald-400/30 scale-105'
+                    : 'border-slate-800 opacity-60 hover:opacity-100'
+                }`}
+              >
+                <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="pwa-detail-price flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Price</p>
+          <p className="mt-1 text-2xl font-bold text-white">{car.price}</p>
+        </div>
+      </div>
+      <p className="pwa-detail-description text-sm leading-6 text-slate-300">
+        {car.description || 'Visit DriveXCars to learn more about this vehicle.'}
+      </p>
+      <div className="pwa-detail-specs grid grid-cols-2 sm:grid-cols-3 gap-3 border-y border-white/10 py-4">
+        {[
+          ['Year', car.year],
+          ['Type', car.category],
+          ['Fuel', car.fuel || car.fuelType || 'Not listed'],
+          ['Transmission', car.transmission || 'Not listed'],
+          ['Drivetrain', car.drivetrain || 'AWD'],
+          ['Horsepower', car.horsepower || 'N/A'],
+          ['Top Speed', car.topSpeed || 'N/A'],
+          ['0-60 Accel.', car.acceleration || 'N/A'],
+          ['Location', car.location || 'DriveXCars showroom']
+        ].map(([label, value]) => (
+          <div className="py-1" key={label}>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</div>
+            <div className="mt-1 text-sm font-medium text-slate-200">{value}</div>
           </div>
 
           {/* Right Column (Width: ~35% -> 4 of 12 cols on desktop, Sticky) */}
@@ -470,6 +560,44 @@ export default function CarDetailPage({ car: propCar }) {
                 </div>
               </div>
             </div>
+      {Array.isArray(car.documents) && car.documents.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Vehicle Documents</h3>
+          <div className="grid grid-cols-1 gap-2">
+            {car.documents.map((doc, idx) => (
+              <a
+                key={doc.id || idx}
+                href={doc.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-3 rounded-lg bg-slate-800/60 border border-slate-700/60 hover:bg-slate-800 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">📄</span>
+                  <div>
+                    <div className="text-sm font-medium text-white">{doc.fileName}</div>
+                    <div className="text-[11px] text-slate-400">{doc.fileType}</div>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-lime-400">Download ↓</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {Array.isArray(car.keyFeatures) && car.keyFeatures.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Key Features</h3>
+          <div className="flex flex-wrap gap-2">
+            {car.keyFeatures.map((feature, idx) => (
+              <span
+                key={idx}
+                className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              >
+                ✓ {feature}
+              </span>
+            ))}
           </div>
         </div>
 

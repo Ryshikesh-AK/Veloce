@@ -38,32 +38,54 @@ async function request(path, options = {}) {
   }
 }
 
+export function formatCarObject(car) {
+  if (!car) return null;
+  const rawMileage = Number(car.mileage) || 0;
+  const formattedMileage = rawMileage > 0 ? `${rawMileage.toLocaleString()} miles` : 'Low Mileage';
+
+  return {
+    ...car,
+    id: car.id,
+    title: car.title || [car.name, car.model].filter(Boolean).join(' ') || 'Vehicle Details',
+    submodel: car.submodel || car.trim || car.variant || (car.name && car.model ? car.model : ''),
+    category: car.type || car.category || 'Luxury',
+    mileage: rawMileage,
+    mileageFormatted: formattedMileage,
+    transmission: car.transmission || 'Automatic',
+    fuel: car.fuel || car.fuelType || 'Petrol',
+    imageUrl: resolveImageUrl(car.image || car.imageUrl),
+    images: Array.isArray(car.images) && car.images.length > 0
+      ? car.images.map(img => typeof img === 'object' ? resolveImageUrl(img.url || img.image_url) : resolveImageUrl(img))
+      : (typeof car.images === 'string' && car.images.trim().startsWith('[')
+          ? (function() { try { return JSON.parse(car.images).map(resolveImageUrl); } catch { return [resolveImageUrl(car.image || car.imageUrl)]; } })()
+          : (car.image || car.imageUrl ? [resolveImageUrl(car.image || car.imageUrl)] : [])),
+    documents: Array.isArray(car.documents) ? car.documents.map(doc => ({
+      id: doc.id,
+      fileUrl: resolveImageUrl(doc.fileUrl || doc.file_url),
+      fileName: doc.fileName || doc.file_name,
+      fileType: doc.fileType || doc.file_type || 'Document',
+      fileSize: doc.fileSize || doc.file_size
+    })) : [],
+    currency: car.currency || 'USD',
+    priceAmount: isNaN(Number(car.price)) ? 0 : Number(car.price),
+    price: typeof car.price === 'string' && (car.price.startsWith('$') || car.price.startsWith('£') || car.price.startsWith('€'))
+      ? car.price
+      : new Intl.NumberFormat((car.currency || 'USD') === 'GBP' ? 'en-GB' : 'en-US', {
+          style: 'currency',
+          currency: car.currency || 'USD',
+          maximumFractionDigits: 0
+        }).format(Number(car.price) || 0),
+    isFeatured: car.isFeatured
+  };
+}
+
 export async function listCars(page = 1, pageSize = 50) {
   try {
     const result = await request(`/cars?page=${page}&page_size=${pageSize}`);
     const items = Array.isArray(result) ? result : (result.items || []);
     if (!items || items.length === 0) return ENABLE_MOCK_FALLBACK ? SAMPLE_CARS : [];
 
-    return items.map((car) => ({
-      ...car,
-      title: [car.name, car.model].filter(Boolean).join(' '),
-      category: car.type || car.category || 'Luxury',
-      imageUrl: resolveImageUrl(car.image),
-      images: Array.isArray(car.images) && car.images.length > 0
-        ? car.images.map(resolveImageUrl)
-        : (typeof car.images === 'string' && car.images.trim().startsWith('[')
-            ? (function() { try { return JSON.parse(car.images).map(resolveImageUrl); } catch { return [resolveImageUrl(car.image)]; } })()
-            : (car.image ? [resolveImageUrl(car.image)] : [])),
-      currency: car.currency || 'USD',
-      priceAmount: Number(car.price),
-      price: new Intl.NumberFormat((car.currency || 'USD') === 'GBP' ? 'en-GB' : 'en-US', {
-        style: 'currency',
-        currency: car.currency || 'USD',
-        maximumFractionDigits: 0
-      }).format(Number(car.price)),
-      isFeatured: car.isFeatured,
-      rating: car.rating == null ? null : Number(car.rating)
-    }));
+    return items.map(formatCarObject);
   } catch (error) {
     if (ENABLE_MOCK_FALLBACK) {
       console.warn('Backend API request failed, using SAMPLE_CARS from constants:', error.message);
@@ -73,16 +95,27 @@ export async function listCars(page = 1, pageSize = 50) {
   }
 }
 
-export function listMyTestDrives(email) {
-  return request(`/test-drives/mine?email=${encodeURIComponent(email)}`).then((requests) => requests.map(normalizeTestDrive));
-}
+export async function getCarById(id) {
+  const numId = Number(id);
+  const isNumeric = !isNaN(numId) && String(id).trim() !== '';
 
-export function createTestDrive(details) {
-  return request('/test-drives', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(details)
-  }).then(normalizeTestDrive);
+  try {
+    if (isNumeric) {
+      const car = await request(`/cars/${numId}`);
+      if (car) return formatCarObject(car);
+    }
+    const sample = SAMPLE_CARS.find((c) => String(c.id) === String(id));
+    if (sample) return formatCarObject(sample);
+    return null;
+  } catch (error) {
+    console.warn(`Failed to fetch car details for ID ${id}:`, error.message);
+    const sample = SAMPLE_CARS.find((c) => String(c.id) === String(id));
+    if (sample) return formatCarObject(sample);
+    if (ENABLE_MOCK_FALLBACK) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export function loginApi(email, password) {
@@ -90,6 +123,14 @@ export function loginApi(email, password) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export function registerApi(full_name, email, password, phone = null) {
+  return request('/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ full_name, email, password, phone }),
   });
 }
 
@@ -101,8 +142,16 @@ export function getMeApi(token) {
   });
 }
 
-function normalizeTestDrive(request) {
-  return { ...request, carImage: resolveImageUrl(request.carImage) };
+export function createLeadApi(leadData, token = null) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return request('/leads', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(leadData),
+  });
 }
 
 export async function generateDescriptionApi(vehicleData) {
@@ -119,4 +168,3 @@ export async function generateDescriptionApi(vehicleData) {
   const data = await response.json();
   return data.description;
 }
-
