@@ -410,29 +410,8 @@ input:focus-visible {
   }
 
   .pwa-detail-screen {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
-    grid-template-areas:
-      'heading heading'
-      'photo price'
-      'photo description'
-      'photo specs'
-      'photo actions'
-      'photo request';
-    align-items: start;
-    column-gap: 2rem;
-    row-gap: 1rem;
+    display: block;
   }
-
-  .pwa-detail-screen > * { margin-top: 0 !important; }
-  .pwa-detail-heading { grid-area: heading; }
-  .pwa-detail-image { grid-area: photo; position: sticky; top: 6rem; }
-  .pwa-detail-photo { aspect-ratio: 1.18; max-height: min(68vh, 680px); }
-  .pwa-detail-price { grid-area: price; }
-  .pwa-detail-description { grid-area: description; }
-  .pwa-detail-specs { grid-area: specs; }
-  .pwa-detail-actions { grid-area: actions; }
-  [data-purpose='car-details-screen'] > button:last-of-type { grid-area: request; }
 
   [data-purpose='test-drives-screen'],
   [data-purpose='test-drive-request-screen'],
