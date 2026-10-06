@@ -129,6 +129,13 @@ export function AuthProvider({ children }) {
     window.dispatchEvent(new Event('app:logout'));
   };
 
+  const updateUser = (updates) => {
+    if (!user) return;
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem('pwa_user', JSON.stringify(updatedUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -139,6 +146,7 @@ export function AuthProvider({ children }) {
         loading,
         login,
         signup,
+        updateUser,
         switchRole,
         skipAuth,
         logout,

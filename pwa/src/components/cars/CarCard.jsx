@@ -384,7 +384,13 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           darkMode ? 'border-white/10' : 'border-gray-100'
         }`}>
           <div>
-            <span className={`text-[10px] uppercase block font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>Price</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className={`text-[10px] uppercase font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>Price</span>
+              {/* Estimated Monthly Lease pill */}
+              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.2 rounded">
+                Est. ${Math.round((parseInt(String(price || '0').replace(/[^0-9]/g, ''), 10) || 120000) * 0.011).toLocaleString()}/mo
+              </span>
+            </div>
             <span className={`text-base font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{price}</span>
           </div>
           <motion.button 

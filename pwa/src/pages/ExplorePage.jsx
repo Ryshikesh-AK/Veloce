@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import HeroSection from '../components/cars/HeroSection';
 import SearchAndFilters from '../components/cars/SearchAndFilters';
 import CarListingsSection from '../components/cars/CarListingsSection';
 import Footer from '../components/layout/Footer';
+import CarMatchmakerModal from '../components/cars/CarMatchmakerModal';
 import { useCarContext } from '../context/CarContext';
 
 export default function ExplorePage() {
@@ -24,9 +25,14 @@ export default function ExplorePage() {
     openCarDetails
   } = useCarContext();
 
+  const [matchmakerOpen, setMatchmakerOpen] = useState(false);
+
   return (
     <>
-      <HeroSection darkMode={darkMode} />
+      <HeroSection
+        darkMode={darkMode}
+        onOpenMatchmaker={() => setMatchmakerOpen(true)}
+      />
       <SearchAndFilters
         darkMode={darkMode}
         searchQuery={searchQuery}
@@ -49,6 +55,16 @@ export default function ExplorePage() {
         onViewDetails={openCarDetails}
       />
       <Footer darkMode={darkMode} />
+
+      {/* AI Dream Car Matchmaker Modal */}
+      <CarMatchmakerModal
+        isOpen={matchmakerOpen}
+        onClose={() => setMatchmakerOpen(false)}
+        cars={cars}
+        darkMode={darkMode}
+        onSelectCar={(car) => openCarDetails(car.id)}
+      />
     </>
+
   );
 }

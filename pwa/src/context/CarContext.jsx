@@ -242,6 +242,7 @@ export function CarProvider({ children }) {
     favorites,
     toggleFavorite,
     compareIds,
+    setCompareIds,
     toggleCompare,
     clearUserData,
     cars,

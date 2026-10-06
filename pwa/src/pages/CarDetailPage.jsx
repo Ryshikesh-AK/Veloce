@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Calculator, Calendar } from 'lucide-react';
 import ScreenHeading from '../components/common/ScreenHeading';
 import CarPhoto from '../components/cars/CarPhoto';
+import LeaseCalculatorModal from '../components/cars/LeaseCalculatorModal';
 import { useCarContext } from '../context/CarContext';
 import { getCarById } from '../services/api';
 
@@ -16,6 +18,7 @@ export default function CarDetailPage({ car: propCar }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageExpanded, setIsImageExpanded] = useState(false);
   const [failedPhotoSrc, setFailedPhotoSrc] = useState('');
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   useEffect(() => {
     if (propCar) {
@@ -237,10 +240,27 @@ export default function CarDetailPage({ car: propCar }) {
           </div>
         )}
       </div>
-      <div className="pwa-detail-price flex items-start justify-between gap-4">
+      <div className="pwa-detail-price flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900/60 border border-white/10">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Price</p>
-          <p className="mt-1 text-2xl font-bold text-white">{car.price}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Total Vehicle Price</p>
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+              Est. ${Math.round((parseInt(String(car.price || '0').replace(/[^0-9]/g, ''), 10) || 120000) * 0.011).toLocaleString()}/mo
+            </span>
+          </div>
+          <p className="mt-0.5 text-2xl font-extrabold text-white">{car.price}</p>
+        </div>
+
+        {/* Quick Luxury Interactive Chips: Lease Calculator */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCalculatorOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+          >
+            <Calculator className="w-4 h-4" />
+            <span>Customize Lease</span>
+          </button>
         </div>
       </div>
       <p className="pwa-detail-description text-sm leading-6 text-slate-300">
@@ -371,6 +391,14 @@ export default function CarDetailPage({ car: propCar }) {
           <CarPhoto src={activePhotoUrl} alt={car.title} className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg" />
         </div>
       )}
+
+      {/* Interactive Lease & Payment Calculator Modal */}
+      <LeaseCalculatorModal
+        isOpen={calculatorOpen}
+        onClose={() => setCalculatorOpen(false)}
+        car={car}
+        darkMode={true}
+      />
     </section>
   );
 }
