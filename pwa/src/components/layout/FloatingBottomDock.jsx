@@ -14,7 +14,7 @@ export default function FloatingBottomDock() {
       label: 'Explore',
       path: '/',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
           <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
           <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
@@ -41,6 +41,26 @@ export default function FloatingBottomDock() {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
           <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'contact',
+      label: 'Contact',
+      path: '/contact',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+          <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'profile',
+      label: 'Profile',
+      path: '/profile',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round"></path>
         </svg>
       )
     }
@@ -88,12 +108,12 @@ export default function FloatingBottomDock() {
       )
     },
     {
-      id: 'admin-finance',
-      label: 'Finance',
-      path: '/admin/finance',
+      id: 'admin-profile',
+      label: 'Profile',
+      path: '/profile',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       )
     }
@@ -136,10 +156,12 @@ export default function FloatingBottomDock() {
                     {tab.icon}
                     {tab.badge > 0 && (
                       <span
-                        className={`absolute -top-1 -right-2 text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none ring-2 ${
+                        className={`absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 text-[10px] font-extrabold rounded-full flex items-center justify-center leading-none ring-2 shadow-sm z-10 transition-all duration-200 ${
                           isActive
-                            ? 'bg-black text-[#bef264] ring-[#bef264]'
-                            : 'bg-emerald-500 text-white ring-slate-900'
+                            ? 'bg-slate-950 text-[#bef264] ring-[#bef264]'
+                            : darkMode
+                              ? 'bg-emerald-400 text-slate-950 ring-slate-900 font-extrabold'
+                              : 'bg-emerald-600 text-white ring-white font-extrabold'
                         }`}
                       >
                         {tab.badge}
@@ -161,64 +183,6 @@ export default function FloatingBottomDock() {
               )}
             </NavLink>
           ))}
-
-          {/* Contact Button (Only shown in customer view) */}
-          {!isAdmin && (
-            <NavLink
-              to="/contact"
-              onClick={() => hapticTab()}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center flex-1 py-1 px-1.5 rounded-full transition-all duration-200 group cursor-pointer no-underline select-none ${
-                  isActive
-                    ? 'bg-[#bef264] text-black font-semibold shadow-xs scale-105'
-                    : darkMode
-                      ? 'text-slate-400 hover:text-white hover:bg-white/5'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-black/5'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className="relative flex items-center justify-center">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105 ${
-                        isActive
-                          ? 'bg-black/10 text-black'
-                          : darkMode
-                            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
-                            : 'bg-gray-900 text-white'
-                      }`}
-                    >
-                      <svg
-                        className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-emerald-400'}`}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <span
-                    className={`text-[10px] tracking-tight mt-0.5 transition-colors duration-200 ${
-                      isActive
-                        ? 'font-bold text-black'
-                        : darkMode
-                          ? 'font-medium text-slate-400 group-hover:text-white'
-                          : 'font-medium text-gray-500 group-hover:text-gray-900'
-                    }`}
-                  >
-                    Contact
-                  </span>
-                </>
-              )}
-            </NavLink>
-          )}
         </nav>
       </div>
     </div>

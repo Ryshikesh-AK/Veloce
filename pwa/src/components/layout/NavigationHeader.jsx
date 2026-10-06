@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function NavigationHeader() {
   const { darkMode, toggleDarkMode, favorites, compareIds } = useCarContext();
-  const { user, isAuthenticated, isAdmin, logout, skipAuth } = useAuth();
+  const { user, isAuthenticated, isAdmin, skipAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -158,9 +158,9 @@ export default function NavigationHeader() {
         {isAuthenticated ? (
           <div className="flex items-center gap-2">
             <div
-              title={`Logged in as ${user?.name || 'User'} (${user?.role || 'customer'}). Click to logout`}
+              title={`Logged in as ${user?.name || 'User'}. Click to view Profile & Settings`}
               className="relative group cursor-pointer"
-              onClick={() => logout()}
+              onClick={() => navigate('/profile')}
             >
               <div
                 className={`w-9 h-9 rounded-full font-semibold text-xs flex items-center justify-center border transition-colors ${
@@ -176,28 +176,7 @@ export default function NavigationHeader() {
               ></span>
             </div>
           </div>
-        ) : isAuthPage ? (
-          <button
-            onClick={() => {
-              skipAuth();
-              if (window.history.length > 1 && window.history.state?.idx > 0) {
-                navigate(-1);
-              } else {
-                navigate('/');
-              }
-            }}
-            className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-full border transition-all duration-300 flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer ${
-              darkMode 
-                ? 'text-slate-200 hover:text-white bg-slate-900 border-emerald-500/30 hover:border-emerald-500/60' 
-                : 'text-slate-700 hover:text-slate-900 bg-white border-slate-200 hover:border-slate-300 shadow-xs'
-            }`}
-          >
-            <span>Skip for now</span>
-            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </button>
-        ) : (
+        ) : isAuthPage ? null : (
           <button
             onClick={() => navigate('/login')}
             className={`group relative overflow-hidden text-xs font-semibold px-4 py-2 rounded-full border transition-all duration-300 flex items-center gap-2 cursor-pointer ${

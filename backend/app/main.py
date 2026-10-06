@@ -31,9 +31,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-if not settings.cloudinary_enabled:
-    settings.upload_directory.mkdir(parents=True, exist_ok=True)
-    app.mount("/uploads", StaticFiles(directory=settings.upload_directory, check_dir=False), name="uploads")
+settings.upload_directory.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.upload_directory, check_dir=False), name="uploads")
 app.include_router(api_router, prefix=settings.api_prefix)
 
 from app.api.routes.ai import router as ai_direct_router

@@ -256,14 +256,14 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           </div>
         ))}
 
-        {/* Carousel Prev/Next Buttons - Hidden by default, shown on card hover */}
+        {/* Carousel Prev/Next Buttons */}
         {imagesList.length > 1 && (
           <>
             <button
               type="button"
               onClick={handleNextCardImage}
               aria-label="Next photo"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold shadow-md border border-white/10"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-70 hover:opacity-100 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
             >
               ›
             </button>
@@ -271,7 +271,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
               type="button"
               onClick={handlePrevCardImage}
               aria-label="Previous photo"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold shadow-md border border-white/10"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-950/70 text-white flex items-center justify-center opacity-70 hover:opacity-100 group-hover:opacity-100 transition-opacity backdrop-blur-md hover:bg-slate-900 cursor-pointer z-10 text-xs font-bold"
             >
               ‹
             </button>
@@ -299,12 +299,11 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           </>
         )}
         
-        {/* Sleek Glassmorphism Status Pill in Top-Left */}
-        <div className="absolute left-3 top-3 z-10">
-          <span className="bg-black/40 backdrop-blur-md text-[10px] uppercase tracking-wider text-white px-2.5 py-1 rounded-full font-semibold border border-white/15 shadow-xs">
-            {status || 'Available'}
-          </span>
-        </div>
+        {status && status !== 'Available' && (
+          <div className="absolute left-3 top-3 rounded-md border border-white/15 bg-slate-950/85 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md z-10">
+            {status}
+          </div>
+        )}
 
         {/* Top-Right Action Buttons: Share & Favorite */}
         <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
@@ -350,55 +349,65 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
             </svg>
           </motion.button>
         </div>
+
+        <div className="absolute bottom-3 right-3 z-10">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleCompare}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md backdrop-blur-sm text-[10px] text-white font-medium cursor-pointer ${isCompared ? 'bg-emerald-700/90' : 'bg-black/60 hover:bg-black/80'}`}
+          >
+            <span>{isCompared ? '✓' : '+'}</span> {isCompared ? 'Added' : 'Compare'}
+          </motion.button>
+        </div>
       </div>
 
       {/* Card Content Body */}
-      <div className="p-4 space-y-2.5">
+      <div className="p-4 space-y-2">
+        {car.submodel && car.submodel.toLowerCase() !== title.toLowerCase() && (
+          <p className={`text-xs font-semibold tracking-wide ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            {car.submodel}
+          </p>
+        )}
+
         <div className="flex items-center justify-between">
           <h3 className={`font-bold text-base tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
-          <div className={`flex items-center text-xs font-semibold ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
-            <span className="text-emerald-500 mr-1">★</span> {rating}
-          </div>
         </div>
         
-        <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>{year} • {category} • {location}</p>
+        {/* Specs line: Transmission • Fuel */}
+        <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+          {[car.transmission, car.fuel || car.fuelType || 'Petrol'].filter(Boolean).join(' • ')}
+        </p>
 
-        {/* Card Bottom Divider & Footer Actions */}
-        <div className={`pt-3 mt-1 border-t flex items-center justify-between gap-2 ${
+        {/* Card Bottom Divider & Price CTA */}
+        <div className={`pt-3 mt-1 border-t flex items-center justify-between ${
           darkMode ? 'border-white/10' : 'border-gray-100'
         }`}>
           <div>
             <span className={`text-[10px] uppercase block font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>Price</span>
             <span className={`text-base font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{price}</span>
           </div>
+          <motion.button 
+            whileHover={{ x: 2 }}
+            onClick={handleView}
+            className="text-xs font-semibold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 group cursor-pointer"
+          >
+            View details
+            <span className="group-hover:translate-x-0.5 transition-transform text-emerald-500">→</span>
+          </motion.button>
+        </div>
 
-          <div className="flex items-center gap-2">
-            {/* Compare Trigger Button in Card Footer */}
-            <button
-              type="button"
-              onClick={handleCompare}
-              className={`text-xs transition-all cursor-pointer select-none ${
-                isCompared
-                  ? 'bg-[#bef264] text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow-xs hover:bg-[#aee750]'
-                  : darkMode
-                  ? 'border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-semibold px-3 py-1.5 rounded-xl'
-                  : 'border border-slate-200 hover:border-slate-400 text-slate-700 font-semibold px-3 py-1.5 rounded-xl'
-              }`}
-            >
-              {isCompared ? '✓ In Compare' : '+ Compare'}
-            </button>
-
-            {/* Dark Pill View Details Button */}
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleView}
-              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1 cursor-pointer"
-            >
-              <span>View details</span>
-              <span className="transition-transform group-hover:translate-x-0.5">→</span>
-            </motion.button>
-          </div>
+        {/* Location, Year, & Mileage Footer Bar with Location Pin Icon */}
+        <div className={`pt-2 flex items-center gap-1.5 text-[11px] font-medium ${
+          darkMode ? 'text-slate-400 border-t border-white/5' : 'text-gray-500 border-t border-gray-100'
+        }`}>
+          <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="truncate">
+            {[location, year, car.mileageFormatted || (car.mileage ? `${Number(car.mileage).toLocaleString()} miles` : '')].filter(Boolean).join(' • ')}
+          </span>
         </div>
       </div>
     </motion.article>
