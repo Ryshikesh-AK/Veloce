@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.db.base import Base
-from app.models import Car, Lead
+from app.models import Car, Lead, User
 
 
 if context.config.config_file_name is not None:

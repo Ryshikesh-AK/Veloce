@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
     environment: str = "development"
     database_url: str = "postgresql+psycopg://DriveXCars:DriveXCars@localhost:5432/DriveXCars"
-    auto_create_tables: bool = False
+    auto_create_tables: bool = True
     upload_directory: Path = BACKEND_DIRECTORY / "uploads"
     cors_origins: list[str] | str = Field(
         default_factory=lambda: [

@@ -46,24 +46,52 @@ export function AuthProvider({ children }) {
   const getRegisteredAccounts = () => {
     try {
       const raw = localStorage.getItem('drivexcars_registered_users');
-      if (!raw) return DEFAULT_ACCOUNTS;
+      if (!raw) {
+        try {
+          localStorage.setItem('drivexcars_registered_users', JSON.stringify(DEFAULT_ACCOUNTS));
+        } catch {}
+        return [...DEFAULT_ACCOUNTS];
+      }
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_ACCOUNTS;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure default accounts remain available
+        let changed = false;
+        const merged = [...parsed];
+        for (const def of DEFAULT_ACCOUNTS) {
+          if (!merged.some((a) => a?.email?.toLowerCase() === def.email.toLowerCase())) {
+            merged.push(def);
+            changed = true;
+          }
+        }
+        if (changed) {
+          try {
+            localStorage.setItem('drivexcars_registered_users', JSON.stringify(merged));
+          } catch {}
+        }
+        return merged;
+      }
+      return [...DEFAULT_ACCOUNTS];
     } catch {
-      return DEFAULT_ACCOUNTS;
+      return [...DEFAULT_ACCOUNTS];
     }
   };
 
   const saveRegisteredAccount = (newAccount) => {
+    if (!newAccount?.email) return;
     try {
+      const cleanEmail = newAccount.email.trim().toLowerCase();
       const accounts = getRegisteredAccounts();
       const existingIndex = accounts.findIndex(
-        (a) => a.email.toLowerCase() === newAccount.email.toLowerCase()
+        (a) => a?.email && a.email.trim().toLowerCase() === cleanEmail
       );
+      const entry = {
+        ...newAccount,
+        email: cleanEmail,
+      };
       if (existingIndex >= 0) {
-        accounts[existingIndex] = { ...accounts[existingIndex], ...newAccount };
+        accounts[existingIndex] = { ...accounts[existingIndex], ...entry };
       } else {
-        accounts.push(newAccount);
+        accounts.push(entry);
       }
       localStorage.setItem('drivexcars_registered_users', JSON.stringify(accounts));
     } catch (e) {
@@ -75,7 +103,7 @@ export function AuthProvider({ children }) {
     if (!email) return false;
     const cleanEmail = email.trim().toLowerCase();
     const accounts = getRegisteredAccounts();
-    return accounts.some((a) => a.email.toLowerCase() === cleanEmail);
+    return accounts.some((a) => a?.email && a.email.trim().toLowerCase() === cleanEmail);
   };
 
   const login = async (email, password) => {
@@ -155,26 +183,8 @@ export function AuthProvider({ children }) {
       localStorage.setItem('pwa_user', JSON.stringify(userSession));
       return userSession;
     } catch (error) {
-      const userSession = {
-        id: 'usr_' + Date.now(),
-        name: name || cleanEmail.split('@')[0],
-        email: cleanEmail,
-        phone,
-        role: cleanEmail.includes('admin') ? 'admin' : 'customer',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      };
-      saveRegisteredAccount({
-        id: userSession.id,
-        name: userSession.name,
-        email: cleanEmail,
-        password,
-        phone,
-        role: userSession.role,
-      });
-      setUser(userSession);
-      setIsGuest(false);
-      localStorage.setItem('pwa_user', JSON.stringify(userSession));
-      return userSession;
+      console.error('Registration failed on backend:', error);
+      throw error;
     }
   };
 
@@ -195,16 +205,27 @@ export function AuthProvider({ children }) {
     setUser(null);
     setIsGuest(true);
 
-    // Retain theme preferences, clear all user & session storage
-    const keysToPreserve = ['drivexcars_theme_v2', 'drivexcars_theme', 'pwa_theme'];
+    // Retain registered users database, theme preferences, and saved configurations
+    const keysToPreserve = [
+      'drivexcars_registered_users',
+      'drivexcars_theme_v2', 
+      'drivexcars_theme', 
+      'pwa_theme'
+    ];
     const preservedValues = {};
     keysToPreserve.forEach((k) => {
       const val = localStorage.getItem(k);
       if (val !== null) preservedValues[k] = val;
     });
 
-    localStorage.clear();
+    // Remove active user session credentials
+    localStorage.removeItem('pwa_user');
+    localStorage.removeItem('pwa_token');
+    localStorage.removeItem('guest_user_info');
+    localStorage.removeItem('DriveXCars-admin-customer-leads');
+    localStorage.removeItem('DriveXCars-test-drive-email');
 
+    // Guarantee preserved data is intact
     Object.entries(preservedValues).forEach(([k, val]) => {
       localStorage.setItem(k, val);
     });
