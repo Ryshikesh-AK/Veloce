@@ -71,7 +71,7 @@ export default function SearchAndFilters({
               }}
               className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer border ${
                 isActive
-                  ? 'bg-emerald-500 text-slate-950 font-semibold shadow-lg shadow-emerald-500/20 border-emerald-400'
+                  ? 'bg-[#bef264] text-slate-950 font-bold shadow-md shadow-[#bef264]/20 border-[#bef264]'
                   : darkMode 
                     ? 'bg-slate-900/60 border-white/10 text-slate-300 hover:text-white hover:bg-slate-800/60'
                     : 'bg-white border-gray-200/90 text-gray-600 hover:text-gray-900 active:bg-gray-50'

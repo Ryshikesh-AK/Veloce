@@ -23,13 +23,13 @@ import { hapticAction, hapticTab } from '../utils/haptics';
 export default function LoginPage({ initialMode = 'login' }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login, signup, skipAuth } = useAuth();
+  const { login, signup, skipAuth, checkUserExists } = useAuth();
   const { darkMode, setToast } = useCarContext();
 
-  // Mode: 'login' | 'signup'
-  const isSignupPath = location.pathname === '/signup' || initialMode === 'signup';
-  const [internalMode, setInternalMode] = useState(null);
-  const mode = internalMode !== null ? internalMode : (isSignupPath ? 'signup' : 'login');
+  // Mode: 'login' | 'signup' (Defaults strictly to 'login' unless path is /signup)
+  const isSignupPath = location.pathname === '/signup';
+  const [internalMode, setInternalMode] = useState(isSignupPath ? 'signup' : 'login');
+  const mode = internalMode;
 
   // Form State
   const [fullName, setFullName] = useState('');
@@ -42,11 +42,13 @@ export default function LoginPage({ initialMode = 'login' }) {
   const [agreeTerms, setAgreeTerms] = useState(true);
   
   const [error, setError] = useState('');
+  const [userNotFoundNotice, setUserNotFoundNotice] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleModeSwitch = (newMode) => {
     hapticTab();
     setInternalMode(newMode);
+    setUserNotFoundNotice(false);
     setError('');
   };
 
@@ -70,6 +72,7 @@ export default function LoginPage({ initialMode = 'login' }) {
     hapticAction();
     setIsLoading(true);
     setError('');
+    setUserNotFoundNotice(false);
 
     const demoEmail = role === 'admin' ? 'admin@drivexcars.co.uk' : 'collector@drivexcars.co.uk';
     const demoPassword = 'DemoPassword123!';
@@ -95,24 +98,38 @@ export default function LoginPage({ initialMode = 'login' }) {
 
     if (mode === 'signup') {
       if (!fullName.trim() || !email.trim() || !password) {
-        setError('Please fill in your name, email, and password.');
+        setError('Please enter your full name, email, and password.');
         return;
       }
       if (password.length < 6) {
         setError('Password must be at least 6 characters long.');
         return;
       }
-      if (password !== confirmPassword) {
+      if (confirmPassword && password !== confirmPassword) {
         setError('Passwords do not match. Please re-enter.');
         return;
       }
       if (!agreeTerms) {
-        setError('Please agree to the DriveX Terms & Privacy Policy.');
+        setError('Please agree to the DriveX Collector Terms & Privacy Policy.');
         return;
       }
     } else {
-      if (!email.trim() || !password) {
-        setError('Please enter your email and password.');
+      if (!email.trim()) {
+        setError('Please enter your email address.');
+        return;
+      }
+      // If user does not exist in registry, immediately transition to catchy Create Account mode!
+      if (!checkUserExists?.(email.trim())) {
+        hapticTab();
+        setInternalMode('signup');
+        setUserNotFoundNotice(true);
+        if (password) setConfirmPassword(password);
+        setError('');
+        setToast?.('✨ No account found. Create your collector profile in seconds!');
+        return;
+      }
+      if (!password) {
+        setError('Please enter your password.');
         return;
       }
     }
@@ -139,6 +156,15 @@ export default function LoginPage({ initialMode = 'login' }) {
         }
       }
     } catch (err) {
+      if (mode === 'login' && (err.userNotFound || !checkUserExists?.(email.trim()))) {
+        // User does not exist yet! Automatically present the catchy Create Account section
+        setInternalMode('signup');
+        setUserNotFoundNotice(true);
+        if (password) setConfirmPassword(password);
+        setError('');
+        setToast?.('✨ No account found. Create your collector profile in seconds!');
+        return;
+      }
       setError(err.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setIsLoading(false);
@@ -252,43 +278,45 @@ export default function LoginPage({ initialMode = 'login' }) {
               </button>
             </div>
 
-            {/* Mode Switcher Segmented Tabs */}
-            <div className="p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/5 grid grid-cols-2 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => handleModeSwitch('login')}
-                className={`py-2.5 rounded-xl transition cursor-pointer text-center ${
-                  mode === 'login'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-md font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeSwitch('signup')}
-                className={`py-2.5 rounded-xl transition cursor-pointer text-center ${
-                  mode === 'signup'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-md font-extrabold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
-
             {/* Header Title */}
-            <div>
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#bef264]/15 border border-[#bef264]/30 text-[#bef264] text-[10px] font-black uppercase tracking-widest">
+                <Sparkles className="w-3 h-3 text-[#bef264]" />
+                <span>{mode === 'login' ? 'Collector Portal' : 'Exclusive Access'}</span>
+              </div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                {mode === 'login' ? 'Welcome Back, Collector' : 'Join the DriveX Inner Circle'}
+                {mode === 'login' ? 'Welcome Back, Collector' : 'Create Your Account'}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                 {mode === 'login' 
                   ? 'Sign in to access your garage wishlists, compare matrix, and private allocations.'
-                  : 'Register your client account to unlock bespoke vehicle inquiries and sync across devices.'}
+                  : 'Join DriveX in seconds to unlock bespoke hypercars, private viewings, and VIP perks.'}
               </p>
             </div>
+
+            {/* Catchy Notice Banner if account was not found */}
+            <AnimatePresence>
+              {userNotFoundNotice && mode === 'signup' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="p-3.5 rounded-2xl bg-[#bef264]/15 border border-[#bef264]/40 text-slate-900 dark:text-white flex items-start gap-3 shadow-sm"
+                >
+                  <div className="w-7 h-7 rounded-xl bg-[#bef264] text-slate-950 flex items-center justify-center shrink-0 mt-0.5 shadow-sm font-black text-xs">
+                    <Sparkles className="w-4 h-4 fill-current" />
+                  </div>
+                  <div className="flex-1 text-xs">
+                    <div className="font-extrabold text-slate-950 dark:text-[#bef264] text-xs sm:text-sm">
+                      ✨ No account found for this email!
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed text-[11px] sm:text-xs">
+                      We've pre-filled <span className="font-bold underline decoration-[#bef264] text-slate-900 dark:text-white">{email}</span>. Just enter your name to complete your collector profile in seconds!
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Error Banner */}
             <AnimatePresence>
@@ -451,7 +479,7 @@ export default function LoginPage({ initialMode = 'login' }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full min-h-[50px] rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-50 active:scale-[0.99] mt-2"
+                className="w-full min-h-[50px] rounded-2xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#bef264]/20 cursor-pointer disabled:opacity-50 active:scale-[0.99] mt-2"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -460,12 +488,51 @@ export default function LoginPage({ initialMode = 'login' }) {
                   </span>
                 ) : (
                   <>
-                    <span>{mode === 'login' ? 'Sign In to Garage' : 'Create Collector Account'}</span>
+                    <span>{mode === 'login' ? 'Sign In to Garage' : 'Create Collector Account & Enter'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
             </form>
+
+            {/* Intuitive Switcher Link */}
+            <div className="text-center pt-0.5">
+              {mode === 'login' ? (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Don't have an account yet?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      hapticTab();
+                      setInternalMode('signup');
+                      setUserNotFoundNotice(false);
+                      setError('');
+                    }}
+                    className="font-bold text-slate-900 dark:text-[#bef264] hover:underline cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <span>Create Account</span>
+                    <span>→</span>
+                  </button>
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Already have a collector account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      hapticTab();
+                      setInternalMode('login');
+                      setUserNotFoundNotice(false);
+                      setError('');
+                    }}
+                    className="font-bold text-slate-900 dark:text-[#bef264] hover:underline cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <span>Sign In instead</span>
+                    <span>→</span>
+                  </button>
+                </p>
+              )}
+            </div>
 
             {/* Quick Demo Credentials Bar */}
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">

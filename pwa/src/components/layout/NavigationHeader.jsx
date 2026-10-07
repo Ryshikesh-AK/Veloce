@@ -86,17 +86,21 @@ export default function NavigationHeader() {
                   }`
                 }
               >
-                <span>{link.label}</span>
-                {link.count > 0 && (
-                  <span
-                    className={`inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] font-bold ${
-                      link.isActive
-                        ? 'bg-black text-[#bef264]'
-                        : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                    }`}
-                  >
-                    {link.count}
-                  </span>
+                {({ isActive }) => (
+                  <>
+                    <span>{link.label}</span>
+                    {link.count > 0 && (
+                      <span
+                        className={`inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[10px] font-bold ${
+                          isActive
+                            ? 'bg-slate-950 text-[#bef264]'
+                            : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                        }`}
+                      >
+                        {link.count}
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
             ))}

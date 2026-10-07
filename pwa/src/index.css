@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: Newsreader, Georgia, serif;
   --color-slate-950: #0b121d;
   --color-slate-900: #142131;
   --color-slate-800: #203147;
-  --color-emerald-400: #b9f43d;
-  --color-emerald-500: #b9f43d;
-  --color-emerald-600: #159bbf;
+  --color-emerald-400: #bef264;
+  --color-emerald-500: #bef264;
+  --color-emerald-600: #a3e635;
   --shadow-subtle: 0 2px 12px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
   --shadow-float: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.04);
 }
@@ -172,43 +174,6 @@ input:focus-visible {
 .pwa-shell[data-theme='light'] {
   color-scheme: light;
   background: #fbfbfc;
-  --color-emerald-400: #b9f43d;
-  --color-emerald-500: #b9f43d;
-  --color-emerald-600: #b9f43d;
-}
-
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] .text-white {
-  color: #1b211c;
-}
-
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] .text-slate-200,
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] .text-slate-300 {
-  color: #3f4941;
-}
-
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] .text-slate-400,
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] .text-slate-500 {
-  color: #68736b;
-}
-
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] [class*='bg-slate-900'] {
-  background-color: #fff;
-}
-
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] [class*='border-white'] {
-  border-color: #dfe5df;
-}
-
-.pwa-shell[data-theme='light'] [data-purpose$='-screen'] input {
-  border-color: #d5ddd6;
-  background: #fff;
-  color: #202922;
-}
-
-.pwa-shell[data-theme='light'] .text-emerald-400,
-.pwa-shell[data-theme='light'] .text-emerald-500,
-.pwa-shell[data-theme='light'] .text-emerald-600 {
-  color: #253508;
 }
 
 .pwa-main {

@@ -267,7 +267,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
                 >
                   Save Profile Changes
                 </button>

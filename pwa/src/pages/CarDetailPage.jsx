@@ -256,7 +256,7 @@ export default function CarDetailPage({ car: propCar }) {
           <button
             type="button"
             onClick={() => setCalculatorOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+            className="px-4 py-2.5 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
           >
             <Calculator className="w-4 h-4" />
             <span>Customize Lease</span>
@@ -344,7 +344,7 @@ export default function CarDetailPage({ car: propCar }) {
       </div>
       <button
         type="button"
-        className="min-h-12 w-full rounded-lg bg-emerald-400 px-4 text-sm font-bold text-slate-950 hover:bg-emerald-300 transition-colors cursor-pointer"
+        className="min-h-12 w-full rounded-lg bg-[#bef264] px-4 text-sm font-bold text-slate-950 hover:bg-[#aee750] transition-colors cursor-pointer shadow-sm"
         onClick={() => navigate('/contact')}
       >
         Inquire about this car

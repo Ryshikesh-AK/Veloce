@@ -37,61 +37,144 @@ export function AuthProvider({ children }) {
     window.dispatchEvent(new Event('app:login'));
   };
 
+  const DEFAULT_ACCOUNTS = [
+    { email: 'admin@drivexcars.co.uk', password: 'DemoPassword123!', name: 'Executive Admin', role: 'admin' },
+    { email: 'admin@example.com', password: 'test-password', name: 'System Admin', role: 'admin' },
+    { email: 'collector@drivexcars.co.uk', password: 'DemoPassword123!', name: 'VIP Collector', role: 'customer' },
+  ];
+
+  const getRegisteredAccounts = () => {
+    try {
+      const raw = localStorage.getItem('drivexcars_registered_users');
+      if (!raw) return DEFAULT_ACCOUNTS;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_ACCOUNTS;
+    } catch {
+      return DEFAULT_ACCOUNTS;
+    }
+  };
+
+  const saveRegisteredAccount = (newAccount) => {
+    try {
+      const accounts = getRegisteredAccounts();
+      const existingIndex = accounts.findIndex(
+        (a) => a.email.toLowerCase() === newAccount.email.toLowerCase()
+      );
+      if (existingIndex >= 0) {
+        accounts[existingIndex] = { ...accounts[existingIndex], ...newAccount };
+      } else {
+        accounts.push(newAccount);
+      }
+      localStorage.setItem('drivexcars_registered_users', JSON.stringify(accounts));
+    } catch (e) {
+      console.warn('Failed to save registered account to localStorage', e);
+    }
+  };
+
+  const checkUserExists = (email) => {
+    if (!email) return false;
+    const cleanEmail = email.trim().toLowerCase();
+    const accounts = getRegisteredAccounts();
+    return accounts.some((a) => a.email.toLowerCase() === cleanEmail);
+  };
+
   const login = async (email, password) => {
     clearGuestAndUserDataOnLogin();
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
-      const response = await loginApi(email, password);
+      const response = await loginApi(cleanEmail, password);
       const userSession = {
         ...response.user,
         token: response.access_token,
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       };
+      saveRegisteredAccount({
+        email: cleanEmail,
+        name: userSession.name,
+        role: userSession.role,
+        password,
+      });
       setUser(userSession);
       setIsGuest(false);
       localStorage.setItem('pwa_user', JSON.stringify(userSession));
       return userSession;
     } catch (error) {
-      const isAdmin = email.toLowerCase().includes('admin');
-      const fallbackUser = {
-        id: 'usr_' + Date.now(),
-        name: email.split('@')[0] || 'User',
-        email: email,
-        role: isAdmin ? 'admin' : 'customer',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      // Local fallback account check
+      const accounts = getRegisteredAccounts();
+      const matched = accounts.find((a) => a.email.toLowerCase() === cleanEmail);
+
+      if (!matched) {
+        const notFoundErr = new Error('No account found for this email.');
+        notFoundErr.userNotFound = true;
+        throw notFoundErr;
+      }
+
+      // User exists, verify password if one was set
+      if (matched.password && matched.password !== password) {
+        throw new Error('Incorrect password. Please verify and try again.');
+      }
+
+      const userSession = {
+        id: matched.id || 'usr_' + Date.now(),
+        name: matched.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        phone: matched.phone || null,
+        role: matched.role || (cleanEmail.includes('admin') ? 'admin' : 'customer'),
+        avatar: matched.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       };
-      setUser(fallbackUser);
+
+      setUser(userSession);
       setIsGuest(false);
-      localStorage.setItem('pwa_user', JSON.stringify(fallbackUser));
-      return fallbackUser;
+      localStorage.setItem('pwa_user', JSON.stringify(userSession));
+      return userSession;
     }
   };
 
   const signup = async (name, email, password, phone = null) => {
     clearGuestAndUserDataOnLogin();
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
-      const response = await registerApi(name, email, password, phone);
+      const response = await registerApi(name, cleanEmail, password, phone);
       const userSession = {
         ...response.user,
         token: response.access_token,
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       };
+      saveRegisteredAccount({
+        id: userSession.id,
+        name,
+        email: cleanEmail,
+        password,
+        phone,
+        role: userSession.role || 'customer',
+      });
       setUser(userSession);
       setIsGuest(false);
       localStorage.setItem('pwa_user', JSON.stringify(userSession));
       return userSession;
     } catch (error) {
-      const fallbackUser = {
+      const userSession = {
         id: 'usr_' + Date.now(),
-        name: name || email.split('@')[0],
-        email: email,
-        phone: phone,
-        role: 'customer',
+        name: name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        phone,
+        role: cleanEmail.includes('admin') ? 'admin' : 'customer',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       };
-      setUser(fallbackUser);
+      saveRegisteredAccount({
+        id: userSession.id,
+        name: userSession.name,
+        email: cleanEmail,
+        password,
+        phone,
+        role: userSession.role,
+      });
+      setUser(userSession);
       setIsGuest(false);
-      localStorage.setItem('pwa_user', JSON.stringify(fallbackUser));
-      return fallbackUser;
+      localStorage.setItem('pwa_user', JSON.stringify(userSession));
+      return userSession;
     }
   };
 
@@ -150,6 +233,7 @@ export function AuthProvider({ children }) {
         switchRole,
         skipAuth,
         logout,
+        checkUserExists,
       }}
     >
       {children}

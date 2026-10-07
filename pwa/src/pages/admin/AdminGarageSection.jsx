@@ -271,7 +271,7 @@ export default function AdminGarageSection() {
                 onClick={() => setCategoryFilter(cat)}
                 className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
                   categoryFilter === cat
-                    ? 'bg-emerald-500 text-slate-950 font-bold shadow-xs'
+                    ? 'bg-[#bef264] text-slate-950 font-bold shadow-xs'
                     : darkMode
                     ? 'bg-slate-800/70 text-slate-300 hover:bg-slate-800'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -374,7 +374,7 @@ export default function AdminGarageSection() {
               setStatusFilter('All');
               setSortBy('newest');
             }}
-            className="mt-3 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-500 text-slate-950 cursor-pointer"
+            className="mt-3 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-[#bef264] text-slate-950 cursor-pointer shadow-xs hover:bg-[#aee750]"
           >
             Reset Filters
           </button>

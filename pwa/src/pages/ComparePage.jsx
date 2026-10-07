@@ -477,7 +477,7 @@ export default function ComparePage() {
                 type="button"
                 onClick={handleSwapSlots}
                 disabled={!carSlot1 || !carSlot2}
-                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-2 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 shadow-sm"
                 title="Swap vehicle 1 and 2"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -488,7 +488,7 @@ export default function ComparePage() {
                 <button
                   type="button"
                   onClick={() => openPicker(3)}
-                  className="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add 3rd Car</span>
@@ -497,7 +497,7 @@ export default function ComparePage() {
                 <button
                   type="button"
                   onClick={handleRemoveSlot3}
-                  className="px-3 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Remove 3rd</span>
@@ -514,20 +514,20 @@ export default function ComparePage() {
               <div 
                 className={`relative rounded-3xl border-2 transition-all flex flex-col justify-between overflow-hidden group ${
                   carSlot1
-                    ? 'border-emerald-500/40 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none'
+                    ? 'border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md shadow-slate-200/40 dark:shadow-none hover:border-slate-300 dark:hover:border-white/20'
                     : 'border-dashed border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40'
                 }`}
               >
                 <div className="p-4 sm:p-6 space-y-4">
                   {/* Slot Top Bar */}
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/5">
                       Vehicle 1
                     </span>
                     <button
                       type="button"
                       onClick={() => openPicker(1)}
-                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer flex items-center gap-1 transition"
                     >
                       <span>{carSlot1 ? 'Change Car' : 'Choose Car'}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -539,14 +539,14 @@ export default function ComparePage() {
                       {/* Car Visual Spotlight */}
                       <div 
                         onClick={() => openPicker(1)}
-                        className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 relative border border-black/10 dark:border-white/10 cursor-pointer group-hover:border-emerald-500/50 transition"
+                        className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 relative border border-black/10 dark:border-white/10 cursor-pointer group-hover:border-slate-400/50 dark:group-hover:border-white/30 transition"
                       >
                         <CarPhoto 
                           src={carSlot1.imageUrl || carSlot1.image} 
                           alt={carSlot1.title} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
-                        <div className="absolute top-2.5 left-2.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
+                        <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
                           {carSlot1.category || 'Luxury'}
                         </div>
                       </div>
@@ -558,10 +558,10 @@ export default function ComparePage() {
                           {carSlot1.title}
                         </h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <p className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400">
+                          <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                             {carSlot1.price}
                           </p>
-                          <span className="text-xs text-slate-400 font-medium">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                             {getMonthlyLease(carSlot1)}
                           </span>
                         </div>
@@ -569,17 +569,17 @@ export default function ComparePage() {
 
                       {/* Mini Spec Badges */}
                       <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-white/5 text-[11px] font-semibold">
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                          <div className="text-[9px] text-slate-400 uppercase">0–60 mph</div>
-                          <div className="text-slate-800 dark:text-slate-200 mt-0.5">{carSlot1.acceleration || '3.5s'}</div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                          <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">0–60 mph</div>
+                          <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{carSlot1.acceleration || '3.5s'}</div>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                          <div className="text-[9px] text-slate-400 uppercase">Power</div>
-                          <div className="text-slate-800 dark:text-slate-200 mt-0.5">{carSlot1.horsepower || 'High Output'}</div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                          <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Power</div>
+                          <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{carSlot1.horsepower || 'High Output'}</div>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                          <div className="text-[9px] text-slate-400 uppercase">Energy</div>
-                          <div className="text-slate-800 dark:text-slate-200 mt-0.5 truncate">{carSlot1.fuel || 'Petrol'}</div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                          <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Energy</div>
+                          <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5 truncate">{carSlot1.fuel || 'Petrol'}</div>
                         </div>
                       </div>
                     </>
@@ -588,7 +588,7 @@ export default function ComparePage() {
                       onClick={() => openPicker(1)}
                       className="py-12 flex flex-col items-center justify-center text-center cursor-pointer space-y-3"
                     >
-                      <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                      <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:scale-110 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-transform">
                         <CarIcon className="w-8 h-8" />
                       </div>
                       <div className="font-bold text-slate-800 dark:text-slate-200 text-sm">Select Vehicle 1</div>
@@ -602,20 +602,20 @@ export default function ComparePage() {
               <div 
                 className={`relative rounded-3xl border-2 transition-all flex flex-col justify-between overflow-hidden group ${
                   carSlot2
-                    ? 'border-rose-500/40 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none'
+                    ? 'border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md shadow-slate-200/40 dark:shadow-none hover:border-slate-300 dark:hover:border-white/20'
                     : 'border-dashed border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40'
                 }`}
               >
                 <div className="p-4 sm:p-6 space-y-4">
                   {/* Slot Top Bar */}
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/5">
                       Vehicle 2
                     </span>
                     <button
                       type="button"
                       onClick={() => openPicker(2)}
-                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer flex items-center gap-1 transition"
                     >
                       <span>{carSlot2 ? 'Change Car' : 'Choose Car'}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -627,14 +627,14 @@ export default function ComparePage() {
                       {/* Car Visual Spotlight */}
                       <div 
                         onClick={() => openPicker(2)}
-                        className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 relative border border-black/10 dark:border-white/10 cursor-pointer group-hover:border-rose-500/50 transition"
+                        className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 relative border border-black/10 dark:border-white/10 cursor-pointer group-hover:border-slate-400/50 dark:group-hover:border-white/30 transition"
                       >
                         <CarPhoto 
                           src={carSlot2.imageUrl || carSlot2.image} 
                           alt={carSlot2.title} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
-                        <div className="absolute top-2.5 left-2.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
+                        <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
                           {carSlot2.category || 'Luxury'}
                         </div>
                       </div>
@@ -646,10 +646,10 @@ export default function ComparePage() {
                           {carSlot2.title}
                         </h3>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <p className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400">
+                          <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                             {carSlot2.price}
                           </p>
-                          <span className="text-xs text-slate-400 font-medium">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                             {getMonthlyLease(carSlot2)}
                           </span>
                         </div>
@@ -657,17 +657,17 @@ export default function ComparePage() {
 
                       {/* Mini Spec Badges */}
                       <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-white/5 text-[11px] font-semibold">
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                          <div className="text-[9px] text-slate-400 uppercase">0–60 mph</div>
-                          <div className="text-slate-800 dark:text-slate-200 mt-0.5">{carSlot2.acceleration || '3.8s'}</div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                          <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">0–60 mph</div>
+                          <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{carSlot2.acceleration || '3.8s'}</div>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                          <div className="text-[9px] text-slate-400 uppercase">Power</div>
-                          <div className="text-slate-800 dark:text-slate-200 mt-0.5">{carSlot2.horsepower || 'High Output'}</div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                          <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Power</div>
+                          <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{carSlot2.horsepower || 'High Output'}</div>
                         </div>
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                          <div className="text-[9px] text-slate-400 uppercase">Energy</div>
-                          <div className="text-slate-800 dark:text-slate-200 mt-0.5 truncate">{carSlot2.fuel || 'Petrol'}</div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                          <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Energy</div>
+                          <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5 truncate">{carSlot2.fuel || 'Petrol'}</div>
                         </div>
                       </div>
                     </>
@@ -676,7 +676,7 @@ export default function ComparePage() {
                       onClick={() => openPicker(2)}
                       className="py-12 flex flex-col items-center justify-center text-center cursor-pointer space-y-3"
                     >
-                      <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center border border-rose-500/20 group-hover:scale-110 transition-transform">
+                      <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:scale-110 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-transform">
                         <CarIcon className="w-8 h-8" />
                       </div>
                       <div className="font-bold text-slate-800 dark:text-slate-200 text-sm">Select Vehicle 2</div>
@@ -689,25 +689,25 @@ export default function ComparePage() {
               {/* Optional Slot 3: Third Car */}
               {carSlot3 && (
                 <div 
-                  className="relative rounded-3xl border-2 border-indigo-500/40 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-col justify-between overflow-hidden group animate-in zoom-in-95 duration-200"
+                  className="relative rounded-3xl border-2 border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-md shadow-slate-200/40 dark:shadow-none hover:border-slate-300 dark:hover:border-white/20 flex flex-col justify-between overflow-hidden group animate-in zoom-in-95 duration-200"
                 >
                   <div className="p-4 sm:p-6 space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-white/5">
                         Vehicle 3
                       </span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => openPicker(3)}
-                          className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                          className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
                         >
                           Change
                         </button>
                         <button
                           type="button"
                           onClick={handleRemoveSlot3}
-                          className="text-xs font-bold text-rose-500 hover:text-rose-600 cursor-pointer p-1"
+                          className="text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer p-1"
                           title="Remove vehicle 3"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -717,14 +717,14 @@ export default function ComparePage() {
 
                     <div 
                       onClick={() => openPicker(3)}
-                      className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 relative border border-black/10 dark:border-white/10 cursor-pointer group-hover:border-indigo-500/50 transition"
+                      className="w-full h-44 sm:h-52 rounded-2xl overflow-hidden bg-slate-950 relative border border-black/10 dark:border-white/10 cursor-pointer group-hover:border-slate-400/50 dark:group-hover:border-white/30 transition"
                     >
                       <CarPhoto 
                         src={carSlot3.imageUrl || carSlot3.image} 
                         alt={carSlot3.title} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                       />
-                      <div className="absolute top-2.5 left-2.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
+                      <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider">
                         {carSlot3.category || 'Luxury'}
                       </div>
                     </div>
@@ -735,27 +735,27 @@ export default function ComparePage() {
                         {carSlot3.title}
                       </h3>
                       <div className="flex items-baseline gap-2 mt-1">
-                        <p className="text-lg sm:text-xl font-black text-indigo-600 dark:text-indigo-400">
+                        <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                           {carSlot3.price}
                         </p>
-                        <span className="text-xs text-slate-400 font-medium">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                           {getMonthlyLease(carSlot3)}
                         </span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-white/5 text-[11px] font-semibold">
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                        <div className="text-[9px] text-slate-400 uppercase">0–60 mph</div>
-                        <div className="text-slate-800 dark:text-slate-200 mt-0.5">{carSlot3.acceleration || '3.6s'}</div>
+                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                        <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">0–60 mph</div>
+                        <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{carSlot3.acceleration || '3.6s'}</div>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                        <div className="text-[9px] text-slate-400 uppercase">Power</div>
-                        <div className="text-slate-800 dark:text-slate-200 mt-0.5">{carSlot3.horsepower || 'High Output'}</div>
+                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                        <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Power</div>
+                        <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{carSlot3.horsepower || 'High Output'}</div>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-center">
-                        <div className="text-[9px] text-slate-400 uppercase">Energy</div>
-                        <div className="text-slate-800 dark:text-slate-200 mt-0.5 truncate">{carSlot3.fuel || 'Petrol'}</div>
+                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-center">
+                        <div className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Energy</div>
+                        <div className="text-slate-900 dark:text-slate-100 font-extrabold mt-0.5 truncate">{carSlot3.fuel || 'Petrol'}</div>
                       </div>
                     </div>
                   </div>
@@ -789,10 +789,10 @@ export default function ComparePage() {
                     key={idx}
                     type="button"
                     onClick={() => selectQuickMatchup(match)}
-                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-emerald-500 transition cursor-pointer flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer flex items-center gap-1.5 shadow-xs dark:shadow-none"
                   >
                     <span>{match.car1.title}</span>
-                    <span className="text-rose-500 font-extrabold text-[10px]">VS</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-extrabold text-[10px]">vs</span>
                     <span>{match.car2.title}</span>
                   </button>
                 ))}
@@ -806,17 +806,17 @@ export default function ComparePage() {
               type="button"
               disabled={!carSlot1 || !carSlot2}
               onClick={handleStartCompare}
-              className="w-full min-h-[56px] rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-extrabold text-sm sm:text-base flex items-center justify-between px-6 sm:px-8 transition-all shadow-xl shadow-slate-900/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.99]"
+              className="w-full min-h-[56px] rounded-2xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-black text-sm sm:text-base flex items-center justify-between px-6 sm:px-8 transition-all shadow-xl shadow-[#bef264]/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.99]"
             >
               <div className="flex items-center gap-2">
-                <Gauge className="w-5 h-5 text-emerald-400 dark:text-emerald-600" />
+                <Gauge className="w-5 h-5 text-slate-950" />
                 <span>Compare {carSlot3 ? '3 Vehicles' : 'Head-to-Head'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-600 hidden sm:inline">
+                <span className="text-xs uppercase tracking-wider font-extrabold text-slate-800 hidden sm:inline">
                   Detailed Spec Breakdown
                 </span>
-                <span className="text-emerald-400 dark:text-emerald-600 font-black tracking-widest text-lg group-hover:translate-x-1.5 transition-transform">
+                <span className="text-slate-950 font-black tracking-widest text-lg group-hover:translate-x-1.5 transition-transform">
                   &gt;&gt;&gt;
                 </span>
               </div>
@@ -858,7 +858,7 @@ export default function ComparePage() {
               <button
                 type="button"
                 onClick={handleSwapSlots}
-                className="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-500 cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                className="text-xs font-bold text-slate-950 bg-[#bef264] hover:bg-[#aee750] cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-xl shadow-xs"
                 title="Swap vehicle order"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -867,7 +867,7 @@ export default function ComparePage() {
               <button
                 type="button"
                 onClick={handleShareComparison}
-                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-500/30"
+                className="text-xs font-bold text-slate-950 bg-[#bef264] hover:bg-[#aee750] cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-xl shadow-xs"
                 title="Share this comparison"
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -936,7 +936,7 @@ export default function ComparePage() {
                   }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
                     activeCategory === cat.id
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm'
+                      ? 'bg-[#bef264] text-slate-950 shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -958,13 +958,13 @@ export default function ComparePage() {
                 }}
                 className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border ${
                   diffOnly
-                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+                    ? 'bg-[#bef264] text-slate-950 border-transparent shadow-xs'
                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                 }`}
                 title="Only show specs where vehicles differ"
               >
                 <span>Differences Only</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${diffOnly ? 'bg-emerald-500 text-slate-950' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${diffOnly ? 'bg-slate-950 text-[#bef264]' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
                   {diffCount}
                 </span>
               </button>
@@ -978,7 +978,7 @@ export default function ComparePage() {
                 }}
                 className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border ${
                   isCompact
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent shadow-sm'
+                    ? 'bg-[#bef264] text-slate-950 border-transparent shadow-xs'
                     : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                 }`}
                 title="Toggle compact high-density view"
@@ -1065,17 +1065,17 @@ export default function ComparePage() {
                       {/* Slot 2 Value */}
                       <div className={`p-2 rounded-xl transition ${
                         adv2 
-                          ? 'bg-rose-500/[0.08] dark:bg-rose-500/[0.12] border border-rose-500/30' 
+                          ? 'bg-emerald-500/[0.08] dark:bg-emerald-500/[0.12] border border-emerald-500/30' 
                           : 'bg-transparent'
                       }`}>
                         <div className="flex items-center justify-between gap-1 flex-wrap">
                           <span className={`text-xs sm:text-sm font-bold leading-tight ${
-                            adv2 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+                            adv2 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
                           }`}>
                             {row.val2}
                           </span>
                           {adv2 && (
-                            <span className="text-[9px] font-black text-rose-700 dark:text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded-full shrink-0">
+                            <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded-full shrink-0">
                               {adv2}
                             </span>
                           )}
@@ -1086,17 +1086,17 @@ export default function ComparePage() {
                       {carSlot3 && (
                         <div className={`p-2 rounded-xl transition ${
                           adv3 
-                            ? 'bg-indigo-500/[0.08] dark:bg-indigo-500/[0.12] border border-indigo-500/30' 
+                            ? 'bg-emerald-500/[0.08] dark:bg-emerald-500/[0.12] border border-emerald-500/30' 
                             : 'bg-transparent'
                         }`}>
                           <div className="flex items-center justify-between gap-1 flex-wrap">
                             <span className={`text-xs sm:text-sm font-bold leading-tight ${
-                              adv3 ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'
+                              adv3 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
                             }`}>
                               {row.val3}
                             </span>
                             {adv3 && (
-                              <span className="text-[9px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-500/20 px-1.5 py-0.5 rounded-full shrink-0">
+                              <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded-full shrink-0">
                                 {adv3}
                               </span>
                             )}
@@ -1134,7 +1134,7 @@ export default function ComparePage() {
                   <button
                     type="button"
                     onClick={() => navigate(`/car/${car.id}`)}
-                    className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    className="py-2.5 px-3 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Inspect</span>
@@ -1145,7 +1145,7 @@ export default function ComparePage() {
                       hapticAction();
                       setLeaseModalCar(car);
                     }}
-                    className="py-2.5 px-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    className="py-2.5 px-3 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
                   >
                     <Calculator className="w-3.5 h-3.5" />
                     <span>Lease Calc</span>

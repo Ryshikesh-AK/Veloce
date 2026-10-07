@@ -230,7 +230,7 @@ export default function ConciergePage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-emerald-500/20 active:scale-[0.99] disabled:opacity-50"
+                  className="w-full py-3 px-4 rounded-xl bg-[#bef264] hover:bg-[#aee750] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-[#bef264]/20 active:scale-[0.99] disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>Sending...</span>
