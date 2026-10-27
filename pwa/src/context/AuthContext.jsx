@@ -28,13 +28,7 @@ export function AuthProvider({ children }) {
 
   const clearGuestAndUserDataOnLogin = () => {
     localStorage.removeItem('guest_user_info');
-    localStorage.removeItem('DriveXCars-pwa-saved-cars');
-    localStorage.removeItem('DriveXCars-pwa-compare-cars');
     localStorage.removeItem('DriveXCars-test-drive-email');
-    localStorage.removeItem('DriveXCars-admin-customer-leads');
-    localStorage.removeItem('drivexcars_saved_v2');
-    localStorage.removeItem('drivexcars_compare_v2');
-    window.dispatchEvent(new Event('app:login'));
   };
 
   const DEFAULT_ACCOUNTS = [

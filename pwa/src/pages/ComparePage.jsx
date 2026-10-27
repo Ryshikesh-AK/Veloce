@@ -135,8 +135,8 @@ export default function ComparePage() {
     return [
       {
         title: 'Super EV vs Iconic 911',
-        car1: cars.find(c => c.id.includes('audi') || c.category === 'Electric') || cars[0],
-        car2: cars.find(c => c.id.includes('porsche') || c.title?.includes('911')) || cars[1]
+        car1: cars.find(c => String(c.id).toLowerCase().includes('audi') || (c.title || c.name || '').toLowerCase().includes('audi') || c.category === 'Electric') || cars[0],
+        car2: cars.find(c => String(c.id).toLowerCase().includes('porsche') || (c.title || c.name || '').toLowerCase().includes('911') || (c.title || c.name || '').toLowerCase().includes('porsche')) || cars[1]
       },
       {
         title: 'Track Performance Duel',
