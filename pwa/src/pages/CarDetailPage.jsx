@@ -584,13 +584,13 @@ export default function CarDetailPage({ car: propCar }) {
               </div>
             </div>
 
-            {/* Veloce Certified Trust Guarantee */}
+            {/* DriveXCars Certified Trust Guarantee */}
             <div className="mt-6 pt-5 border-t border-slate-200/60 dark:border-white/10 flex items-center gap-3 text-xs">
               <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-[#bef264] flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="text-[11px] leading-tight text-slate-500 dark:text-slate-400">
-                <span className="font-bold text-slate-900 dark:text-slate-200 block">Veloce Provenance Guarantee</span>
+                <span className="font-bold text-slate-900 dark:text-slate-200 block">DriveXCars Provenance Guarantee</span>
                 Inspected across 160 points with full provenance documentation included.
               </div>
             </div>

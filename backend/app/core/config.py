@@ -27,6 +27,7 @@ class Settings(BaseSettings):
             "http://127.0.0.1:5175",
             "http://127.0.0.1:5176",
             "https://veloce.ryshikeshak.workers.dev",
+            "https://drivexcars.ryshikeshak.workers.dev",
         ]
     )
     jwt_secret_key: str = "development-only-secret-change-before-production-32"
@@ -45,6 +46,18 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        if isinstance(value, str):
+            clean = value.strip()
+            if clean.startswith("postgres://"):
+                return clean.replace("postgres://", "postgresql+psycopg://", 1)
+            if clean.startswith("postgresql://") and not clean.startswith("postgresql+"):
+                return clean.replace("postgresql://", "postgresql+psycopg://", 1)
+            return clean
+        return value
 
     @field_validator("upload_directory", mode="before")
     @classmethod

@@ -215,4 +215,103 @@ def test_admin_image_upload_uses_cloudinary(monkeypatch) -> None:
     assert uploaded_options["folder"] == "DriveXCars/cars"
     assert uploaded_options["resource_type"] == "image"
 
+
+def test_user_registration_and_login_flow() -> None:
+    # 1. Register new user
+    reg_payload = {
+        "email": "collector@drivexcars.co.uk",
+        "password": "SecurePassword123!",
+        "full_name": "VIP Collector",
+        "phone": "+447911123456",
+    }
+    reg_resp = client.post("/api/v1/auth/register", json=reg_payload)
+    assert reg_resp.status_code == 201
+    reg_data = reg_resp.json()
+    assert "access_token" in reg_data
+    assert reg_data["user"]["email"] == "collector@drivexcars.co.uk"
+    assert reg_data["user"]["role"] == "customer"
+
+    # 2. Duplicate registration rejection
+    dup_resp = client.post("/api/v1/auth/register", json=reg_payload)
+    assert dup_resp.status_code == 400
+    assert "already exists" in dup_resp.json()["detail"]
+
+    # 3. Successful login
+    login_resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "collector@drivexcars.co.uk", "password": "SecurePassword123!"},
+    )
+    assert login_resp.status_code == 200
+    user_token = login_resp.json()["access_token"]
+
+    # 4. Access /me as customer
+    me_resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {user_token}"})
+    assert me_resp.status_code == 200
+    assert me_resp.json()["email"] == "collector@drivexcars.co.uk"
+    assert me_resp.json()["role"] == "customer"
+
+    # 5. Customer cannot access admin routes (role boundary)
+    forbidden_resp = client.post(
+        "/api/v1/cars",
+        headers={"Authorization": f"Bearer {user_token}"},
+        json={"name": "Hacked", "year": 2024, "type": "SUV", "price": 100000, "image": "https://example.com/h.jpg"},
+    )
+    assert forbidden_resp.status_code == 403
+
+
+def test_login_invalid_credentials_returns_generic_401() -> None:
+    resp = client.post("/api/v1/auth/login", json={"email": "unknown@example.com", "password": "wrong"})
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Invalid email or password"
+
+
+def test_system_health_endpoint() -> None:
+    resp = client.get("/api/v1/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+    assert resp.json()["database"] == "ok"
+
+
+def test_lead_creation_and_admin_management() -> None:
+    # 1. Create lead
+    lead_payload = {
+        "name": "James Bond",
+        "phone": "+447000000007",
+        "email": "bond@mi6.gov.uk",
+        "action_type": "test_drive",
+        "notes": "Aston Martin preferred",
+    }
+    create_resp = client.post("/api/v1/leads", json=lead_payload)
+    assert create_resp.status_code == 201
+    lead_id = int(create_resp.json()["id"])
+
+    # 2. Non-admin cannot view leads
+    assert client.get("/api/v1/leads").status_code == 401
+
+    # 3. Admin can list leads
+    leads_resp = client.get("/api/v1/leads", headers={"Authorization": f"Bearer {admin_token()}"})
+    assert leads_resp.status_code == 200
+    leads_list = leads_resp.json()
+    assert any(l["id"] == lead_id for l in leads_list)
+
+    # 4. Admin updates lead status
+    status_resp = client.patch(
+        f"/api/v1/leads/{lead_id}/status",
+        headers={"Authorization": f"Bearer {admin_token()}"},
+        json={"status": "Contacted"},
+    )
+    assert status_resp.status_code == 200
+    assert status_resp.json()["status"] == "Contacted"
+
+
+def test_neon_database_url_normalization() -> None:
+    from app.core.config import Settings
+
+    s1 = Settings(_env_file=None, database_url="postgresql://user:pass@ep-cool.neon.tech/neondb?sslmode=require")
+    assert s1.database_url.startswith("postgresql+psycopg://")
+
+    s2 = Settings(_env_file=None, database_url="postgres://user:pass@ep-cool.neon.tech/neondb?sslmode=require")
+    assert s2.database_url.startswith("postgresql+psycopg://")
+
+
 

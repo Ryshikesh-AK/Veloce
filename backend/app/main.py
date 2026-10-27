@@ -9,10 +9,17 @@ from app.core.config import settings
 from app.db.init_db import init_db
 
 
+import logging
+
+logger = logging.getLogger("uvicorn.error")
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     if settings.auto_create_tables:
-        init_db()
+        try:
+            init_db()
+        except Exception as exc:
+            logger.error(f"Database initialization deferred or failed on startup: {exc}")
     yield
 
 

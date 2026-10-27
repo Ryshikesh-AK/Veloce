@@ -1,5 +1,6 @@
 import hashlib
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -24,7 +25,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
         salt_hex, hash_hex = hashed_password.split(":")
         salt = bytes.fromhex(salt_hex)
         pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-        return pwd_hash.hex() == hash_hex
+        return secrets.compare_digest(pwd_hash.hex(), hash_hex)
     except Exception:
         return False
 
@@ -74,6 +75,10 @@ def require_admin(
         payload = decode_access_token(credentials.credentials)
     except jwt.InvalidTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token") from exc
-    if payload.get("role") != "admin" and payload.get("sub") != settings.admin_email:
+
+    sub = str(payload.get("sub", "")).strip().lower()
+    role = str(payload.get("role", "")).strip().lower()
+
+    if role != "admin" and sub != settings.admin_email.strip().lower():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return str(payload["sub"])
+    return str(payload.get("sub", ""))
