@@ -17,28 +17,69 @@ export function CarProvider({ children }) {
   const [favorites, setFavorites] = useLocalStorage(SAVED_KEY, []);
   const [compareIds, setCompareIds] = useLocalStorage(COMPARE_KEY, []);
 
+  // Sync favorites & compareIds with the authenticated user profile
+  useEffect(() => {
+    if (user?.email) {
+      const userEmail = user.email.toLowerCase();
+      const userSavedKey = `DriveXCars-saved-${userEmail}`;
+      const userCompareKey = `DriveXCars-compare-${userEmail}`;
+
+      try {
+        const rawUserSaved = localStorage.getItem(userSavedKey);
+        const userSavedList = rawUserSaved ? JSON.parse(rawUserSaved) : [];
+        // Merge any guest-favorited items so nothing is lost upon login
+        const guestSaved = Array.isArray(favorites) ? favorites : [];
+        const mergedSaved = Array.from(new Set([...userSavedList, ...guestSaved]));
+        localStorage.setItem(userSavedKey, JSON.stringify(mergedSaved));
+        setFavorites(mergedSaved);
+
+        const rawUserCompare = localStorage.getItem(userCompareKey);
+        const userCompareList = rawUserCompare ? JSON.parse(rawUserCompare) : [];
+        const guestCompare = Array.isArray(compareIds) ? compareIds : [];
+        const mergedCompare = Array.from(new Set([...userCompareList, ...guestCompare]));
+        localStorage.setItem(userCompareKey, JSON.stringify(mergedCompare));
+        setCompareIds(mergedCompare);
+      } catch (err) {
+        console.warn('Error syncing user favorites/comparisons:', err);
+      }
+    }
+  }, [user?.email]);
+
+  // Save changes to user profile whenever favorites or compareIds change
+  useEffect(() => {
+    if (user?.email && Array.isArray(favorites)) {
+      try {
+        localStorage.setItem(`DriveXCars-saved-${user.email.toLowerCase()}`, JSON.stringify(favorites));
+      } catch {}
+    }
+  }, [favorites, user?.email]);
+
+  useEffect(() => {
+    if (user?.email && Array.isArray(compareIds)) {
+      try {
+        localStorage.setItem(`DriveXCars-compare-${user.email.toLowerCase()}`, JSON.stringify(compareIds));
+      } catch {}
+    }
+  }, [compareIds, user?.email]);
+
   const clearUserData = () => {
-    setFavorites([]);
-    setCompareIds([]);
     setSelectedCar(null);
     if (setSearchQuery) setSearchQuery('');
     if (setSelectedCategory) setSelectedCategory('All cars');
     if (setSortBy) setSortBy('featured');
     storageService.removeGuestUser();
-    storageService.removeItem(SAVED_KEY);
-    storageService.removeItem(COMPARE_KEY);
   };
 
   useEffect(() => {
-    const handleAppReset = () => {
+    const handleLogout = () => {
       clearUserData();
-      localStorage.removeItem('DriveXCars-admin-customer-leads');
+      // Reset active view to guest
+      setFavorites([]);
+      setCompareIds([]);
     };
-    window.addEventListener('app:logout', handleAppReset);
-    window.addEventListener('app:login', handleAppReset);
+    window.addEventListener('app:logout', handleLogout);
     return () => {
-      window.removeEventListener('app:logout', handleAppReset);
-      window.removeEventListener('app:login', handleAppReset);
+      window.removeEventListener('app:logout', handleLogout);
     };
   }, []);
 
