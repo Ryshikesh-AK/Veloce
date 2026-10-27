@@ -32,15 +32,22 @@ def create_lead(
         status="Pending Call",
     )
     db.add(lead)
-    db.add(
-        Notification(
-            type="lead_created",
-            title="New Concierge / VIP Lead",
-            message=f"{lead.name} ({lead.email or lead.phone}): {lead.notes or 'Inquiry submitted'}",
-            user_id=user_id,
-        )
-    )
     db.commit()
+    db.refresh(lead)
+
+    try:
+        db.add(
+            Notification(
+                type="lead_created",
+                title="New Concierge / VIP Lead",
+                message=f"{lead.name} ({lead.email or lead.phone}): {lead.notes or 'Inquiry submitted'}",
+                user_id=user_id,
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+
     return {"status": "received", "id": str(lead.id)}
 
 
