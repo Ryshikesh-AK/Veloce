@@ -128,14 +128,17 @@ export function AuthProvider({ children }) {
       localStorage.setItem('pwa_user', JSON.stringify(userSession));
       return userSession;
     } catch (error) {
-      // Local fallback account check
+      // If backend responded with an authentication error, preserve it directly
+      if (error?.message && !error.message.includes('Could not reach') && !error.message.includes('took too long') && !error.message.includes('failed to fetch')) {
+        throw error;
+      }
+
+      // Offline local fallback check
       const accounts = getRegisteredAccounts();
       const matched = accounts.find((a) => a.email.toLowerCase() === cleanEmail);
 
       if (!matched) {
-        const notFoundErr = new Error('No account found for this email.');
-        notFoundErr.userNotFound = true;
-        throw notFoundErr;
+        throw error;
       }
 
       // User exists, verify password if one was set

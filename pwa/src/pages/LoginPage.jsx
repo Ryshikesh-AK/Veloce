@@ -118,16 +118,6 @@ export default function LoginPage({ initialMode = 'login' }) {
         setError('Please enter your email address.');
         return;
       }
-      // If user does not exist in registry, immediately transition to catchy Create Account mode!
-      if (!checkUserExists?.(email.trim())) {
-        hapticTab();
-        setInternalMode('signup');
-        setUserNotFoundNotice(true);
-        if (password) setConfirmPassword(password);
-        setError('');
-        setToast?.('✨ No account found. Create your collector profile in seconds!');
-        return;
-      }
       if (!password) {
         setError('Please enter your password.');
         return;
@@ -156,15 +146,6 @@ export default function LoginPage({ initialMode = 'login' }) {
         }
       }
     } catch (err) {
-      if (mode === 'login' && (err.userNotFound || !checkUserExists?.(email.trim()))) {
-        // User does not exist yet! Automatically present the catchy Create Account section
-        setInternalMode('signup');
-        setUserNotFoundNotice(true);
-        if (password) setConfirmPassword(password);
-        setError('');
-        setToast?.('✨ No account found. Create your collector profile in seconds!');
-        return;
-      }
       setError(err.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setIsLoading(false);

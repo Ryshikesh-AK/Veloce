@@ -260,9 +260,64 @@ function ContactModal({ onClose }) {
 }
 
 function SignupModal({ onClose, onSubmit }) {
-  const [user, setUser] = useState({ name: '', email: '', phone: '' });
-  const update = (key, value) => setUser((current) => ({ ...current, [key]: value }));
-  return <div className="modal-backdrop signup-backdrop"><div className="signup-modal"><button className="close-button signup-close" onClick={onClose} aria-label="Close sign up"><X size={19} /></button><div className="signup-mark"><Sparkles size={19} /></div><div className="eyebrow muted">WELCOME TO DriveXCars</div><h2>Stay close to<br /><em>the right car.</em></h2><p>Sign up to save your shortlist, receive new arrivals, and get first access to exceptional cars.</p><form onSubmit={(event) => { event.preventDefault(); onSubmit(user); }}><label>Your name<input required value={user.name} onChange={(event) => update('name', event.target.value)} placeholder="Jordan Miller" /></label><label>Email address<input required type="email" value={user.email} onChange={(event) => update('email', event.target.value)} placeholder="you@example.com" /></label><label>Phone number <span className="optional-label">Optional</span><input value={user.phone} onChange={(event) => update('phone', event.target.value)} placeholder="+1 555 000 0000" /></label><button className="primary-button" type="submit">Create my account <ArrowRight size={16} /></button></form><small>By continuing, you agree to receive occasional DriveXCars updates.</small></div></div>;
+  const [user, setUser] = useState({ name: '', email: '', phone: '', password: '' });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const update = (key, value) => {
+    setError('');
+    setUser((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!user.password || user.password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      await carApi.register(user.name, user.email, user.password, user.phone);
+      onSubmit(user);
+    } catch (e) {
+      setError(e.message || 'Registration failed. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-backdrop signup-backdrop">
+      <div className="signup-modal">
+        <button className="close-button signup-close" onClick={onClose} aria-label="Close sign up">
+          <X size={19} />
+        </button>
+        <div className="signup-mark"><Sparkles size={19} /></div>
+        <div className="eyebrow muted">WELCOME TO DriveXCars</div>
+        <h2>Stay close to<br /><em>the right car.</em></h2>
+        <p>Create an account to save shortlist vehicles, book test-drives, and access your profile on any device.</p>
+        <form onSubmit={handleSubmit}>
+          <label>Your name *
+            <input required value={user.name} onChange={(event) => update('name', event.target.value)} placeholder="Jordan Miller" />
+          </label>
+          <label>Email address *
+            <input required type="email" value={user.email} onChange={(event) => update('email', event.target.value)} placeholder="you@example.com" />
+          </label>
+          <label>Password *
+            <input required type="password" minLength={6} value={user.password} onChange={(event) => update('password', event.target.value)} placeholder="At least 6 characters" />
+          </label>
+          <label>Phone number <span className="optional-label">Optional</span>
+            <input value={user.phone} onChange={(event) => update('phone', event.target.value)} placeholder="+1 555 000 0000" />
+          </label>
+          {error && <span className="login-error" role="alert" style={{ color: '#ef4444', fontSize: '11px', marginTop: '4px' }}>{error}</span>}
+          <button className="primary-button" type="submit" disabled={submitting}>
+            {submitting ? 'Creating account...' : 'Create my account'} <ArrowRight size={16} />
+          </button>
+        </form>
+        <small>Your account will be accessible on both desktop and mobile.</small>
+      </div>
+    </div>
+  );
 }
 
 function AdminPanel({ cars, featuredIds, standalone = false, onClose, onAdd, onRemove, onFeaturedChange }) {
