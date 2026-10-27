@@ -15,20 +15,22 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCarContext } from '../context/CarContext';
+import { createLeadApi } from '../services/api';
 import { hapticAction } from '../utils/haptics';
 
 export default function ConciergePage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { setToast } = useCarContext();
 
   // Quick Message Form State
   const [fullName, setFullName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !message.trim()) {
       setToast?.('Please fill in your name, email, and message.');
@@ -38,31 +40,56 @@ export default function ConciergePage() {
     hapticAction();
     setIsSubmitting(true);
 
+    const contactPhone = phone.trim() || user?.phone || 'Not provided';
+    const noteText = message.trim();
+
+    // 1. Submit lead to central backend database
+    try {
+      await createLeadApi(
+        {
+          name: fullName.trim(),
+          email: email.trim(),
+          phone: contactPhone,
+          action_type: 'concierge_inquiry',
+          notes: noteText,
+        },
+        token
+      );
+    } catch (apiErr) {
+      console.warn('Backend lead creation fallback to local storage:', apiErr.message);
+    }
+
+    // 2. Local storage sync for instant Admin Panel visibility
     const newMessage = {
       id: 'msg-' + Date.now(),
+      customerName: fullName.trim(),
       name: fullName.trim(),
       email: email.trim(),
-      message: message.trim(),
+      phone: contactPhone,
+      message: noteText,
+      notes: noteText,
       service: 'General Concierge Inquiry',
+      carId: 'Concierge VIP Inquiry',
+      intentLevel: 'VIP Inquiry',
+      location: 'Online Concierge Desk',
+      budget: 'Bespoke / Inquired',
+      callStatus: 'Pending Call',
+      status: 'new',
+      addedDate: 'Just now',
       createdAt: new Date().toISOString()
     };
 
     try {
       const existing = JSON.parse(localStorage.getItem('DriveXCars-admin-customer-leads') || '[]');
-      existing.unshift({
-        ...newMessage,
-        status: 'new'
-      });
+      existing.unshift(newMessage);
       localStorage.setItem('DriveXCars-admin-customer-leads', JSON.stringify(existing));
     } catch (err) {
       console.warn('Failed to save message:', err);
     }
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setToast?.('Message sent! Our concierge will reply within 15 minutes.');
-    }, 600);
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    setToast?.('Message sent! Our concierge team will reach out shortly.');
   };
 
   return (
@@ -209,6 +236,19 @@ export default function ConciergePage() {
                     placeholder="client@drivexcars.co.uk"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1">
+                    Phone / WhatsApp <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+44 7700 900077"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
