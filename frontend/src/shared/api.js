@@ -1,4 +1,4 @@
-const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://veloce-dsax.onrender.com')).replace(/\/+$/, '');
 const API_ROOT = `${API_ORIGIN}/api/v1`;
 const ADMIN_TOKEN_KEY = 'DriveXCars-admin-token';
 const ADMIN_EMAIL_KEY = 'DriveXCars-admin-email';
@@ -112,5 +112,14 @@ export const carApi = {
       headers: { 'Content-Type': file.type },
       auth: true
     });
+  },
+  listNotifications() {
+    return request('/notifications', { auth: true });
+  },
+  markNotificationRead(id) {
+    return request(`/notifications/${id}/read`, { method: 'PATCH', auth: true });
+  },
+  markAllNotificationsRead() {
+    return request('/notifications/mark-all-read', { method: 'POST', auth: true });
   }
 };

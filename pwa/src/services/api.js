@@ -168,3 +168,24 @@ export async function generateDescriptionApi(vehicleData) {
   const data = await response.json();
   return data.description;
 }
+
+export function listNotificationsApi(token) {
+  return request('/notifications', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export function markNotificationReadApi(id, token) {
+  return request(`/notifications/${id}/read`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+
+export function markAllNotificationsReadApi(token) {
+  return request('/notifications/mark-all-read', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+

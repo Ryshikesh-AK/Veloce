@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import create_access_token, get_current_user_payload, hash_password, verify_password
 from app.db.session import get_db
+from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserRead
 
@@ -30,6 +31,14 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         role="customer",
     )
     db.add(new_user)
+    db.add(
+        Notification(
+            type="user_registration",
+            title="New User Registration",
+            message=f"{new_user.full_name} ({new_user.email}) registered an account.",
+            user_id=new_user.id,
+        )
+    )
     db.commit()
     db.refresh(new_user)
 
@@ -81,6 +90,18 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is deactivated"
         )
+
+    # Record notification for customer login
+    if user.role != "admin":
+        db.add(
+            Notification(
+                type="user_login",
+                title="Customer Sign In",
+                message=f"{user.full_name or user.email} signed into their showroom account.",
+                user_id=user.id,
+            )
+        )
+        db.commit()
 
     user_info = UserRead(
         id=user.id,

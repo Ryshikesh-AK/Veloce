@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_user_payload, require_admin
 from app.db.session import get_db
 from app.models.lead import Lead
+from app.models.notification import Notification
 from app.schemas.lead import LeadCreate, LeadRead, LeadStatusUpdate
 
 router = APIRouter()
@@ -31,6 +32,14 @@ def create_lead(
         status="Pending Call",
     )
     db.add(lead)
+    db.add(
+        Notification(
+            type="lead_created",
+            title="New Concierge / VIP Lead",
+            message=f"{lead.name} ({lead.email or lead.phone}): {lead.notes or 'Inquiry submitted'}",
+            user_id=user_id,
+        )
+    )
     db.commit()
     return {"status": "received", "id": str(lead.id)}
 
