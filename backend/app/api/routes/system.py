@@ -1,8 +1,22 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
 
 router = APIRouter(tags=["system"])
 
 
 @router.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health(db: Session = Depends(get_db)) -> dict[str, str]:
+    db_status = "ok"
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "unavailable"
+
+    response_data = {"status": "ok", "database": db_status}
+    if db_status != "ok":
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=response_data)
+    return response_data
