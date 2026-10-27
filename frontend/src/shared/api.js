@@ -80,6 +80,12 @@ export const carApi = {
       return result;
     });
   },
+  register(name, email, password, phone = null) {
+    return request('/auth/register', {
+      method: 'POST',
+      body: { full_name: name, email, password, phone: phone || null }
+    });
+  },
   create(car) {
     return request('/cars', { method: 'POST', body: car, auth: true }).then(normalizeCar);
   },
