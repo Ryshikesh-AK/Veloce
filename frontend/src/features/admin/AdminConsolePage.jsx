@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { formatPrice } from '../../shared/format.js';
 import CarPhoto from '../../shared/CarPhoto.jsx';
+import { carApi } from '../../shared/api.js';
 import {
-  ArrowLeft, ArrowRight, CarFront, Check, CircleDollarSign, LayoutDashboard,
+  ArrowLeft, ArrowRight, Bell, CarFront, Check, CircleDollarSign, LayoutDashboard,
   LogOut, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Upload, X
 } from 'lucide-react';
 
 const sections = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard },
+  { path: '/admin/notifications', label: 'Activity & Alerts', icon: Bell },
   { path: '/admin/inventory', label: 'Inventory', icon: CarFront },
   { path: '/admin/finance', label: 'Financial overview', icon: CircleDollarSign },
   { path: '/admin/featured', label: 'Featured cars', icon: Sparkles },
@@ -79,6 +81,7 @@ export default function AdminConsolePage({
         <div className="admin-console-content">
           <div className="admin-page-transition" key={activePath}>
             {activePath === '/admin' && <OverviewPage cars={cars} featuredIds={featuredIds} adminEmail={adminEmail} onNavigate={onNavigate} onStatusSelect={(status) => { setInventoryStatus(status); onNavigate('/admin/inventory'); }} />}
+            {activePath === '/admin/notifications' && <NotificationsPage />}
             {activePath === '/admin/inventory' && <InventoryPage cars={cars} carsLoading={carsLoading} carsError={carsError} onRetryCars={onRetryCars} statusFilter={inventoryStatus} onStatusFilterChange={setInventoryStatus} onRemove={onRemove} onUpdate={onUpdate} onStatusChange={onStatusChange} onFinancialChange={onFinancialChange} onPriceChange={onPriceChange} onNavigate={onNavigate} />}
             {activePath === '/admin/finance' && <FinancialPage cars={cars} onNavigate={onNavigate} />}
             {activePath === '/admin/featured' && <FeaturedPage cars={cars} featuredIds={featuredIds} onFeaturedChange={onFeaturedChange} />}
@@ -384,15 +387,113 @@ function EditCarPage({ car, onUpdate, onDone }) {
   </>;
 }
 
-function NotificationsPage({ count, onClear }) {
+function NotificationsPage() {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await carApi.listNotifications();
+      setNotifications(data.items || []);
+      setUnreadCount(data.unread_count || 0);
+    } catch (e) {
+      console.warn('Failed to load notifications:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMarkAll = async () => {
+    try {
+      await carApi.markAllNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (e) {
+      console.warn('Failed to mark all as read:', e);
+    }
+  };
+
+  const handleMarkOne = async (id) => {
+    try {
+      await carApi.markNotificationRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (e) {
+      console.warn('Failed to mark notification as read:', e);
+    }
+  };
+
   return (
     <>
-      <SectionHeading eyebrow="ACTIVITY" title="Notifications" description="Visitor activity recorded for this admin session." action={count > 0 && <button className="secondary-button" onClick={onClear}><Check size={15} /> Mark all as read</button>} />
-      <section className="admin-notification-row">
-        <span className="admin-notification-icon"><Bell size={18} /></span>
-        <div><strong>{count ? `${count} new visitor ${count === 1 ? 'session' : 'sessions'}` : 'You’re all caught up'}</strong><p>{count ? 'New marketplace visitors have arrived since you last cleared notifications.' : 'New visitor activity will appear here.'}</p></div>
-        {count > 0 && <span className="admin-notification-count">{count}</span>}
-      </section>
+      <SectionHeading
+        eyebrow="ACTIVITY FEED"
+        title="Admin Notifications & Alerts"
+        description="Live alerts when users register, customers log in, VIP inquiries arrive, or test-drives are requested."
+        action={
+          unreadCount > 0 && (
+            <button className="secondary-button" onClick={handleMarkAll}>
+              <Check size={15} /> Mark all as read
+            </button>
+          )
+        }
+      />
+      {loading ? (
+        <div className="admin-empty-state">Loading notifications...</div>
+      ) : notifications.length === 0 ? (
+        <section className="admin-notification-row">
+          <span className="admin-notification-icon"><Bell size={18} /></span>
+          <div>
+            <strong>You’re all caught up</strong>
+            <p>New customer registrations, logins, and showroom activities will automatically trigger alerts here.</p>
+          </div>
+        </section>
+      ) : (
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {notifications.map((item) => (
+            <section
+              key={item.id}
+              className="admin-notification-row"
+              style={{
+                opacity: item.is_read ? 0.75 : 1,
+                borderLeft: item.is_read ? '1px solid var(--line)' : '3px solid #79aa1c',
+                cursor: 'pointer'
+              }}
+              onClick={() => !item.is_read && handleMarkOne(item.id)}
+            >
+              <span
+                className="admin-notification-icon"
+                style={{
+                  background: item.is_read ? 'var(--surface-soft)' : '#eff9d9',
+                  color: item.is_read ? 'var(--muted)' : '#547b0d'
+                }}
+              >
+                <Bell size={18} />
+              </span>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <strong>{item.title}</strong>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                    {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {new Date(item.created_at).toLocaleDateString()}
+                  </span>
+                  {!item.is_read && (
+                    <span style={{ fontSize: '9px', background: '#eff9d9', color: '#547b0d', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                      NEW
+                    </span>
+                  )}
+                </div>
+                <p>{item.message}</p>
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
     </>
   );
 }

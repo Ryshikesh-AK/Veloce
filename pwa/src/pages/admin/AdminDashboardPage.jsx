@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCarContext } from '../../context/CarContext';
+import { useAuth } from '../../context/AuthContext';
+import { listNotificationsApi, markAllNotificationsReadApi, markNotificationReadApi } from '../../services/api';
 import AdminNavTabs from './AdminNavTabs';
 import AdminEditModal from './AdminEditModal';
 import AdminCarLeadsModal from './AdminCarLeadsModal';
@@ -9,13 +11,55 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 export default function AdminDashboardPage() {
   const { cars, toggleCarStatus, darkMode } = useCarContext();
+  const { token } = useAuth();
   const [customerLeads, setCustomerLeads] = useLocalStorage(CUSTOMER_LEADS_STORAGE_KEY, INITIAL_LEADS);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
   // Selected filter from clicking the KPI cards: 'all' | 'valuation' | 'available' | 'reserved' | 'sold' | 'customers'
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [editingCar, setEditingCar] = useState(null);
   const [inspectingLeadsCar, setInspectingLeadsCar] = useState(null);
+
+  const fetchAlerts = async () => {
+    if (!token) return;
+    try {
+      const res = await listNotificationsApi(token);
+      setNotifications(res?.items || []);
+      setUnreadCount(res?.unread_count || 0);
+    } catch (err) {
+      console.warn('Notifications fetch error:', err.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 8000);
+    return () => clearInterval(interval);
+  }, [token]);
+
+  const handleMarkAllRead = async () => {
+    if (!token) return;
+    try {
+      await markAllNotificationsReadApi(token);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  const handleMarkOneRead = async (id) => {
+    if (!token) return;
+    try {
+      await markNotificationReadApi(id, token);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.warn(err);
+    }
+  };
 
   const totalCars = cars.length;
   const totalValue = cars.reduce((sum, c) => sum + (c.priceAmount || (Number(c.pricePerDay || 0) * 300)), 0);
@@ -386,6 +430,82 @@ export default function AdminDashboardPage() {
             Open Car Garage
           </button>
         </div>
+      </div>
+
+      {/* Live Admin Activity & Alerts Feed */}
+      <div
+        className={`rounded-3xl border p-5 sm:p-6 transition-all ${
+          darkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className={`p-2 rounded-xl ${darkMode ? 'bg-amber-400/10 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+              <svg className="w-4 h-4 fill-none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className={`text-base sm:text-lg font-bold tracking-tight ${darkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+                  Real-Time Showroom Activity & Alerts
+                </h3>
+                {unreadCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#bef264] text-slate-950 shadow-sm">
+                    {unreadCount} NEW
+                  </span>
+                )}
+              </div>
+              <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Instant alerts when users register, sign in, submit VIP inquiries, or book test drives.
+              </p>
+            </div>
+          </div>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+            >
+              Mark all as read
+            </button>
+          )}
+        </div>
+
+        {notifications.length === 0 ? (
+          <div className={`p-4 rounded-2xl text-center text-xs ${darkMode ? 'bg-slate-950/50 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
+            No alerts yet. When clients register or sign in, activity notifications will appear here instantly.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+            {notifications.slice(0, 10).map((alert) => (
+              <div
+                key={alert.id}
+                onClick={() => !alert.is_read && handleMarkOneRead(alert.id)}
+                className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                  alert.is_read
+                    ? darkMode ? 'bg-slate-950/40 border-slate-800/80 opacity-70' : 'bg-slate-50/80 border-slate-100 opacity-75'
+                    : darkMode ? 'bg-slate-800/80 border-emerald-500/30 ring-1 ring-emerald-500/20' : 'bg-emerald-50/40 border-emerald-200'
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${alert.is_read ? 'bg-slate-500' : 'bg-emerald-500 animate-pulse'}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold truncate text-slate-900 dark:text-white">
+                      {alert.title}
+                    </span>
+                    <span className="text-[10px] text-slate-400 shrink-0">
+                      {new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+                    {alert.message}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Interactive Filter Results Section */}
