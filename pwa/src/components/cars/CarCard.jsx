@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { GitCompareArrows } from 'lucide-react';
 import { hapticCard, hapticAction } from '../../utils/haptics';
 import { useCarContext } from '../../context/CarContext';
 import CarPhoto from './CarPhoto';
@@ -13,9 +14,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
   const {
     id,
     title,
-    rating,
     year,
-    category,
     location,
     price,
     status,
@@ -55,8 +54,6 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
 
     return () => clearInterval(timer);
   }, [imagesList.length, isHovered]);
-
-  const displayPhotoUrl = imagesList[currentImageIndex] || imageUrl || car.image || '';
 
   const isFavorite = propIsFav ?? context.favorites.includes(id);
   const isCompared = propIsComp ?? context.compareIds.includes(id);
@@ -216,7 +213,8 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
 
   return (
     <motion.article 
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.2 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleView}
@@ -224,16 +222,16 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
       role="link"
       tabIndex={0}
       aria-label={`View details for ${title}`}
-      className={`rounded-2xl border overflow-hidden shadow-xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+      className={`rounded-2xl border overflow-hidden transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bef264] ${
         darkMode 
-          ? 'bg-slate-900/60 backdrop-blur-md border-white/10 text-white hover:border-emerald-500/30' 
-          : 'bg-white border-gray-200/70 text-gray-900 shadow-subtle hover:shadow-md'
+          ? 'bg-[#142131]/90 backdrop-blur-md border-white/10 text-white hover:border-[#bef264]/40 hover:shadow-xl hover:shadow-black/40' 
+          : 'bg-white border-slate-200/90 text-slate-900 shadow-sm hover:shadow-xl hover:border-slate-300'
       }`} 
       data-purpose="car-card"
     >
       {/* Thumbnail Container with Carousel Controls & Touch Gesture Support */}
       <div 
-        className="relative h-48 w-full bg-slate-950 overflow-hidden group select-none touch-pan-y"
+        className="relative aspect-[16/10] w-full bg-slate-950 overflow-hidden group select-none touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -305,8 +303,26 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
           </div>
         )}
 
-        {/* Top-Right Action Buttons: Share & Favorite */}
+        {/* Top-Right Action Buttons: Compare, Share & Favorite */}
         <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+          {/* Circular Compare Button */}
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleCompare}
+            aria-label={isCompared ? 'Remove vehicle from comparison' : 'Compare vehicle'}
+            aria-pressed={isCompared}
+            title={isCompared ? 'In Comparison (Click to remove)' : 'Compare'}
+            className={`w-8 h-8 rounded-full backdrop-blur-sm border flex items-center justify-center transition-all cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bef264] ${
+              isCompared
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-500/30'
+                : 'bg-white/80 border-white/40 text-slate-700 hover:bg-white hover:text-slate-950'
+            }`}
+          >
+            <GitCompareArrows className="w-4 h-4" />
+          </motion.button>
+
           {/* Circular Share Button */}
           <motion.button
             type="button"
@@ -315,7 +331,7 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
             onClick={handleShare}
             aria-label="Share car listing"
             title="Share or copy link"
-            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer border border-white/40"
+            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer border border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bef264]"
           >
             <svg
               className="w-3.5 h-3.5 stroke-current fill-none stroke-[2.2]"
@@ -338,7 +354,9 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
             whileTap={{ scale: 0.9 }}
             onClick={handleToggleFav}
             aria-label={isFavorite ? 'Remove from saved cars' : 'Save car'}
-            className={`w-8 h-8 rounded-full backdrop-blur-sm border flex items-center justify-center transition-transform cursor-pointer shadow-sm ${
+            aria-pressed={isFavorite}
+            title={isFavorite ? 'Saved to Garage' : 'Save to Garage'}
+            className={`w-8 h-8 rounded-full backdrop-blur-sm border flex items-center justify-center transition-transform cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bef264] ${
               isFavorite 
                 ? 'text-rose-500 border-rose-500/30 bg-white/90' 
                 : 'bg-white/80 border-white/40 text-slate-700 hover:bg-white'
@@ -349,65 +367,52 @@ export default function CarCard({ darkMode: propDarkMode, car, isFavorite: propI
             </svg>
           </motion.button>
         </div>
-
-        <div className="absolute bottom-3 right-3 z-10">
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleCompare}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md backdrop-blur-sm text-[10px] text-white font-medium cursor-pointer ${isCompared ? 'bg-emerald-700/90' : 'bg-black/60 hover:bg-black/80'}`}
-          >
-            <span>{isCompared ? '✓' : '+'}</span> {isCompared ? 'Added' : 'Compare'}
-          </motion.button>
-        </div>
       </div>
 
       {/* Card Content Body */}
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2.5">
         {car.submodel && car.submodel.toLowerCase() !== title.toLowerCase() && (
-          <p className={`text-xs font-semibold tracking-wide ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+          <p className={`text-[11px] font-bold uppercase tracking-wider ${darkMode ? 'text-[#bef264]' : 'text-emerald-700'}`}>
             {car.submodel}
           </p>
         )}
 
         <div className="flex items-center justify-between">
-          <h3 className={`font-bold text-base tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
+          <h3 className={`font-bold text-base tracking-tight leading-snug ${darkMode ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
         </div>
         
         {/* Specs line: Transmission • Fuel */}
-        <p className={`text-[11px] font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+        <p className={`text-xs font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
           {[car.transmission, car.fuel || car.fuelType || 'Petrol'].filter(Boolean).join(' • ')}
         </p>
 
         {/* Card Bottom Divider & Price CTA */}
-        <div className={`pt-3 mt-1 border-t flex items-center justify-between ${
-          darkMode ? 'border-white/10' : 'border-gray-100'
+        <div className={`pt-3 mt-1.5 border-t flex items-center justify-between ${
+          darkMode ? 'border-white/10' : 'border-slate-100'
         }`}>
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className={`text-[10px] uppercase font-medium ${darkMode ? 'text-slate-400' : 'text-gray-400'}`}>Price</span>
-              {/* Estimated Monthly Lease pill */}
-              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.2 rounded">
-                Est. ${Math.round((parseInt(String(price || '0').replace(/[^0-9]/g, ''), 10) || 120000) * 0.011).toLocaleString()}/mo
-              </span>
-            </div>
-            <span className={`text-base font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{price}</span>
+            <span className={`text-[10px] uppercase font-bold tracking-wider block ${
+              darkMode ? 'text-slate-400' : 'text-slate-500'
+            }`}>
+              Vehicle Price
+            </span>
+            <span className={`text-lg font-black tracking-tight ${
+              darkMode ? 'text-white' : 'text-slate-900'
+            }`}>
+              {price}
+            </span>
           </div>
-          <motion.button 
-            whileHover={{ x: 2 }}
-            onClick={handleView}
-            className="text-xs font-semibold text-emerald-500 hover:text-emerald-400 flex items-center gap-1 group cursor-pointer"
-          >
-            View details
-            <span className="group-hover:translate-x-0.5 transition-transform text-emerald-500">→</span>
-          </motion.button>
+          <div className="flex items-center gap-1 text-xs font-bold text-emerald-500 dark:text-[#bef264] group-hover:translate-x-1 transition-transform">
+            <span>View details</span>
+            <span>→</span>
+          </div>
         </div>
 
         {/* Location, Year, & Mileage Footer Bar with Location Pin Icon */}
-        <div className={`pt-2 flex items-center gap-1.5 text-[11px] font-medium ${
-          darkMode ? 'text-slate-400 border-t border-white/5' : 'text-gray-500 border-t border-gray-100'
+        <div className={`pt-2 flex items-center gap-1.5 text-xs font-medium ${
+          darkMode ? 'text-slate-400 border-t border-white/5' : 'text-slate-500 border-t border-slate-100'
         }`}>
-          <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-3.5 h-3.5 text-emerald-500 dark:text-[#bef264] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>

@@ -27,33 +27,44 @@ export default function ExplorePage() {
 
   const [matchmakerOpen, setMatchmakerOpen] = useState(false);
 
+  const handleExploreScroll = () => {
+    const el = document.getElementById('inventory-collection');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
       <HeroSection
         darkMode={darkMode}
         onOpenMatchmaker={() => setMatchmakerOpen(true)}
+        onExploreCollection={handleExploreScroll}
       />
-      <SearchAndFilters
-        darkMode={darkMode}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-      />
-      <CarListingsSection
-        darkMode={darkMode}
-        cars={filteredCars}
-        inventoryCount={cars.length}
-        inventoryError={inventoryError}
-        favorites={favorites}
-        compareIds={compareIds}
-        isSavedView={false}
-        onToggleFavorite={toggleFavorite}
-        onCompare={(car) => toggleCompare(car.id)}
-        onViewDetails={openCarDetails}
-      />
+      <div id="inventory-collection" className="scroll-mt-24 space-y-4">
+        <SearchAndFilters
+          darkMode={darkMode}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
+        <CarListingsSection
+          darkMode={darkMode}
+          cars={filteredCars}
+          inventoryCount={cars.length}
+          inventoryError={inventoryError}
+          favorites={favorites}
+          compareIds={compareIds}
+          isSavedView={false}
+          onToggleFavorite={toggleFavorite}
+          onCompare={(car) => toggleCompare(car.id)}
+          onViewDetails={openCarDetails}
+          onBrowse={handleExploreScroll}
+        />
+      </div>
       <Footer darkMode={darkMode} />
 
       {/* AI Dream Car Matchmaker Modal */}
