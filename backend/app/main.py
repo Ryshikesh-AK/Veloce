@@ -19,6 +19,7 @@ async def lifespan(_: FastAPI):
     if settings.auto_create_tables:
         try:
             init_db()
+            logger.info("Database schema and tables initialized successfully.")
         except Exception as exc:
             logger.error(f"Database initialization deferred or failed on startup: {exc}")
     yield

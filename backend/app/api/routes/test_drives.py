@@ -52,17 +52,22 @@ def create_test_drive(payload: TestDriveCreate, db: Session = Depends(get_db)) -
     request = TestDrive(**payload.model_dump())
     request.customer_email = request.customer_email.lower()
     db.add(request)
-    
-    # Notify admin
-    db.add(
-        Notification(
-            type="test_drive_request",
-            title="New Test Drive Request",
-            message=f"{request.customer_name} ({request.customer_email}) booked a test drive for {car.name} on {request.preferred_at.strftime('%Y-%m-%d %H:%M')}.",
-        )
-    )
     db.commit()
     db.refresh(request)
+    
+    # Notify admin safely
+    try:
+        db.add(
+            Notification(
+                type="test_drive_request",
+                title="New Test Drive Request",
+                message=f"{request.customer_name} ({request.customer_email}) booked a test drive for {car.name} on {request.preferred_at.strftime('%Y-%m-%d %H:%M')}.",
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+
     return _response(request, car)
 
 

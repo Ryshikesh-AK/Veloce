@@ -31,16 +31,22 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         role="customer",
     )
     db.add(new_user)
-    db.add(
-        Notification(
-            type="user_registration",
-            title="New User Registration",
-            message=f"{new_user.full_name} ({new_user.email}) registered an account.",
-            user_id=new_user.id,
-        )
-    )
     db.commit()
     db.refresh(new_user)
+
+    # Record notification for customer registration safely
+    try:
+        db.add(
+            Notification(
+                type="user_registration",
+                title="New User Registration",
+                message=f"{new_user.full_name} ({new_user.email}) registered an account.",
+                user_id=new_user.id,
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
 
     user_info = UserRead(
         id=new_user.id,
@@ -91,17 +97,20 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
             detail="User account is deactivated"
         )
 
-    # Record notification for customer login
+    # Record notification for customer login safely
     if user.role != "admin":
-        db.add(
-            Notification(
-                type="user_login",
-                title="Customer Sign In",
-                message=f"{user.full_name or user.email} signed into their showroom account.",
-                user_id=user.id,
+        try:
+            db.add(
+                Notification(
+                    type="user_login",
+                    title="Customer Sign In",
+                    message=f"{user.full_name or user.email} signed into their showroom account.",
+                    user_id=user.id,
+                )
             )
-        )
-        db.commit()
+            db.commit()
+        except Exception:
+            db.rollback()
 
     user_info = UserRead(
         id=user.id,

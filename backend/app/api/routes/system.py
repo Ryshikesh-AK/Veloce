@@ -14,6 +14,11 @@ def health(db: Session = Depends(get_db)) -> dict[str, str]:
     db_error = None
     try:
         db.execute(text("SELECT 1"))
+        # Ensure all registered tables exist in database
+        from app.db.base import Base
+        from app.db.session import engine
+        import app.models  # Ensures all models registered
+        Base.metadata.create_all(bind=engine)
     except Exception as exc:
         db_status = "unavailable"
         db_error = str(exc)
