@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Sparkles, 
-  Compass, 
   Zap, 
   Shield, 
   Users, 
   Gauge, 
-  DollarSign, 
-  Check, 
   RotateCcw, 
   ArrowRight,
   X
 } from 'lucide-react';
-import { hapticAction, hapticTab } from '../../utils/haptics';
+import { hapticTab } from '../../utils/haptics';
 
 const QUIZ_QUESTIONS = [
   {

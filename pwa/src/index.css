@@ -103,7 +103,9 @@ html:not(.dark) body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -112,9 +114,14 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible {
-  outline: 2px solid #b9f43d;
-  outline-offset: 3px;
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="link"]:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid #bef264;
+  outline-offset: 2px;
 }
 
 .no-scrollbar {
@@ -127,7 +134,23 @@ input:focus-visible {
 }
 
 .hero-glass-overlay {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.3) 0%, rgba(15, 23, 42, 0.9) 70%, #020617 100%);
+  background: linear-gradient(180deg, rgba(11, 18, 29, 0.3) 0%, rgba(11, 18, 29, 0.85) 70%, #0b121d 100%);
+}
+
+/* Automotive showroom ambient glow */
+.showroom-glow {
+  background: radial-gradient(circle at 50% 20%, rgba(190, 242, 100, 0.08), transparent 60%);
+}
+
+.showroom-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.pwa-shell[data-theme='light'] .showroom-grid-pattern {
+  background-image: linear-gradient(to right, rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
 }
 
 .safe-bottom {
@@ -375,29 +398,9 @@ input:focus-visible {
   }
 
   .pwa-detail-screen {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
-    grid-template-areas:
-      'heading heading'
-      'photo price'
-      'photo description'
-      'photo specs'
-      'photo actions'
-      'photo request';
-    align-items: start;
-    column-gap: 2rem;
-    row-gap: 1rem;
+    width: 100%;
+    margin-inline: auto;
   }
-
-  .pwa-detail-screen > * { margin-top: 0 !important; }
-  .pwa-detail-heading { grid-area: heading; }
-  .pwa-detail-image { grid-area: photo; position: sticky; top: 6rem; }
-  .pwa-detail-photo { aspect-ratio: 1.18; max-height: min(68vh, 680px); }
-  .pwa-detail-price { grid-area: price; }
-  .pwa-detail-description { grid-area: description; }
-  .pwa-detail-specs { grid-area: specs; }
-  .pwa-detail-actions { grid-area: actions; }
-  [data-purpose='car-details-screen'] > button:last-of-type { grid-area: request; }
 
   [data-purpose='test-drives-screen'],
   [data-purpose='test-drive-request-screen'],

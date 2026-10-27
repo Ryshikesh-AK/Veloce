@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function NavigationHeader() {
   const { darkMode, toggleDarkMode, favorites, compareIds } = useCarContext();
-  const { user, isAuthenticated, isAdmin, skipAuth } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,9 +39,21 @@ export default function NavigationHeader() {
       data-purpose="app-header"
     >
       {/* Brand Logo */}
-      <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(isAdmin ? '/admin' : '/')}>
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
-          darkMode ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-emerald-50 text-emerald-600'
+      <div 
+        className="flex items-center gap-2.5 cursor-pointer select-none" 
+        onClick={() => navigate(isAdmin ? '/admin' : '/')}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate(isAdmin ? '/admin' : '/');
+          }
+        }}
+        aria-label="DriveXCars Motors Home"
+      >
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+          darkMode ? 'bg-[#bef264]/10 border border-[#bef264]/20 text-[#bef264]' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'
         }`}>
           <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
             <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"></path>
@@ -49,12 +61,15 @@ export default function NavigationHeader() {
             <circle cx="16.5" cy="14.5" r="1.5"></circle>
           </svg>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            DriveXCars<span className="text-emerald-500">.</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className={`text-lg sm:text-xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            DriveXCars
+          </span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#bef264] dark:text-[#bef264]">
+            Motors
           </span>
           {isAdmin && (
-            <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/20">
+            <span className="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-amber-400/10 text-amber-400 border border-amber-400/20 ml-1">
               Admin
             </span>
           )}
@@ -136,15 +151,15 @@ export default function NavigationHeader() {
         <motion.button 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          aria-label="Toggle dark mode" 
+          aria-label={darkMode ? 'Switch to light theme' : 'Switch to dark theme'} 
           onClick={() => {
             hapticTab();
             toggleDarkMode();
           }}
-          className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer shadow-xs ${
+          className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bef264] ${
             darkMode 
-              ? 'bg-slate-900 border-white/10 text-amber-400 hover:bg-slate-800' 
-              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              ? 'bg-[#142131] border-white/10 text-amber-400 hover:bg-slate-800' 
+              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
           }`} 
           type="button"
         >
